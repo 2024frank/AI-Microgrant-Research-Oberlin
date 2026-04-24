@@ -13,6 +13,13 @@
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { runIngester } from "./ingest-amam.js";
+import {
+  mightBeDuplicate,
+  checkDuplicateInQueue,
+  geminiCheckDuplicate as _geminiCheckDuplicate,
+  makeRunDeduplicator,
+  MIN_GEMINI_CONFIDENCE,
+} from "./lib/duplicate-agent.js";
 
 const FALLBACK_EMAIL = process.env.FALLBACK_EMAIL || "fkusiapp@oberlin.edu";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -154,30 +161,9 @@ ${rawText}
   }
 }
 
+// Duplicate Agent: delegates to shared lib/duplicate-agent.js
 async function geminiCheckDuplicate(incoming, existing) {
-  if (!GEMINI_API_KEY) return null;
-  try {
-    const raw = await geminiCall(`You are a duplicate detection agent for a community calendar.
-
-Determine if these two events are the SAME real-world event.
-
-Incoming:
-- Title: ${incoming.title}
-- Date: ${incoming.date}
-- Location: ${incoming.location}
-
-Existing:
-- Title: ${existing.title}
-- Date: ${existing.date}
-- Location: ${existing.location}
-
-Reply with JSON only — no markdown:
-{"isDuplicate": true, "confidence": 0-100, "reason": "one sentence"}`);
-    return JSON.parse((raw || "{}").replace(/```json\n?|```/g, "").trim());
-  } catch (err) {
-    console.warn(`Duplicate Agent failed: ${err.message}`);
-    return null;
-  }
+  return _geminiCheckDuplicate(incoming, existing, GEMINI_API_KEY);
 }
 
 async function geminiCheckPublic(ev) {
@@ -213,19 +199,11 @@ Reply with JSON only — no markdown:
   }
 }
 
-// ─── Pre-filter for duplicates ────────────────────────────────────────────────
-
-function mightBeDuplicate(incoming, chEvent) {
-  if (!incoming.date || !chEvent.date) return false;
-  if (incoming.date !== chEvent.date) return false;
-  const inTitle = new Set(incoming.title.toLowerCase().split(/\W+/).filter(w => w.length > 3));
-  const chWords = (chEvent.title || "").toLowerCase().split(/\W+/).filter(w => w.length > 3);
-  if (chWords.some(w => inTitle.has(w))) return true;
-  const a = (incoming.location || "").toLowerCase();
-  const b = (chEvent.location || "").toLowerCase();
-  if (!a || !b) return true;
-  const aWords = new Set(a.split(/\W+/).filter(w => w.length > 3));
-  return b.split(/\W+/).filter(w => w.length > 3).some(w => aWords.has(w));
+// Pre-filter: delegates to shared lib/duplicate-agent.js
+function localMightBeDuplicate(incoming, chEvent) {
+  const { verdict, reason } = mightBeDuplicate(incoming, chEvent);
+  if (verdict) console.log(`  ↗ Candidate pair: ${reason}`);
+  return verdict;
 }
 
 // ─── Load already-processed fingerprints from Firestore ───────────────────────
@@ -293,6 +271,7 @@ async function main() {
   let analyzed          = 0;
   const runDuplicates   = [];
   const runRejected     = [];
+  const seenThisRun     = makeRunDeduplicator();
 
   for (let i = 0; i < stagedEvents.length; i++) {
     const ev          = stagedEvents[i];
@@ -316,15 +295,18 @@ async function main() {
       description: (ev.short_description || "").slice(0, 300),
     };
 
+    // ── Step 0: Within-run dedup ─────────────────────────────────────────────
+    if (seenThisRun(incoming)) { skipped++; processedFps.add(fingerprint); continue; }
+
     // ── Step 1: Duplicate Agent ──────────────────────────────────────────────
-    const dupCandidates = chEvents.filter(ch => mightBeDuplicate(incoming, ch));
+    const dupCandidates = chEvents.filter(ch => localMightBeDuplicate(incoming, ch));
     let isDuplicate = false;
 
     for (const ch of dupCandidates) {
       const result = await geminiCheckDuplicate(incoming, ch);
-      if (result?.isDuplicate && result.confidence >= 70) {
+      if (result?.isDuplicate && result.confidence >= MIN_GEMINI_CONFIDENCE) {
         isDuplicate = true;
-        console.log(`⚠ Duplicate (${result.confidence}%): "${ev.title}" ↔ "${ch.title}"`);
+        console.log(`⚠ Duplicate (${result.confidence}%): "${ev.title}" ↔ "${ch.title}" — ${result.reason}`);
         runDuplicates.push({
           eventA:     incoming,
           eventB:     { id: String(ch.id), source: "communityhub", title: ch.title, date: ch.date, location: ch.location },
@@ -334,6 +316,8 @@ async function main() {
           detectedAt: new Date().toISOString(),
         });
         break;
+      } else if (result) {
+        console.log(`  ✓ Not duplicate (${result.confidence}%): "${ev.title}" — ${result.reason}`);
       }
     }
 
@@ -342,6 +326,10 @@ async function main() {
       processedFps.add(fingerprint);
       continue;
     }
+
+    // Layer 5: within-queue guard
+    const alreadyQueued = await checkDuplicateInQueue(db, incoming, "amam");
+    if (alreadyQueued) { skipped++; processedFps.add(fingerprint); continue; }
 
     // ── Step 2: Writer Agent ─────────────────────────────────────────────────
     const writerPayload = await buildPayloadFromStaged(ev);

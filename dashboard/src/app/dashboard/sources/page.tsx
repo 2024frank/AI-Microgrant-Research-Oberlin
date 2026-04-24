@@ -106,10 +106,13 @@ export default function SourcesPage() {
 
   useEffect(() => {
     fetchRuns();
+    // Server-side cache is 20 s — poll at 25 s (active) / 60 s (idle) to
+    // stay well under GitHub's secondary rate limit (10 requests / 60 s per
+    // endpoint). Three workflows × 25 s = 7 API calls/min max.
     const anyRunning = Object.values(runs).some(
       r => r?.status === "in_progress" || r?.status === "queued"
     );
-    const interval = setInterval(fetchRuns, anyRunning ? 10000 : 30000);
+    const interval = setInterval(fetchRuns, anyRunning ? 25000 : 60000);
     return () => clearInterval(interval);
   }, [fetchRuns, runs]);
 
