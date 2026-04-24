@@ -69,7 +69,7 @@ function truncate(str, max) {
 function buildPayload(e) {
   const inst = e.event_instances?.[0]?.event_instance || {};
   const startTime = inst.start ? toUnix(inst.start) : toUnix(new Date().toISOString());
-  const endTime = inst.end ? toUnix(inst.end) : startTime;
+  const endTime = inst.end ? toUnix(inst.end) : startTime + 3600;
   const experience = e.experience || "inperson";
   const locationType = mapLocationType(experience);
   const eventTypes = e.filters?.event_types || [];
