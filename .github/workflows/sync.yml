@@ -23,7 +23,6 @@ jobs:
 
       - name: Run sync
         env:
-          COMMUNITYHUB_TOKEN: ${{ secrets.COMMUNITYHUB_TOKEN }}
           FALLBACK_EMAIL: ${{ secrets.FALLBACK_EMAIL }}
         run: node sync.js
 

@@ -3,7 +3,6 @@ import fs from "fs";
 const LOCALIST_API = "https://calendar.oberlin.edu/api/2/events";
 const COMMUNITYHUB_API = "https://oberlin.communityhub.cloud/api/legacy/calendar/posts";
 const PUSHED_IDS_FILE = "pushed_ids.json";
-const COMMUNITYHUB_TOKEN = process.env.COMMUNITYHUB_TOKEN;
 const FALLBACK_EMAIL = process.env.FALLBACK_EMAIL || "frankkusiap@gmail.com";
 
 const POST_TYPE_MAP = {
@@ -156,10 +155,7 @@ async function fetchLocalist(days = 365, pp = 100, maxPages = 10) {
 async function pushToCommunityHub(payload) {
   const res = await fetch(COMMUNITYHUB_API, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${COMMUNITYHUB_TOKEN}`,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
