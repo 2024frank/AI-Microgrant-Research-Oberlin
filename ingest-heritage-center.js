@@ -1,17 +1,18 @@
 /**
  * Oberlin Heritage Center Event Ingester — heritage_center_v1
  * Adapter for: Oberlin Heritage Center
- * Source URLs:
- *   - Events page : https://www.oberlinheritagecenter.org/events/
- *   - AJAX API    : https://www.oberlinheritagecenter.org/wp-admin/admin-ajax.php?action=fetch_Events
  *
- * Uses Gemini url_context tool to fetch and parse events because
- * oberlinheritagecenter.org drops TLS connections from plain HTTP clients.
- * Gemini's infrastructure can reach the site; we parse the result as JSON.
+ * oberlinheritagecenter.org blocks plain HTTP clients via TLS fingerprinting.
+ * Solution: use Playwright's page.request.get() which routes through Chromium's
+ * TLS stack — indistinguishable from a real browser, bypassing the JA3 check.
+ *
+ * API: WordPress / The Events Calendar REST API
+ *   GET /wp-json/tribe/events/v1/events?start_date=YYYY-MM-DD&per_page=50&page=N
  *
  * Run: node --env-file=.env ingest-heritage-center.js
  */
 
+import { chromium } from "playwright";
 import crypto from "crypto";
 
 const SOURCE = {
@@ -19,15 +20,14 @@ const SOURCE = {
   source_name: "Oberlin Heritage Center",
   adapter_key: "heritage_center_v1",
   listing_url: "https://www.oberlinheritagecenter.org/events/",
+  api_base:    "https://www.oberlinheritagecenter.org/wp-json/tribe/events/v1/events",
   attribution_label: "Oberlin Heritage Center",
-  default_location: "73½ S. Professor St., Oberlin, OH 44074",
-  default_email: "fkusiapp@oberlin.edu",
-  default_phone: "440-774-1700",
+  default_location:  "73½ S. Professor St., Oberlin, OH 44074",
+  default_email:     "fkusiapp@oberlin.edu",
+  default_phone:     "440-774-1700",
 };
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-2.5-flash";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+const PER_PAGE = 50;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,172 +42,159 @@ function truncate(str, max) {
   return lastPeriod > max * 0.5 ? str.slice(0, lastPeriod + 1).trim() : chunk.trimEnd();
 }
 
-// ─── Fetch + parse via Gemini url_context ─────────────────────────────────────
-
-async function fetchEventsViaGemini() {
-  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not set");
-
-  const prompt = `
-Visit ${SOURCE.listing_url} and list every event you can find — including any on future pages or linked from this page. Include past and future events (we filter ourselves).
-
-Return a JSON array only — no markdown fences, no explanation.
-Each item:
-{
-  "title": "event name",
-  "start_datetime": "ISO 8601 e.g. 2026-05-10T14:00:00, or null",
-  "end_datetime": "ISO 8601 or null",
-  "description": "short plain-text description or null",
-  "event_url": "click the event title link and give me its full URL, or null",
-  "image_url": "full URL to the event image or null",
-  "location": "specific room/venue if mentioned, or null"
+function stripHtml(html) {
+  if (!html) return null;
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&amp;/g, "&").replace(/&nbsp;/g, " ")
+    .replace(/&#8211;/g, "-").replace(/&#8217;/g, "'").replace(/&#8220;/g, '"').replace(/&#8221;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim() || null;
 }
-If only a date with no time is listed, use T09:00:00. Return [] if no events found.
-`.trim();
 
-  const body = {
-    tools: [{ url_context: {} }],
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0 },
-  };
+// ─── Fetch all events via Playwright page.request.get() ───────────────────────
 
-  console.log("→ Fetching Heritage Center events via Gemini url_context…");
+async function fetchAllEvents() {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    locale: "en-US",
+  });
+  const page = await context.newPage();
 
-  // Retry up to 3 times on 429 / 503
-  let res, attempts = 0;
-  while (true) {
-    attempts++;
-    res = await fetch(GEMINI_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) break;
-    if ((res.status === 429 || res.status === 503) && attempts < 3) {
-      const wait = attempts * 15000;
-      console.log(`  Gemini ${res.status} — retrying in ${wait / 1000}s (attempt ${attempts}/3)…`);
-      await new Promise(r => setTimeout(r, wait));
-      continue;
-    }
-    const text = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${text.slice(0, 500)}`);
-  }
+  const today    = new Date().toISOString().slice(0, 10);
+  const allRaw   = [];
+  let   pageNum  = 1;
 
-  const payload = await res.json();
-  const candidate = payload.candidates?.[0];
-  if (!candidate) throw new Error("Gemini returned no candidates");
-
-  const parts = candidate.content?.parts || [];
-  const textPart = parts.find(p => p.text)?.text || "";
-
-  if (!textPart.trim()) {
-    console.warn("⚠ Gemini returned an empty response");
-    return [];
-  }
-
-  // Strip any accidental markdown fences
-  const clean = textPart
-    .replace(/^```(?:json)?\n?/i, "")
-    .replace(/\n?```$/i, "")
-    .trim();
-
-  let events;
   try {
-    events = JSON.parse(clean);
-  } catch {
-    // Try to extract a JSON array from the text
-    const match = clean.match(/\[[\s\S]*\]/);
-    if (match) {
-      try { events = JSON.parse(match[0]); } catch { /* fall through */ }
+    while (true) {
+      const url = `${SOURCE.api_base}?start_date=${today}&per_page=${PER_PAGE}&page=${pageNum}`;
+      console.log(`  → Page ${pageNum}: ${url}`);
+
+      const res = await page.request.get(url, { timeout: 30000 });
+
+      if (!res.ok()) {
+        console.log(`    HTTP ${res.status()} — stopping`);
+        break;
+      }
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (err) {
+        console.log(`    JSON parse error: ${err.message} — stopping`);
+        break;
+      }
+
+      // Tribe Events REST API response shape: { events: [...], total, total_pages }
+      const events = Array.isArray(data) ? data : (data.events || []);
+      console.log(`    ${events.length} events`);
+
+      if (events.length === 0) break;
+      allRaw.push(...events);
+
+      const totalPages = data.total_pages ?? 1;
+      if (pageNum >= totalPages || events.length < PER_PAGE) break;
+
+      pageNum++;
     }
-    if (!events) {
-      console.error("⚠ Could not parse Gemini response as JSON:\n", textPart.slice(0, 1000));
-      throw new Error("Failed to parse Gemini response as JSON array");
-    }
+  } finally {
+    await browser.close();
   }
 
-  if (!Array.isArray(events)) {
-    console.warn("⚠ Gemini returned non-array:", typeof events);
-    return [];
-  }
-
-  console.log(`→ Gemini extracted ${events.length} raw events`);
-  return events;
+  return allRaw;
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const rawEvents = await fetchEventsViaGemini();
   const now = new Date().toISOString();
 
+  console.log("→ Fetching Heritage Center events via Playwright + Chromium TLS\n");
+  const allRaw = await fetchAllEvents();
+  console.log(`\n→ Total raw events: ${allRaw.length}`);
+
   const stagedEvents = [];
-  const candidates = [];
+  const candidates   = [];
+  const seenKeys     = new Set();
 
-  for (const raw of rawEvents) {
-    if (!raw.title) continue;
+  for (const e of allRaw) {
+    const title = stripHtml(e.title) || null;
+    if (!title) continue;
 
-    const start_datetime = raw.start_datetime || null;
-    const end_datetime = raw.end_datetime || null;
+    // Tribe Events date fields: "2026-05-09 09:00:00"
+    const startRaw = e.start_date || null;
+    const endRaw   = e.end_date   || null;
+
+    const start_datetime = startRaw ? new Date(startRaw).toISOString() : null;
+    const end_datetime   = endRaw   ? new Date(endRaw).toISOString()   : null;
+
+    // Deduplicate by title + start
+    const key = `${title}|${start_datetime || ""}`;
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
 
     // Drop past events
     if (start_datetime && start_datetime < now) continue;
 
-    const isOnline = /zoom|virtual|online/i.test(raw.title + (raw.description || ""));
+    const rawDesc   = e.description || e.excerpt || null;
+    const description = stripHtml(rawDesc);
+
+    // Image — Tribe Events puts it at e.image.url
+    const artwork_url =
+      e.image?.url ||
+      e.image?.sizes?.medium?.url ||
+      null;
+
+    const event_link = e.url || SOURCE.listing_url;
+
+    // Venue
+    const venueName = e.venue?.venue || null;
+    const isOnline  = /zoom|virtual|online/i.test(title + (description || ""));
     const location_type = isOnline ? "Online" : "In-Person";
     const location_or_address = isOnline
       ? null
-      : (raw.location
-          ? `${raw.location}, ${SOURCE.default_location}`
-          : SOURCE.default_location);
-
-    const event_link = raw.event_url || SOURCE.listing_url;
+      : venueName
+        ? `${venueName}, ${SOURCE.default_location}`
+        : SOURCE.default_location;
 
     const staged = {
-      // Content
-      title: raw.title,
+      title,
       organizational_sponsor: SOURCE.attribution_label,
       start_datetime,
       end_datetime,
       location_type,
       location_or_address,
-      room_number: null,
+      room_number:          venueName || null,
       event_link,
-      short_description: truncate(raw.description, 200),
-      extended_description: raw.description || null,
-      artwork_url: raw.image_url || null,
+      short_description:    truncate(description, 200),
+      extended_description: description || null,
+      artwork_url,
 
-      // Source metadata
-      source_id: SOURCE.id,
-      source_name: SOURCE.source_name,
-      adapter_key: SOURCE.adapter_key,
+      source_id:        SOURCE.id,
+      source_name:      SOURCE.source_name,
+      adapter_key:      SOURCE.adapter_key,
       source_event_url: event_link,
-      listing_url: SOURCE.listing_url,
+      listing_url:      SOURCE.listing_url,
+      contact_email:    SOURCE.default_email,
+      contact_phone:    SOURCE.default_phone,
 
-      // Contact defaults
-      contact_email: SOURCE.default_email,
-      contact_phone: SOURCE.default_phone,
-
-      // Review fields
-      is_duplicate: null,
+      is_duplicate:        null,
       duplicate_match_url: null,
-      duplicate_reason: null,
-      confidence: 0.85,
-      review_status: "pending",
+      duplicate_reason:    null,
+      confidence:          0.9,
+      review_status:       "pending",
 
-      // Raw payload for debugging
-      raw_payload: raw,
+      raw_payload: e,
     };
 
     stagedEvents.push(staged);
     candidates.push({
-      external_event_id: null,
-      event_url: staged.source_event_url,
-      title_hint: staged.title,
-      fingerprint: makeFingerprint([
-        SOURCE.id,
-        staged.source_event_url,
-        staged.start_datetime || "",
-      ]),
+      external_event_id: e.id || null,
+      event_url: event_link,
+      title_hint: title,
+      fingerprint: makeFingerprint([SOURCE.id, event_link, start_datetime || title]),
       raw_payload: { adapter: SOURCE.adapter_key },
     });
   }
@@ -221,29 +208,26 @@ async function main() {
     },
   };
 
-  // ── Validation report ──────────────────────────────────────────────────────
+  // ── Report ──────────────────────────────────────────────────────────────────
   console.log("\n══════════════════════════════════════════");
-  console.log(`  Heritage Center Ingester — ${SOURCE.adapter_key}`);
+  console.log(`  Heritage Center — ${SOURCE.adapter_key}`);
   console.log("══════════════════════════════════════════");
-  console.log(`  Raw events from Gemini : ${rawEvents.length}`);
-  console.log(`  Eligible (future)      : ${result.summary.eligible_events}`);
-  console.log(`  Candidates             : ${result.candidates.length}`);
-  console.log(`  Match (equal?)         : ${candidates.length === stagedEvents.length ? "✓ YES" : "✗ NO"}`);
+  console.log(`  Raw events from API : ${allRaw.length}`);
+  console.log(`  Eligible (future)   : ${stagedEvents.length}`);
+  console.log(`  Match (equal?)      : ${candidates.length === stagedEvents.length ? "✓ YES" : "✗ NO"}`);
 
   if (stagedEvents.length > 0) {
     console.log("\n  Sample events:");
-    for (const e of stagedEvents.slice(0, 3)) {
+    for (const e of stagedEvents.slice(0, 5)) {
       console.log(`\n  ┌─ ${e.title}`);
-      console.log(`  │  start       : ${e.start_datetime || "—"}`);
-      console.log(`  │  end         : ${e.end_datetime || "—"}`);
-      console.log(`  │  location    : ${e.location_or_address || e.location_type}`);
-      console.log(`  │  event_link  : ${e.event_link}`);
-      console.log(`  │  artwork_url : ${e.artwork_url || "—"}`);
-      console.log(`  └─ desc        : ${(e.short_description || "—").slice(0, 80)}`);
+      console.log(`  │  start    : ${e.start_datetime || "—"}`);
+      console.log(`  │  end      : ${e.end_datetime || "—"}`);
+      console.log(`  │  location : ${e.location_or_address || "—"}`);
+      console.log(`  │  image    : ${e.artwork_url || "—"}`);
+      console.log(`  └─ desc     : ${(e.short_description || "—").slice(0, 80)}`);
     }
   } else {
     console.log("\n  ⚠ No future events found.");
-    console.log("    Verify Gemini can reach the events page and dates are parseable.");
   }
 
   console.log("\n══════════════════════════════════════════\n");
