@@ -12,7 +12,7 @@ Event information in Oberlin is scattered. Oberlin College, FAVA, AMAM, the City
 
 ## The Goal
 
-Build a system that automatically pulls events from every major Oberlin community source and unifies them on [CommunityHub](https://oberlin.communityhub.cloud) — one community calendar for everyone. The system uses AI to detect and avoid posting the same event twice when it appears on multiple source calendars.
+Build a system that automatically pulls events from every major Oberlin community source and unifies them on the [Oberlin Community Calendar](https://environmentaldashboard.org/calendar/?show-menu-bar=1) — one place for everyone. The system uses AI to detect and avoid posting the same event twice when it appears on multiple source calendars.
 
 ---
 
@@ -22,25 +22,37 @@ Build a system that automatically pulls events from every major Oberlin communit
 |---|---|
 | Frank Kusi Appiah | Developer, project lead (Oberlin College, Class of 2027) |
 | Prof. John Petersen | Faculty advisor |
-| Hitesh | CommunityHub platform and API support |
-| Maddy | CommunityHub event moderator |
 
 ---
 
 ## What We Have Done So Far
 
-### Localist to CommunityHub Sync
+### Localist to Community Calendar Sync
 
-The first working pipeline automatically syncs all live, public events from Oberlin College's Localist calendar to CommunityHub.
+The first working pipeline automatically syncs all live, public events from Oberlin College's Localist calendar to the Oberlin Community Calendar.
 
-It runs every hour via GitHub Actions and:
-1. Fetches all upcoming live public events from `calendar.oberlin.edu`
-2. Checks which ones have already been posted to avoid duplicates
-3. Transforms each event into the CommunityHub format, including title, description, start and end times, location, contact info, event category, and image
-4. Posts new events to CommunityHub, where they appear as pending for Maddy to review and approve
-5. Saves the event ID so the same event is never posted twice
+Here is the full flow:
 
-We have successfully pushed 93+ Oberlin College events to CommunityHub, with images. The pipeline handles edge cases like missing end times, missing contact info, virtual vs in-person vs hybrid events, and event category mapping.
+1. **GitHub Actions triggers the sync every hour** — no manual work needed, it just runs in the background on a schedule.
+
+2. **Fetch events from Localist** — the script calls the Localist API (`calendar.oberlin.edu/api/2/events`) and pulls all upcoming live, public events up to 365 days ahead. The API returns results in pages of 100 so the script loops through every page until it has them all.
+
+3. **Check for duplicates** — before doing anything with an event, the script checks `pushed_ids.json`, a file stored in the repo that tracks every Localist event ID that has already been posted. If the ID is in that file, the event is skipped entirely.
+
+4. **Build the payload** — for each new event, the script maps the Localist fields to the format the Community Calendar API expects. This includes:
+   - Title and description (truncated to fit the API limits)
+   - Start and end times (converted to Unix timestamps)
+   - Location and location type (in-person, virtual, or hybrid)
+   - Contact email and phone number
+   - Event category (mapped from Localist event type names to Community Calendar category IDs)
+   - Sponsoring department
+   - Event image (downloaded from Localist and converted to a base64 data URI so it transfers through the API)
+
+5. **Post to the Community Calendar** — the script sends a POST request with the payload to the Community Calendar API. The event is created and appears on the calendar.
+
+6. **Save the ID** — once an event is successfully posted, its Localist ID is added to `pushed_ids.json` and the file is committed back to the repo. This is what prevents duplicates on the next run.
+
+We have successfully pushed 93+ Oberlin College events to the Community Calendar, with images. The pipeline handles edge cases like missing end times, missing contact info, virtual vs in-person vs hybrid events, and event category mapping.
 
 ---
 
@@ -54,7 +66,7 @@ More to come — check back soon.
 
 ### Field Mapping
 
-| CommunityHub Field | Source |
+| Calendar API Field | Source |
 |---|---|
 | `title` | `event.title` (max 60 chars) |
 | `description` | `event.description_text` (max 200 chars) |
@@ -73,7 +85,7 @@ More to come — check back soon.
 
 ### Event Type Mapping
 
-| Localist Type | CommunityHub `postTypeId` |
+| Localist Type | Category ID |
 |---|---|
 | Lecture / Talk / Presentation / Seminar | `6` |
 | Music / Concert | `8` |
@@ -102,7 +114,7 @@ The sync runs every hour automatically. To trigger it manually: `Actions > Local
 
 | File | Purpose |
 |---|---|
-| `sync.js` | Localist to CommunityHub sync script |
+| `sync.js` | Main sync script |
 | `pushed_ids.json` | Tracks already-posted Localist event IDs |
 | `FUTURE_IMPLEMENTATION.md` | Detailed technical roadmap |
 | `.github/workflows/sync.yml` | GitHub Actions hourly schedule |
