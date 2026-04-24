@@ -21,9 +21,13 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install dependencies
+        run: npm install
+
       - name: Run sync
         env:
           FALLBACK_EMAIL: ${{ secrets.FALLBACK_EMAIL }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: node sync.js
 
       - name: Commit updated pushed_ids.json

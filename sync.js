@@ -1,4 +1,20 @@
 import fs from "fs";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+
+function initFirebase() {
+  if (getApps().length > 0) return getFirestore();
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw) return null;
+  try {
+    const serviceAccount = JSON.parse(raw);
+    initializeApp({ credential: cert(serviceAccount) });
+    return getFirestore();
+  } catch {
+    console.warn("Could not init Firebase — stats will not be saved.");
+    return null;
+  }
+}
 
 const LOCALIST_API = "https://calendar.oberlin.edu/api/2/events";
 const COMMUNITYHUB_API = "https://oberlin.communityhub.cloud/api/legacy/calendar/post/submit";
@@ -228,6 +244,18 @@ async function main() {
 
   savePushedIds(pushedIds);
   console.log(`Done — pushed: ${pushed}, skipped: ${skipped}, failed: ${failed}`);
+
+  const db = initFirebase();
+  if (db) {
+    await db.collection("syncs").doc("latest").set({
+      pushed,
+      skipped,
+      failed,
+      total: pushedIds.size,
+      lastRun: new Date().toISOString(),
+    });
+    console.log("Stats saved to Firestore.");
+  }
 }
 
 main().catch((err) => {

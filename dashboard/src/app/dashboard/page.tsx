@@ -1,41 +1,96 @@
 "use client";
 
-const stats = [
-  { label: "Total Events Pushed", value: "93", sub: "from Localist", color: "text-white" },
-  { label: "Active Sources", value: "1", sub: "Oberlin Localist", color: "text-white" },
-  { label: "Duplicates Flagged", value: "0", sub: "pending AI agent", color: "text-zinc-400" },
-  { label: "AI Accuracy", value: "—", sub: "no data yet", color: "text-zinc-400" },
-];
+import { useEffect, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
+interface SyncStats {
+  pushed: number;
+  skipped: number;
+  failed: number;
+  total: number;
+  lastRun: string;
+}
 
 const sources = [
   {
     name: "Oberlin Localist",
     url: "calendar.oberlin.edu",
     status: "live",
-    pushed: 93,
     lastRun: "Runs every hour via GitHub Actions",
   },
-  { name: "FAVA", url: "—", status: "planned", pushed: null, lastRun: "Not yet connected" },
-  { name: "AMAM", url: "—", status: "planned", pushed: null, lastRun: "Not yet connected" },
-  { name: "City of Oberlin", url: "—", status: "planned", pushed: null, lastRun: "Not yet connected" },
+  { name: "FAVA", url: "—", status: "planned", lastRun: "Not yet connected" },
+  { name: "AMAM", url: "—", status: "planned", lastRun: "Not yet connected" },
+  { name: "City of Oberlin", url: "—", status: "planned", lastRun: "Not yet connected" },
 ];
 
+function timeAgo(iso: string) {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
 export default function OverviewPage() {
+  const [stats, setStats] = useState<SyncStats | null>(null);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "syncs", "latest"), (snap) => {
+      if (snap.exists()) setStats(snap.data() as SyncStats);
+    });
+    return unsub;
+  }, []);
+
+  const cards = [
+    {
+      label: "Total Events Pushed",
+      value: stats ? stats.total.toString() : "—",
+      sub: stats ? `${stats.pushed} in last run` : "waiting for first run",
+    },
+    {
+      label: "Active Sources",
+      value: "1",
+      sub: "Oberlin Localist",
+    },
+    {
+      label: "Last Run",
+      value: stats ? timeAgo(stats.lastRun) : "—",
+      sub: stats ? new Date(stats.lastRun).toLocaleString() : "no data yet",
+    },
+    {
+      label: "Last Run Result",
+      value: stats ? (stats.failed === 0 ? "Clean" : `${stats.failed} failed`) : "—",
+      sub: stats ? `${stats.pushed} pushed · ${stats.skipped} skipped` : "no data yet",
+      highlight: stats?.failed === 0,
+    },
+  ];
+
   return (
     <div className="p-8 max-w-5xl">
-      <div className="mb-8">
-        <h1 className="text-white text-2xl font-bold tracking-tight">Overview</h1>
-        <p className="text-zinc-500 text-sm mt-1">
-          Oberlin Community Calendar Unification — AI Micro-Grant Research
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-white text-2xl font-bold tracking-tight">Overview</h1>
+          <p className="text-zinc-500 text-sm mt-1">
+            Oberlin Community Calendar Unification — AI Micro-Grant Research
+          </p>
+        </div>
+        {stats && (
+          <span className="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-medium bg-emerald-400/10 border border-emerald-400/20 rounded-full px-3 py-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live
+          </span>
+        )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        {stats.map((s) => (
+        {cards.map((s) => (
           <div key={s.label} className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
             <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">{s.label}</p>
-            <p className={`text-3xl font-bold ${s.color} mb-1`}>{s.value}</p>
+            <p className={`text-3xl font-bold mb-1 ${s.highlight ? "text-emerald-400" : "text-white"}`}>
+              {s.value}
+            </p>
             <p className="text-zinc-600 text-xs">{s.sub}</p>
           </div>
         ))}
@@ -75,7 +130,11 @@ export default function OverviewPage() {
                     )}
                   </td>
                   <td className="px-5 py-4 text-zinc-300">
-                    {s.pushed !== null ? s.pushed : <span className="text-zinc-600">—</span>}
+                    {s.status === "live" && stats ? (
+                      stats.total
+                    ) : (
+                      <span className="text-zinc-600">—</span>
+                    )}
                   </td>
                   <td className="px-5 py-4 text-zinc-500 text-xs">{s.lastRun}</td>
                 </tr>
