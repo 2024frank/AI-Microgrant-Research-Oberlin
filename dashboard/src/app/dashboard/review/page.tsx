@@ -44,6 +44,10 @@ function fromLocal(s: string) { return Math.floor(new Date(s).getTime() / 1000);
 
 type Edits = Partial<WriterPayload & { startTime: string; endTime: string }>;
 
+type PushResult =
+  | { state: "success"; chId?: string | number }
+  | { state: "error"; message: string; raw?: string };
+
 export default function ReviewPage() {
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +55,7 @@ export default function ReviewPage() {
   const [edits, setEdits] = useState<Record<string, Edits>>({});
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pushing, setPushing] = useState<Set<string>>(new Set());
+  const [pushResults, setPushResults] = useState<Record<string, PushResult>>({});
 
   useEffect(() => {
     const q = query(collection(db, "review_queue"), where("status", "==", "pending"));
@@ -86,6 +91,9 @@ export default function ReviewPage() {
   async function approve(item: QueueItem) {
     if (pushing.has(item.id)) return;
     setPushing(prev => new Set(prev).add(item.id));
+    // Clear any previous result for this item
+    setPushResults(prev => { const s = { ...prev }; delete s[item.id]; return s; });
+
     try {
       const payload = getPayload(item);
       const res = await fetch("/api/push-event", {
@@ -93,14 +101,42 @@ export default function ReviewPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payload }),
       });
+
+      // Always read body — even on error we want the full CommunityHub response
+      let data: Record<string, unknown> = {};
+      const rawText = await res.text();
+      try { data = JSON.parse(rawText); } catch { /* keep empty */ }
+
       if (!res.ok) {
-        const data = await res.json();
-        alert(`Failed: ${data.error}`);
+        // Dig out the most useful error string from the response
+        const message =
+          (data.error as string) ||
+          (data.message as string) ||
+          rawText.slice(0, 300) ||
+          `HTTP ${res.status}`;
+        setPushResults(prev => ({
+          ...prev,
+          [item.id]: { state: "error", message, raw: rawText.slice(0, 1000) },
+        }));
         return;
       }
-      await updateDoc(doc(db, "review_queue", item.id), { status: "approved", approvedAt: new Date().toISOString() });
+
+      // Success — mark approved in Firestore and show confirmation
+      const chId = (data as Record<string, unknown>).id ?? (data as Record<string, unknown>).postId;
+      await updateDoc(doc(db, "review_queue", item.id), {
+        status: "approved",
+        approvedAt: new Date().toISOString(),
+        chPostId: chId ?? null,
+      });
+      setPushResults(prev => ({
+        ...prev,
+        [item.id]: { state: "success", chId: chId as string | number | undefined },
+      }));
     } catch (err: unknown) {
-      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      setPushResults(prev => ({
+        ...prev,
+        [item.id]: { state: "error", message: err instanceof Error ? err.message : String(err) },
+      }));
     } finally {
       setPushing(prev => { const s = new Set(prev); s.delete(item.id); return s; });
     }
@@ -161,13 +197,22 @@ export default function ReviewPage() {
           {items.map(item => {
             const isExpanded = expanded === item.id;
             const isSelected = selected.has(item.id);
-            const isPushing = pushing.has(item.id);
-            const e = edits[item.id] || {};
+            const isPushing  = pushing.has(item.id);
+            const pushResult = pushResults[item.id] ?? null;
+            const e  = edits[item.id] || {};
             const wp = item.writerPayload || {} as WriterPayload;
             const session = wp.sessions?.[0];
 
+            const borderColor = pushResult?.state === "error"
+              ? "border-red-500/40"
+              : pushResult?.state === "success"
+              ? "border-emerald-500/40"
+              : isSelected
+              ? "border-emerald-500/30"
+              : "border-white/[0.07]";
+
             return (
-              <div key={item.id} className={`bg-white/[0.03] border rounded-xl overflow-hidden transition ${isSelected ? "border-emerald-500/40" : "border-white/[0.07]"}`}>
+              <div key={item.id} className={`bg-white/[0.03] border rounded-xl overflow-hidden transition ${borderColor}`}>
                 {/* Row header */}
                 <div className="flex items-center gap-3 px-5 py-4">
                   <input
@@ -217,6 +262,48 @@ export default function ReviewPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* ── Push result banner ── */}
+                {pushResult && (
+                  <div className={`px-5 py-3 border-t flex items-start gap-3 ${
+                    pushResult.state === "success"
+                      ? "border-emerald-500/20 bg-emerald-500/[0.06]"
+                      : "border-red-500/20 bg-red-500/[0.06]"
+                  }`}>
+                    {pushResult.state === "success" ? (
+                      <>
+                        <span className="text-emerald-400 text-sm mt-0.5">✓</span>
+                        <div>
+                          <p className="text-emerald-400 text-xs font-medium">
+                            Pushed to CommunityHub — awaiting their moderation
+                            {pushResult.chId ? ` · ID ${pushResult.chId}` : ""}
+                          </p>
+                          <p className="text-emerald-600 text-[10px] mt-0.5">
+                            Events appear publicly once a CommunityHub admin approves them.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-red-400 text-sm mt-0.5 shrink-0">✗</span>
+                        <div className="min-w-0">
+                          <p className="text-red-400 text-xs font-medium">Push failed</p>
+                          <p className="text-red-300 text-xs mt-1 break-words">{pushResult.message}</p>
+                          {pushResult.raw && pushResult.raw !== pushResult.message && (
+                            <details className="mt-2">
+                              <summary className="text-zinc-500 text-[10px] cursor-pointer hover:text-zinc-400">
+                                Full response ▸
+                              </summary>
+                              <pre className="text-zinc-500 text-[10px] mt-1 whitespace-pre-wrap break-all font-mono bg-black/20 rounded p-2">
+                                {pushResult.raw}
+                              </pre>
+                            </details>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {/* Expanded: original vs writer side-by-side */}
                 {isExpanded && (
