@@ -16,7 +16,6 @@
 import { chromium } from "playwright";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
-import { runPipeline } from "./pipeline.js";
 
 const SOURCE = {
   id: "amam",
