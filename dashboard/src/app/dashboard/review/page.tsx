@@ -48,6 +48,8 @@ type PushResult =
   | { state: "success"; chId?: string | number }
   | { state: "error"; message: string; raw?: string };
 
+type SaveState = "idle" | "saving" | "saved" | "error";
+
 export default function ReviewPage() {
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +58,7 @@ export default function ReviewPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pushing, setPushing] = useState<Set<string>>(new Set());
   const [pushResults, setPushResults] = useState<Record<string, PushResult>>({});
+  const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({});
 
   useEffect(() => {
     const q = query(collection(db, "review_queue"), where("status", "==", "pending"));
@@ -86,6 +89,23 @@ export default function ReviewPage() {
       base.sessions = [{ startTime: start, endTime: end }];
     }
     return base;
+  }
+
+  // Save edits to Firestore — merges pending edits into writerPayload and
+  // persists. Clears local edits so the form now shows the saved values.
+  async function save(item: QueueItem) {
+    setSaveStates(prev => ({ ...prev, [item.id]: "saving" }));
+    try {
+      const merged = getPayload(item); // edits merged over base
+      await updateDoc(doc(db, "review_queue", item.id), { writerPayload: merged });
+      // Clear local edits — Firestore snapshot will push back the saved values
+      setEdits(prev => { const s = { ...prev }; delete s[item.id]; return s; });
+      setSaveStates(prev => ({ ...prev, [item.id]: "saved" }));
+      // Auto-reset "saved" badge after 3 s
+      setTimeout(() => setSaveStates(prev => ({ ...prev, [item.id]: "idle" })), 3000);
+    } catch {
+      setSaveStates(prev => ({ ...prev, [item.id]: "error" }));
+    }
   }
 
   async function approve(item: QueueItem) {
@@ -195,13 +215,21 @@ export default function ReviewPage() {
       ) : (
         <div className="space-y-3">
           {items.map(item => {
-            const isExpanded = expanded === item.id;
-            const isSelected = selected.has(item.id);
-            const isPushing  = pushing.has(item.id);
-            const pushResult = pushResults[item.id] ?? null;
-            const e  = edits[item.id] || {};
-            const wp = item.writerPayload || {} as WriterPayload;
-            const session = wp.sessions?.[0];
+            const isExpanded  = expanded === item.id;
+            const isSelected  = selected.has(item.id);
+            const isPushing   = pushing.has(item.id);
+            const pushResult  = pushResults[item.id] ?? null;
+            const saveState   = saveStates[item.id] ?? "idle";
+            const e           = edits[item.id] || {};
+            const wp          = item.writerPayload || {} as WriterPayload;
+            const session     = wp.sessions?.[0];
+            const hasUnsaved  = Object.keys(e).length > 0;
+
+            // Helper: returns amber ring class if this field has a pending unsaved edit
+            const changed = (field: string) =>
+              e[field as keyof Edits] !== undefined
+                ? "border-amber-400/60 focus:border-amber-400"
+                : "border-white/[0.08] focus:border-emerald-500/50";
 
             const borderColor = pushResult?.state === "error"
               ? "border-red-500/40"
@@ -307,7 +335,41 @@ export default function ReviewPage() {
 
                 {/* Expanded: original vs writer side-by-side */}
                 {isExpanded && (
-                  <div className="border-t border-white/[0.06] grid grid-cols-2 divide-x divide-white/[0.06]">
+                  <div className="border-t border-white/[0.06]">
+
+                    {/* ── Unsaved-changes bar ─────────────────────────────── */}
+                    {(hasUnsaved || saveState !== "idle") && (
+                      <div className={`flex items-center justify-between gap-4 px-5 py-2.5 border-b ${
+                        saveState === "saved"
+                          ? "border-emerald-500/20 bg-emerald-500/[0.05]"
+                          : saveState === "error"
+                          ? "border-red-500/20 bg-red-500/[0.05]"
+                          : "border-amber-400/20 bg-amber-400/[0.04]"
+                      }`}>
+                        <p className={`text-xs font-medium ${
+                          saveState === "saved"   ? "text-emerald-400" :
+                          saveState === "error"   ? "text-red-400"     :
+                          saveState === "saving"  ? "text-zinc-400"    :
+                                                    "text-amber-400"
+                        }`}>
+                          {saveState === "saved"  && "✓ Changes saved — Approve will use this version"}
+                          {saveState === "error"  && "✗ Save failed — try again"}
+                          {saveState === "saving" && "Saving…"}
+                          {saveState === "idle" && hasUnsaved && `${Object.keys(e).length} unsaved change${Object.keys(e).length > 1 ? "s" : ""} — save before approving`}
+                        </p>
+                        {(hasUnsaved || saveState === "error") && (
+                          <button
+                            onClick={() => save(item)}
+                            disabled={saveState === "saving"}
+                            className="text-xs font-semibold text-white bg-amber-500 hover:bg-amber-400 disabled:opacity-50 px-3 py-1 rounded-lg transition shrink-0"
+                          >
+                            {saveState === "saving" ? "Saving…" : "Save changes"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
                     {/* Original */}
                     <div className="px-5 py-5 space-y-4">
                       <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wide">
@@ -338,9 +400,14 @@ export default function ReviewPage() {
                       )}
                     </div>
 
-                    {/* Writer's version — editable */}
+                    {/* Writer's version — editable, amber border = unsaved */}
                     <div className="px-5 py-5 space-y-4">
-                      <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide">Writer's Version <span className="text-zinc-600 normal-case font-normal">(editable)</span></p>
+                      <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide">
+                        Writer&apos;s Version
+                        <span className="text-zinc-600 normal-case font-normal"> (editable — </span>
+                        <span className="text-amber-400 normal-case font-normal">amber = unsaved</span>
+                        <span className="text-zinc-600 normal-case font-normal">)</span>
+                      </p>
 
                       {item.original.photoUrl && (
                         <img
@@ -350,7 +417,11 @@ export default function ReviewPage() {
                         />
                       )}
 
-                      <EditField label="Title" value={e.title ?? wp.title} onChange={v => setEdit(item.id, "title", v)} maxLen={60} />
+                      <EditField
+                        label="Title" value={e.title ?? wp.title}
+                        onChange={v => setEdit(item.id, "title", v)} maxLen={60}
+                        borderClass={changed("title")}
+                      />
 
                       <div>
                         <label className="text-zinc-500 text-[10px] uppercase tracking-wide block mb-1">Start Time</label>
@@ -358,7 +429,7 @@ export default function ReviewPage() {
                           type="datetime-local"
                           value={e.startTime ?? (session ? toLocal(session.startTime) : "")}
                           onChange={ev => setEdit(item.id, "startTime", ev.target.value)}
-                          className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+                          className={`w-full bg-white/[0.04] border rounded-lg px-3 py-2 text-white text-xs focus:outline-none transition ${changed("startTime")}`}
                         />
                       </div>
                       <div>
@@ -367,28 +438,45 @@ export default function ReviewPage() {
                           type="datetime-local"
                           value={e.endTime ?? (session ? toLocal(session.endTime) : "")}
                           onChange={ev => setEdit(item.id, "endTime", ev.target.value)}
-                          className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+                          className={`w-full bg-white/[0.04] border rounded-lg px-3 py-2 text-white text-xs focus:outline-none transition ${changed("endTime")}`}
                         />
                       </div>
 
                       {(wp.locationType === "ph2" || wp.locationType === "bo") && (
-                        <EditField label="Location" value={e.location ?? wp.location ?? ""} onChange={v => setEdit(item.id, "location", v)} />
+                        <EditField label="Location" value={e.location ?? wp.location ?? ""}
+                          onChange={v => setEdit(item.id, "location", v)} borderClass={changed("location")} />
                       )}
                       {(wp.locationType === "on" || wp.locationType === "bo") && (
-                        <EditField label="Stream URL" value={e.urlLink ?? wp.urlLink ?? ""} onChange={v => setEdit(item.id, "urlLink", v)} />
+                        <EditField label="Stream URL" value={e.urlLink ?? wp.urlLink ?? ""}
+                          onChange={v => setEdit(item.id, "urlLink", v)} borderClass={changed("urlLink")} />
                       )}
 
-                      <EditArea label={`Short Description (${(e.description ?? wp.description ?? "").length}/200)`} value={e.description ?? wp.description ?? ""} onChange={v => setEdit(item.id, "description", v)} rows={3} />
-                      <EditArea label={`Extended Description (${(e.extendedDescription ?? wp.extendedDescription ?? "").length}/1000)`} value={e.extendedDescription ?? wp.extendedDescription ?? ""} onChange={v => setEdit(item.id, "extendedDescription", v)} rows={5} />
+                      <EditArea
+                        label={`Short Description (${(e.description ?? wp.description ?? "").length}/200)`}
+                        value={e.description ?? wp.description ?? ""}
+                        onChange={v => setEdit(item.id, "description", v)} rows={3}
+                        borderClass={changed("description")}
+                      />
+                      <EditArea
+                        label={`Extended Description (${(e.extendedDescription ?? wp.extendedDescription ?? "").length}/1000)`}
+                        value={e.extendedDescription ?? wp.extendedDescription ?? ""}
+                        onChange={v => setEdit(item.id, "extendedDescription", v)} rows={5}
+                        borderClass={changed("extendedDescription")}
+                      />
 
                       <EditField
                         label="Sponsors (comma-separated)"
                         value={e.sponsors ? (e.sponsors as string[]).join(", ") : (wp.sponsors || []).join(", ")}
                         onChange={v => setEdit(item.id, "sponsors", v.split(",").map((s: string) => s.trim()).filter(Boolean))}
+                        borderClass={changed("sponsors")}
                       />
-                      <EditField label="Contact Email" value={e.contactEmail ?? wp.contactEmail ?? ""} onChange={v => setEdit(item.id, "contactEmail", v)} />
-                      <EditField label="Phone" value={e.phone ?? wp.phone ?? ""} onChange={v => setEdit(item.id, "phone", v)} />
-                      <EditField label="Website" value={e.website ?? wp.website ?? ""} onChange={v => setEdit(item.id, "website", v)} />
+                      <EditField label="Contact Email" value={e.contactEmail ?? wp.contactEmail ?? ""}
+                        onChange={v => setEdit(item.id, "contactEmail", v)} borderClass={changed("contactEmail")} />
+                      <EditField label="Phone" value={e.phone ?? wp.phone ?? ""}
+                        onChange={v => setEdit(item.id, "phone", v)} borderClass={changed("phone")} />
+                      <EditField label="Website" value={e.website ?? wp.website ?? ""}
+                        onChange={v => setEdit(item.id, "website", v)} borderClass={changed("website")} />
+                    </div>
                     </div>
                   </div>
                 )}
@@ -410,7 +498,10 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function EditField({ label, value, onChange, maxLen }: { label: string; value: string; onChange: (v: string) => void; maxLen?: number }) {
+function EditField({ label, value, onChange, maxLen, borderClass }: {
+  label: string; value: string; onChange: (v: string) => void;
+  maxLen?: number; borderClass?: string;
+}) {
   return (
     <div>
       <label className="text-zinc-500 text-[10px] uppercase tracking-wide block mb-1">{label}</label>
@@ -419,13 +510,16 @@ function EditField({ label, value, onChange, maxLen }: { label: string; value: s
         value={value}
         maxLength={maxLen}
         onChange={e => onChange(e.target.value)}
-        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+        className={`w-full bg-white/[0.04] border rounded-lg px-3 py-2 text-white text-xs focus:outline-none transition ${borderClass ?? "border-white/[0.08] focus:border-emerald-500/50"}`}
       />
     </div>
   );
 }
 
-function EditArea({ label, value, onChange, rows }: { label: string; value: string; onChange: (v: string) => void; rows: number }) {
+function EditArea({ label, value, onChange, rows, borderClass }: {
+  label: string; value: string; onChange: (v: string) => void;
+  rows: number; borderClass?: string;
+}) {
   return (
     <div>
       <label className="text-zinc-500 text-[10px] uppercase tracking-wide block mb-1">{label}</label>
@@ -433,7 +527,7 @@ function EditArea({ label, value, onChange, rows }: { label: string; value: stri
         value={value}
         rows={rows}
         onChange={e => onChange(e.target.value)}
-        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500/50 resize-y"
+        className={`w-full bg-white/[0.04] border rounded-lg px-3 py-2 text-white text-xs focus:outline-none resize-y transition ${borderClass ?? "border-white/[0.08] focus:border-emerald-500/50"}`}
       />
     </div>
   );
