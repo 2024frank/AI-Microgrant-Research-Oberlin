@@ -152,14 +152,25 @@ async function geminiCheckPublic(e) {
   const title = e.title || "";
   const desc = (e.description_text || e.description || "").replace(/<[^>]*>/g, " ").trim().slice(0, 600);
   try {
-    const raw = await geminiCall(`You are a public-access filter agent for a community calendar.
+    const raw = await geminiCall(`You are a public-access filter agent for a community calendar serving the town of Oberlin, Ohio.
 
-Determine if this event is OPEN TO THE GENERAL PUBLIC (including non-Oberlin people) or RESTRICTED to Oberlin College students, faculty, or staff only.
+The ONLY question: Can a regular Oberlin town resident — someone with ZERO Oberlin College affiliation — walk in and attend this event?
 
-Private indicators: tutoring session, advising appointment, faculty meeting, department meeting, staff meeting, internal, students-only, OSCA, co-op meeting, class session, academic advising, department seminar with registration required only for Oberlin affiliates.
-Public indicators: open to all, community event, free and open to the public, everyone welcome, public lecture, general admission, open house, no affiliation required.
+PRIVATE (reject) if ANY of these apply:
+- Requires being an Oberlin College student, faculty, staff, or affiliate
+- Academic deadlines, grading policies, advising, tutoring, registration
+- Department/faculty/staff meetings
+- Student org meetings (OSCA, co-ops, student senate, etc.)
+- Requires college login, ID card, or enrollment to register or attend
+- Described as exclusive to a school or institution group
+- Career/recruiting events restricted to enrolled students
 
-If unclear, lean toward public.
+PUBLIC (approve) only if a non-affiliated town resident can genuinely attend:
+- Open to the Oberlin community or general public with no affiliation required
+- Public lectures, performances, concerts, exhibitions, open houses, festivals
+- Community events where anyone can walk in
+
+When in doubt, mark PRIVATE. It is better to be too cautious than to post internal school events on a public community calendar.
 
 Event:
 - Title: ${title}
@@ -174,10 +185,17 @@ Reply with JSON only — no markdown:
   }
 }
 
-// Pre-filter for duplicate detection: same calendar date AND location word overlap
+// Pre-filter: same date AND (title word overlap OR location word overlap)
 function mightBeDuplicate(incoming, chEvent) {
   if (!incoming.date || !chEvent.date) return false;
   if (incoming.date !== chEvent.date) return false;
+
+  // Title overlap is the strongest signal
+  const inTitle = new Set(incoming.title.toLowerCase().split(/\W+/).filter(w => w.length > 3));
+  const chTitleWords = (chEvent.title || "").toLowerCase().split(/\W+/).filter(w => w.length > 3);
+  if (chTitleWords.some(w => inTitle.has(w))) return true;
+
+  // Fall back to location overlap
   const a = (incoming.location || "").toLowerCase();
   const b = (chEvent.location || "").toLowerCase();
   if (!a || !b) return true;

@@ -67,11 +67,25 @@ Reply JSON only: {"isDuplicate": true, "confidence": 0-100, "reason": "one sente
 }
 
 async function publicAgent(title, description) {
-  const raw = await geminiCall(`Is this event OPEN TO THE GENERAL PUBLIC or RESTRICTED to Oberlin students/staff only?
+  const raw = await geminiCall(`You are a public-access filter agent for a community calendar serving the town of Oberlin, Ohio.
 
-Private indicators: tutoring, advising, faculty meeting, department meeting, staff only, students only, co-op meeting, class session, internal.
-Public indicators: open to all, community event, free and open, everyone welcome, public lecture, open house.
-If unclear, lean toward public.
+The ONLY question: Can a regular Oberlin town resident — someone with ZERO Oberlin College affiliation — walk in and attend this event?
+
+PRIVATE (reject) if ANY of these apply:
+- Requires being an Oberlin College student, faculty, staff, or affiliate
+- Academic deadlines, grading policies, advising, tutoring, registration
+- Department/faculty/staff meetings
+- Student org meetings (OSCA, co-ops, student senate, etc.)
+- Requires college login, ID card, or enrollment to register or attend
+- Described as exclusive to a school or institution group
+- Career/recruiting events restricted to enrolled students
+
+PUBLIC (approve) only if a non-affiliated town resident can genuinely attend:
+- Open to the Oberlin community or general public with no affiliation required
+- Public lectures, performances, concerts, exhibitions, open houses, festivals
+- Community events where anyone can walk in
+
+When in doubt, mark PRIVATE. It is better to be too cautious than to post internal school events on a public community calendar.
 
 Title: ${title}
 Description: ${description.slice(0, 500)}
@@ -119,10 +133,21 @@ async function main() {
   const locData = await locRes.json();
   const allEvents = (locData.events || []).map(w => w.event).filter(e => e && e.status === "live" && !e.private);
 
-  // Pick 2 events with non-trivial descriptions for a good demo
-  const picked = allEvents
-    .filter(e => (e.description_text || "").length > 50)
-    .slice(0, 2);
+  // Pick 3 events: first find a Localist event whose title matches a CommunityHub event (duplicate test)
+  const chTitles = chEvents.map(c => c.title.toLowerCase().trim());
+  const duplicateCandidate = allEvents.find(e =>
+    chTitles.some(t => t && e.title && t.includes(e.title.toLowerCase().slice(0, 15)))
+  );
+
+  const nonDupes = allEvents.filter(e => (e.description_text || "").length > 50 && e !== duplicateCandidate);
+  const picked = [
+    duplicateCandidate,          // should hit duplicate agent
+    nonDupes[0],                 // varies
+    nonDupes[1],                 // varies
+  ].filter(Boolean).slice(0, 3);
+
+  console.log(`  → Testing with ${picked.length} events (first is duplicate candidate if found)`);
+  console.log(`  → Events: ${picked.map(e => '"' + e.title + '"').join(', ')}\n`);
 
   console.log(`  → Testing with: "${picked[0]?.title}" and "${picked[1]?.title}"\n`);
 
