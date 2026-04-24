@@ -3,7 +3,13 @@
  * Adapter for: Allen Memorial Art Museum (AMAM)
  * Listing URL: https://amam.oberlin.edu/exhibitions-events/events
  *
- * Uses Playwright (Chromium) as the headless renderer.
+ * Strategy:
+ *   1. Load the events listing page and collect all future event URLs.
+ *      The listing already shows ALL upcoming events on page-1 load
+ *      (the jQuery UI datepicker is only a calendar highlight, not a filter).
+ *   2. Visit each individual event detail page to extract title, date/time,
+ *      description, and image — much more reliable than parsing the listing HTML.
+ *
  * Run: node --env-file=.env ingest-amam.js
  */
 
@@ -37,14 +43,13 @@ function truncate(str, max) {
 /**
  * Parse AMAM date line.
  * Examples:
+ *   "Friday, May 8, 2026 at 5:30 p.m. - 7:30 p.m."
  *   "TUESDAY, APRIL 14, 2026 AT 3:00 P.M. - 4:00 P.M."
  *   "FRIDAY, MAY 2, 2026"
- *   "APRIL 14 – MAY 30, 2026" (exhibition range)
  */
 function parseDateLine(line) {
   if (!line) return { start_datetime: null, end_datetime: null };
 
-  // Normalise: strip "AT", P.M./A.M. → PM/AM, en-dash → hyphen
   const norm = line
     .replace(/\bAT\b/gi, "")
     .replace(/P\.M\./gi, "PM")
@@ -53,7 +58,7 @@ function parseDateLine(line) {
     .replace(/\s+/g, " ")
     .trim();
 
-  // Try "DAY, MONTH DD, YYYY HH:MM PM - HH:MM PM"
+  // "DAY, MONTH DD, YYYY HH:MM PM - HH:MM PM"
   const fullRe =
     /(?:[A-Z]+,\s+)?([A-Z]+ \d{1,2},?\s+\d{4})\s+(\d{1,2}:\d{2}\s*[AP]M)(?:\s*-\s*(\d{1,2}:\d{2}\s*[AP]M))?/i;
   const m = norm.match(fullRe);
@@ -69,7 +74,7 @@ function parseDateLine(line) {
     }
   }
 
-  // Try "DAY, MONTH DD, YYYY" (no time)
+  // "DAY, MONTH DD, YYYY" (no time)
   const dateOnlyRe = /(?:[A-Z]+,\s+)?([A-Z]+ \d{1,2},?\s+\d{4})/i;
   const m2 = norm.match(dateOnlyRe);
   if (m2) {
@@ -82,10 +87,108 @@ function parseDateLine(line) {
   return { start_datetime: null, end_datetime: null };
 }
 
-// ─── Scraper ──────────────────────────────────────────────────────────────────
+// ─── Step 1: Collect all event URLs from the listing page ─────────────────────
 
-async function scrapeAMAM() {
+async function collectEventUrls(page) {
+  console.log("→ Loading events listing:", SOURCE.listing_url);
+  await page.goto(SOURCE.listing_url, { waitUntil: "networkidle", timeout: 60000 });
+  await page.waitForTimeout(3000);
+
+  const hrefs = await page.evaluate(() => {
+    const links = [...document.querySelectorAll("a[href*='/events/']")]
+      .filter(a => /\/events\/\d{4}\/\d{2}\/\d{2}\//.test(a.href));
+    return [...new Set(links.map(a => a.href))];
+  });
+
+  console.log(`→ Found ${hrefs.length} event URLs on listing page`);
+
+  // Also try clicking next month to ensure we haven't missed anything
+  // (in practice the listing is rolling and shows all events, but let's be safe)
+  let nextDisabled = await page.evaluate(() =>
+    document.querySelector(".ui-datepicker-next")?.classList.contains("ui-state-disabled") ?? true
+  );
+
+  if (!nextDisabled) {
+    await page.click(".ui-datepicker-next");
+    await page.waitForTimeout(1500);
+
+    const extra = await page.evaluate(() => {
+      const links = [...document.querySelectorAll("a[href*='/events/']")]
+        .filter(a => /\/events\/\d{4}\/\d{2}\/\d{2}\//.test(a.href));
+      return [...new Set(links.map(a => a.href))];
+    });
+
+    const before = new Set(hrefs);
+    extra.forEach(h => { if (!before.has(h)) hrefs.push(h); });
+
+    if (hrefs.length > before.size) {
+      console.log(`→ +${hrefs.length - before.size} extra events found on next month`);
+    }
+  }
+
+  return hrefs;
+}
+
+// ─── Step 2: Scrape each event detail page ────────────────────────────────────
+
+async function scrapeEventDetail(page, url) {
+  try {
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.waitForTimeout(800);
+
+    return await page.evaluate((eventUrl) => {
+      // Title
+      const title = document.querySelector("h1")?.textContent?.trim() || null;
+      if (!title) return null;
+
+      // Grab the full inner text of main content
+      const mainText = (document.querySelector("main") || document.body)?.innerText || "";
+
+      // Find the date line — the first line after title that contains a month name
+      const lines = mainText.split("\n").map(l => l.trim()).filter(Boolean);
+      const titleIdx = lines.findIndex(l => l === title || l.includes(title.slice(0, 30)));
+      const MONTHS = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i;
+      let dateLine = null;
+      for (let i = titleIdx + 1; i < Math.min(titleIdx + 6, lines.length); i++) {
+        if (MONTHS.test(lines[i]) && /\d{4}/.test(lines[i])) {
+          dateLine = lines[i];
+          break;
+        }
+      }
+
+      // Description — lines after the date line, before any nav boilerplate
+      const descStart = dateLine
+        ? lines.findIndex(l => l === dateLine) + 1
+        : titleIdx + 1;
+      const descLines = [];
+      for (let i = descStart; i < lines.length && descLines.length < 8; i++) {
+        const l = lines[i];
+        if (/^(SHARE|FOLLOW|BACK|CONTACT|HOME|©|SUBSCRIBE)/i.test(l)) break;
+        if (l.length > 15) descLines.push(l);
+      }
+      const description = descLines.join(" ").trim() || null;
+
+      // Image — first non-logo img in the page
+      const img = [...document.querySelectorAll("img")]
+        .find(i => i.src && !i.src.includes("logo") && !i.src.includes("data:") && i.naturalWidth > 100);
+      const imgSrc = img?.src || null;
+
+      return { title, dateLine, description, imgSrc, eventUrl };
+    }, url);
+  } catch (err) {
+    console.warn(`  ⚠ Could not scrape ${url}: ${err.message}`);
+    return null;
+  }
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+async function main() {
   const browser = await chromium.launch({ headless: true });
+  const now = new Date().toISOString();
+  const stagedEvents = [];
+  const candidates = [];
+
   try {
     const context = await browser.newContext({
       userAgent:
@@ -94,138 +197,70 @@ async function scrapeAMAM() {
     });
     const page = await context.newPage();
 
-    console.log("→ Opening", SOURCE.listing_url);
-    await page.goto(SOURCE.listing_url, { waitUntil: "networkidle", timeout: 60000 });
-    await page.waitForTimeout(4000);
+    // Step 1 — collect event URLs
+    const eventUrls = await collectEventUrls(page);
 
-    // ── Extract raw rows ────────────────────────────────────────────────────
-    const rawRows = await page.evaluate(() => {
-      const results = [];
+    // Step 2 — scrape each detail page
+    console.log(`\n→ Scraping ${eventUrls.length} event detail pages…`);
+    let scraped = 0;
 
-      // Try selector variants in priority order
-      const selectors = ["a.event", "a.event-card", ".event-listing a", "article.event a", ".views-row a"];
-      let els = [];
-      for (const sel of selectors) {
-        els = [...document.querySelectorAll(sel)];
-        if (els.length > 0) break;
-      }
+    for (const url of eventUrls) {
+      const detail = await scrapeEventDetail(page, url);
+      if (!detail || !detail.title) continue;
+      scraped++;
 
-      // Fallback: any <a> that looks like an event link
-      if (els.length === 0) {
-        els = [...document.querySelectorAll("a[href*='/event']")];
-      }
+      const { start_datetime, end_datetime } = parseDateLine(detail.dateLine);
 
-      console.log(`Found ${els.length} elements`);
+      // Drop past events
+      if (start_datetime && start_datetime < now) continue;
 
-      for (const el of els) {
-        const text = el.innerText || el.textContent || "";
-        const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+      const isOnline = /zoom|virtual|online/i.test(detail.title + (detail.description || ""));
+      const location_type = isOnline ? "Online" : "In-Person";
+      const location_or_address = isOnline ? null : SOURCE.default_location;
 
-        // Find the date line (contains a weekday)
-        const dateLine = lines.find(l =>
-          /\b(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)\b/i.test(l)
-        ) || null;
+      const staged = {
+        title: detail.title,
+        organizational_sponsor: SOURCE.attribution_label,
+        start_datetime,
+        end_datetime,
+        location_type,
+        location_or_address,
+        room_number: null,
+        event_link: url,
+        short_description: truncate(detail.description, 200),
+        extended_description: detail.description || null,
+        artwork_url: detail.imgSrc || null,
 
-        // Title: first non-date, non-short line
-        const nonDateLines = lines.filter(l => l !== dateLine && l.length > 3);
-        const title = nonDateLines[0] || null;
+        source_id: SOURCE.id,
+        source_name: SOURCE.source_name,
+        adapter_key: SOURCE.adapter_key,
+        source_event_url: url,
+        listing_url: SOURCE.listing_url,
+        contact_email: SOURCE.default_email,
+        contact_phone: SOURCE.default_phone,
 
-        // Description: remaining lines after title
-        const descLines = nonDateLines.slice(1);
-        const desc = descLines.join(" ").trim() || null;
+        is_duplicate: null,
+        duplicate_match_url: null,
+        duplicate_reason: null,
+        confidence: 0.9,
+        review_status: "pending",
 
-        const img = el.querySelector("img");
+        raw_payload: detail,
+      };
 
-        results.push({
-          href: el.href || null,
-          dateLine,
-          title,
-          desc,
-          img: img?.src || img?.dataset?.src || null,
-        });
-      }
+      stagedEvents.push(staged);
+      candidates.push({
+        external_event_id: null,
+        event_url: url,
+        title_hint: detail.title,
+        fingerprint: makeFingerprint([SOURCE.id, url, start_datetime || ""]),
+        raw_payload: { adapter: SOURCE.adapter_key },
+      });
 
-      return results;
-    });
-
-    console.log(`→ Scraped ${rawRows.length} raw rows`);
-
-    // Dump the page HTML if nothing found (for debugging selector issues)
-    if (rawRows.length === 0) {
-      const html = await page.content();
-      const snippet = html.slice(0, 3000);
-      console.log("⚠ No rows found. Page snippet:\n", snippet);
+      process.stdout.write(`  [${scraped}/${eventUrls.length}] ✓ ${detail.title.slice(0, 55)}\n`);
     }
-
-    return rawRows;
   } finally {
     await browser.close();
-  }
-}
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
-async function main() {
-  const rawRows = await scrapeAMAM();
-  const now = new Date().toISOString();
-
-  const stagedEvents = [];
-  const candidates = [];
-
-  for (const row of rawRows) {
-    if (!row.title) continue;
-
-    const { start_datetime, end_datetime } = parseDateLine(row.dateLine);
-
-    // Drop past events
-    if (start_datetime && start_datetime < now) continue;
-
-    const isOnline = /zoom/i.test(row.title + (row.desc || ""));
-    const location_type = isOnline ? "Online" : "In-Person";
-    const location_or_address = isOnline ? null : SOURCE.default_location;
-
-    const event_link = row.href || SOURCE.listing_url;
-
-    const staged = {
-      // Content
-      title: row.title,
-      organizational_sponsor: SOURCE.attribution_label,
-      start_datetime,
-      end_datetime,
-      location_type,
-      location_or_address,
-      room_number: null,
-      event_link,
-      short_description: truncate(row.desc, 200),
-      extended_description: row.desc || null,
-      artwork_url: row.img || null,
-
-      // Source metadata
-      source_id: SOURCE.id,
-      source_name: SOURCE.source_name,
-      adapter_key: SOURCE.adapter_key,
-      source_event_url: event_link,
-      listing_url: SOURCE.listing_url,
-
-      // Review fields
-      is_duplicate: null,
-      duplicate_match_url: null,
-      duplicate_reason: null,
-      confidence: 0.9,
-      review_status: "pending",
-
-      // Raw payload for debugging
-      raw_payload: row,
-    };
-
-    stagedEvents.push(staged);
-    candidates.push({
-      external_event_id: null,
-      event_url: staged.source_event_url,
-      title_hint: staged.title,
-      fingerprint: makeFingerprint([SOURCE.id, staged.source_event_url, staged.start_datetime || ""]),
-      raw_payload: { adapter: SOURCE.adapter_key },
-    });
   }
 
   const result = {
@@ -237,28 +272,26 @@ async function main() {
     },
   };
 
-  // ── Validation ─────────────────────────────────────────────────────────────
   console.log("\n══════════════════════════════════════════");
   console.log(`  AMAM Ingester — ${SOURCE.adapter_key}`);
   console.log("══════════════════════════════════════════");
-  console.log(`  Raw rows scraped  : ${rawRows.length}`);
-  console.log(`  Eligible events   : ${result.summary.eligible_events}`);
-  console.log(`  Candidates        : ${result.candidates.length}`);
-  console.log(`  Match (equal?)    : ${candidates.length === stagedEvents.length ? "✓ YES" : "✗ NO"}`);
+  console.log(`  Event URLs found   : ${candidates.length + stagedEvents.filter(e => e.start_datetime && e.start_datetime < new Date().toISOString()).length}`);
+  console.log(`  Eligible (future)  : ${stagedEvents.length}`);
+  console.log(`  Candidates         : ${candidates.length}`);
+  console.log(`  Match (equal?)     : ${candidates.length === stagedEvents.length ? "✓ YES" : "✗ NO"}`);
 
   if (stagedEvents.length > 0) {
     console.log("\n  Sample events:");
-    for (const e of stagedEvents.slice(0, 2)) {
+    for (const e of stagedEvents.slice(0, 3)) {
       console.log(`\n  ┌─ ${e.title}`);
       console.log(`  │  start       : ${e.start_datetime || "—"}`);
       console.log(`  │  end         : ${e.end_datetime || "—"}`);
-      console.log(`  │  location    : ${e.location_or_address || e.location_type}`);
       console.log(`  │  event_link  : ${e.event_link}`);
       console.log(`  │  artwork_url : ${e.artwork_url || "—"}`);
       console.log(`  └─ desc        : ${(e.short_description || "—").slice(0, 80)}`);
     }
   } else {
-    console.log("\n  ⚠ No future events found. Check selector or date parsing.");
+    console.log("\n  ⚠ No future events found.");
   }
 
   console.log("\n══════════════════════════════════════════\n");
