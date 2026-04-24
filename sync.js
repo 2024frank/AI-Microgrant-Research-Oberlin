@@ -221,6 +221,7 @@ async function main() {
   let pushed = 0;
   let skipped = 0;
   let failed = 0;
+  const failedEvents = [];
 
   for (const e of events) {
     const id = String(e.id);
@@ -238,6 +239,7 @@ async function main() {
       console.log(`✓ Pushed: ${e.title}`);
     } catch (err) {
       failed++;
+      failedEvents.push({ title: e.title || "Untitled", reason: err.message });
       console.error(`✗ Failed: ${e.title} — ${err.message}`);
     }
   }
@@ -247,10 +249,13 @@ async function main() {
 
   const db = initFirebase();
   if (db) {
-    await db.collection("syncs").doc("latest").set({
+    await db.collection("syncs").doc("localist").set({
+      source: "Oberlin Localist",
       pushed,
       skipped,
+      skippedReason: "Already pushed in a previous run",
       failed,
+      failedEvents,
       total: pushedIds.size,
       lastRun: new Date().toISOString(),
     });
