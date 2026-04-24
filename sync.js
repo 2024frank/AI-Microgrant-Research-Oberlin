@@ -20,7 +20,7 @@ const LOCALIST_API = "https://calendar.oberlin.edu/api/2/events";
 const COMMUNITYHUB_POSTS_API =
   "https://oberlin.communityhub.cloud/api/legacy/calendar/posts?limit=10000&page=0&filter=future&tab=main-feed&isJobs=false&order=ASC&postType=All&allPosts";
 const PUSHED_IDS_FILE = "pushed_ids.json";
-const FALLBACK_EMAIL = process.env.FALLBACK_EMAIL || "frankkusiap@gmail.com";
+const FALLBACK_EMAIL = process.env.FALLBACK_EMAIL || "fkusiapp@oberlin.edu";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
 

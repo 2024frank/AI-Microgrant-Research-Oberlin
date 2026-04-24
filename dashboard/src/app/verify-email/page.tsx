@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { isSignInWithEmailLink, signInWithEmailLink, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
+import { ADMIN_EMAIL } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function VerifyEmailPage() {
@@ -26,8 +28,18 @@ export default function VerifyEmailPage() {
       }
 
       try {
-        await signInWithEmailLink(auth, email, window.location.href);
+        const cred = await signInWithEmailLink(auth, email, window.location.href);
         localStorage.removeItem("emailForSignIn");
+
+        if (cred.user.email !== ADMIN_EMAIL) {
+          const snap = await getDoc(doc(db, "allowed_users", cred.user.email!));
+          if (!snap.exists()) {
+            await signOut(auth);
+            setError("This account is not authorized to access the dashboard.");
+            return;
+          }
+        }
+
         router.replace("/dashboard");
       } catch {
         setError("This sign-in link is invalid or has expired. Please request a new one.");

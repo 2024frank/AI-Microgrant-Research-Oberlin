@@ -1,29 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { sendSignInLinkToEmail } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { auth, db } from "@/lib/firebase";
+import { ADMIN_EMAIL } from "@/context/AuthContext";
+
+const provider = new GoogleAuthProvider();
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleGoogleSignIn() {
     setError("");
     setLoading(true);
     try {
-      await sendSignInLinkToEmail(auth, email, {
-        url: `${process.env.NEXT_PUBLIC_APP_URL}/verify-email`,
-        handleCodeInApp: true,
-      });
-      localStorage.setItem("emailForSignIn", email);
-      setSent(true);
-    } catch {
-      setError("Failed to send sign-in link. Check the email and try again.");
-    } finally {
+      const result = await signInWithPopup(auth, provider);
+      const email = result.user.email ?? "";
+      if (email !== ADMIN_EMAIL) {
+        const snap = await getDoc(doc(db, "allowed_users", email));
+        if (!snap.exists()) {
+          await auth.signOut();
+          setError("This Google account is not authorized to access the dashboard.");
+          setLoading(false);
+          return;
+        }
+      }
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      if (e.code === "auth/popup-closed-by-user") { setLoading(false); return; }
+      setError(`Sign-in failed: ${e.code ?? e.message ?? String(err)}`);
       setLoading(false);
     }
   }
@@ -46,62 +56,37 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-8 backdrop-blur-sm">
-          {sent ? (
-            <div className="text-center py-2">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#C8102E]/15 mb-4">
-                <svg className="w-6 h-6 text-[#C8102E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                </svg>
-              </div>
-              <p className="text-white font-semibold mb-2">Check your email</p>
-              <p className="text-zinc-400 text-sm">
-                We sent a sign-in link to <span className="text-white">{email}</span>. Click it to access the dashboard.
-              </p>
-              <button
-                onClick={() => { setSent(false); setEmail(""); }}
-                className="mt-5 text-zinc-500 hover:text-white text-xs transition"
-              >
-                Use a different email
-              </button>
-            </div>
-          ) : (
-            <>
-              <p className="text-white font-semibold text-lg mb-1">Sign in</p>
-              <p className="text-zinc-500 text-sm mb-6">
-                Enter your email and we will send you a sign-in link.
-              </p>
+          <p className="text-white font-semibold text-lg mb-1">Sign in</p>
+          <p className="text-zinc-500 text-sm mb-6">
+            Use your authorized Google account to access the dashboard.
+          </p>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-zinc-400 text-xs font-medium mb-1.5 uppercase tracking-wide">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    placeholder="you@oberlin.edu"
-                    className="w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-white text-sm placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#C8102E] focus:border-[#C8102E] transition"
-                  />
-                </div>
-
-                {error && (
-                  <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3.5 py-2.5">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-[#C8102E] hover:bg-[#a50d26] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm rounded-lg py-2.5 transition shadow-lg shadow-[#C8102E]/20"
-                >
-                  {loading ? "Sending…" : "Send sign-in link"}
-                </button>
-              </form>
-            </>
+          {error && (
+            <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3.5 py-2.5 mb-4">
+              {error}
+            </p>
           )}
+
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-800 font-medium text-sm rounded-lg py-2.5 transition shadow-md"
+          >
+            {loading ? (
+              <svg className="w-5 h-5 animate-spin text-zinc-400" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+            )}
+            {loading ? "Signing in…" : "Sign in with Google"}
+          </button>
         </div>
 
         <p className="text-center text-zinc-600 text-xs mt-6">

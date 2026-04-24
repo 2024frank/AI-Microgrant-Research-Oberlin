@@ -96,8 +96,16 @@ Reply JSON only: {"isPublic": true, "confidence": 0-100, "reason": "one sentence
 
 function mightBeDuplicate(incoming, ch) {
   if (!incoming.date || !ch.date || incoming.date !== ch.date) return false;
-  const a = new Set((incoming.location || "").toLowerCase().split(/\W+/).filter(w => w.length > 3));
-  return (ch.location || "").toLowerCase().split(/\W+/).filter(w => w.length > 3).some(w => a.has(w));
+  // Title overlap is the strongest signal
+  const inTitle = new Set(incoming.title.toLowerCase().split(/\W+/).filter(w => w.length > 3));
+  const chWords = (ch.title || "").toLowerCase().split(/\W+/).filter(w => w.length > 3);
+  if (chWords.some(w => inTitle.has(w))) return true;
+  // Fall back to location overlap
+  const a = (incoming.location || "").toLowerCase();
+  const b = (ch.location || "").toLowerCase();
+  if (!a || !b) return true;
+  const aW = new Set(a.split(/\W+/).filter(w => w.length > 3));
+  return b.split(/\W+/).filter(w => w.length > 3).some(w => aW.has(w));
 }
 
 function divider(label) {
@@ -133,23 +141,15 @@ async function main() {
   const locData = await locRes.json();
   const allEvents = (locData.events || []).map(w => w.event).filter(e => e && e.status === "live" && !e.private);
 
-  // Pick 3 events: first find a Localist event whose title matches a CommunityHub event (duplicate test)
-  const chTitles = chEvents.map(c => c.title.toLowerCase().trim());
-  const duplicateCandidate = allEvents.find(e =>
-    chTitles.some(t => t && e.title && t.includes(e.title.toLowerCase().slice(0, 15)))
-  );
+  // Pick 3 events: Tiny Ref Desk (already on CH = duplicate test), P/NP Deadline (private), Passport Café (public)
+  const tinyRefDesk = allEvents.find(e => e.title?.includes("Tiny Ref Desk"));
+  const pnpDeadline = allEvents.find(e => e.title?.includes("Pass/No Pass"));
+  const passportCafe = allEvents.find(e => e.title?.includes("Passport Café"));
+  const picked = [tinyRefDesk, pnpDeadline, passportCafe].filter(Boolean);
 
-  const nonDupes = allEvents.filter(e => (e.description_text || "").length > 50 && e !== duplicateCandidate);
-  const picked = [
-    duplicateCandidate,          // should hit duplicate agent
-    nonDupes[0],                 // varies
-    nonDupes[1],                 // varies
-  ].filter(Boolean).slice(0, 3);
-
-  console.log(`  → Testing with ${picked.length} events (first is duplicate candidate if found)`);
+  console.log(`  → Testing with ${picked.length} events`);
   console.log(`  → Events: ${picked.map(e => '"' + e.title + '"').join(', ')}\n`);
 
-  console.log(`  → Testing with: "${picked[0]?.title}" and "${picked[1]?.title}"\n`);
 
   const results = [];
 
@@ -205,6 +205,21 @@ async function main() {
     if (isDuplicate) {
       console.log(`  │\n  └─ RESULT: BLOCKED (duplicate of "${dupMatch.title}")`);
       results.push({ title: e.title, outcome: "duplicate", reason: dupResult.reason });
+
+      if (db) {
+        const dupRecord = {
+          eventA: incoming,
+          eventB: { id: String(dupMatch.id), source: "communityhub", title: dupMatch.title,
+            date: dupMatch.date, location: dupMatch.location, description: dupMatch.description || "" },
+          confidence: dupResult.confidence,
+          reason: dupResult.reason,
+          status: "pending",
+          detectedAt: new Date().toISOString(),
+        };
+        const dupId = `test_${incoming.id}_${dupMatch.id}`;
+        await db.collection("duplicates").doc(dupId).set(dupRecord);
+        console.log(`  │  → Saved to Firestore duplicates (id: ${dupId})`);
+      }
       continue;
     }
 
@@ -251,9 +266,9 @@ async function main() {
 
     const writerPayload = {
       eventType: "ot",
-      email: e.custom_fields?.contact_email_address || "frankkusiap@gmail.com",
+      email: e.custom_fields?.contact_email_address || "fkusiapp@oberlin.edu",
       subscribe: true,
-      contactEmail: e.custom_fields?.contact_email_address || "frankkusiap@gmail.com",
+      contactEmail: e.custom_fields?.contact_email_address || "fkusiapp@oberlin.edu",
       title: (e.title || "Untitled").slice(0, 60),
       sponsors: departments.length ? departments : ["Oberlin College"],
       postTypeId: [89],

@@ -45,6 +45,15 @@ function ConfidenceBadge({ score }: { score: number }) {
 export default function DuplicatesPage() {
   const [duplicates, setDuplicates] = useState<Duplicate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  function toggleExpand(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "duplicates"), (snap) => {
@@ -96,48 +105,64 @@ export default function DuplicatesPage() {
       {!loading && pending.length > 0 && (
         <div className="space-y-4 mb-8">
           <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide">Pending Review</p>
-          {pending.map((dup) => (
-            <div key={dup.id} className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-white/[0.06] flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <ConfidenceBadge score={dup.confidence} />
-                  <p className="text-zinc-500 text-xs">{dup.reason}</p>
-                </div>
-                <p className="text-zinc-600 text-xs">{timeAgo(dup.detectedAt)}</p>
-              </div>
-              <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
-                {[dup.eventA, dup.eventB].map((ev, i) => (
-                  <div key={i} className="px-5 py-4">
-                    <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wide mb-2">
-                      {ev.source.toUpperCase()}
-                    </p>
-                    <p className="text-white text-sm font-medium mb-1">{ev.title}</p>
-                    <p className="text-zinc-500 text-xs mb-1">
-                      {ev.date ? new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
-                      {ev.location ? ` · ${ev.location}` : ""}
-                    </p>
-                    {ev.description && (
-                      <p className="text-zinc-600 text-xs leading-relaxed line-clamp-2">{ev.description}</p>
-                    )}
+          {pending.map((dup) => {
+            const isOpen = expanded.has(dup.id);
+            return (
+              <div key={dup.id} className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+                <button
+                  onClick={() => toggleExpand(dup.id)}
+                  className="w-full px-5 py-3 border-b border-white/[0.06] flex items-center justify-between hover:bg-white/[0.02] transition text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <ConfidenceBadge score={dup.confidence} />
+                    <p className="text-zinc-500 text-xs">{dup.reason}</p>
                   </div>
-                ))}
-              </div>
-              <div className="px-5 py-3 border-t border-white/[0.06] flex gap-2 justify-end">
-                <button
-                  onClick={() => updateStatus(dup.id, "rejected")}
-                  className="text-xs font-medium text-zinc-400 hover:text-white border border-white/[0.08] hover:border-white/20 px-3 py-1.5 rounded-lg transition"
-                >
-                  Not a duplicate
+                  <div className="flex items-center gap-3">
+                    <p className="text-zinc-600 text-xs">{timeAgo(dup.detectedAt)}</p>
+                    <svg
+                      className={`w-4 h-4 text-zinc-600 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </button>
-                <button
-                  onClick={() => updateStatus(dup.id, "confirmed")}
-                  className="text-xs font-medium text-white bg-[#C8102E]/80 hover:bg-[#C8102E] px-3 py-1.5 rounded-lg transition"
-                >
-                  Confirm duplicate
-                </button>
+                <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
+                  {[dup.eventA, dup.eventB].map((ev, i) => (
+                    <div key={i} className="px-5 py-4">
+                      <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wide mb-2">
+                        {(ev.source || "unknown").toUpperCase()}
+                      </p>
+                      <p className="text-white text-sm font-medium mb-1">{ev.title}</p>
+                      <p className="text-zinc-500 text-xs mb-1">
+                        {ev.date ? new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                        {ev.location ? ` · ${ev.location}` : ""}
+                      </p>
+                      {ev.description && (
+                        <p className={`text-zinc-600 text-xs leading-relaxed ${isOpen ? "" : "line-clamp-2"}`}>
+                          {ev.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="px-5 py-3 border-t border-white/[0.06] flex gap-2 justify-end">
+                  <button
+                    onClick={() => updateStatus(dup.id, "rejected")}
+                    className="text-xs font-medium text-zinc-400 hover:text-white border border-white/[0.08] hover:border-white/20 px-3 py-1.5 rounded-lg transition"
+                  >
+                    Not a duplicate
+                  </button>
+                  <button
+                    onClick={() => updateStatus(dup.id, "confirmed")}
+                    className="text-xs font-medium text-white bg-[#C8102E]/80 hover:bg-[#C8102E] px-3 py-1.5 rounded-lg transition"
+                  >
+                    Confirm duplicate
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
