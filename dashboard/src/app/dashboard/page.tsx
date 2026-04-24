@@ -34,9 +34,9 @@ function timeAgo(iso: string) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function StatCard({ label, value, sub, highlight }: { label: string; value: string; sub: string; highlight?: boolean }) {
+function StatCard({ label, value, sub, highlight, dim }: { label: string; value: string; sub: string; highlight?: boolean; dim?: boolean }) {
   return (
-    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
+    <div className={`bg-white/[0.03] border border-white/[0.07] rounded-xl p-5 ${dim ? "opacity-40" : ""}`}>
       <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">{label}</p>
       <p className={`text-3xl font-bold mb-1 ${highlight ? "text-emerald-400" : "text-white"}`}>{value}</p>
       <p className="text-zinc-600 text-xs">{sub}</p>
@@ -82,38 +82,38 @@ export default function OverviewPage() {
           value="1"
           sub="Oberlin Localist"
         />
-        {localist && (
-          <StatCard
-            label="Last Run"
-            value={timeAgo(localist.lastRun)}
-            sub={new Date(localist.lastRun).toLocaleString()}
-          />
-        )}
-        {localist && (
-          <StatCard
-            label="Last Run Result"
-            value={localist.failed === 0 ? "Clean" : `${localist.failed} failed`}
-            sub={`${localist.pushed} pushed · ${localist.skipped} skipped`}
-            highlight={localist.failed === 0}
-          />
-        )}
+        <StatCard
+          label="Last Run"
+          value={localist ? timeAgo(localist.lastRun) : "—"}
+          sub={localist ? new Date(localist.lastRun).toLocaleString() : "no sync run yet"}
+          dim={!localist}
+        />
+        <StatCard
+          label="Last Run Result"
+          value={localist ? (localist.failed === 0 ? "Clean" : `${localist.failed} failed`) : "—"}
+          sub={localist ? `${localist.pushed} pushed · ${localist.skipped} skipped` : "no sync run yet"}
+          highlight={!!localist && localist.failed === 0}
+          dim={!localist}
+        />
       </div>
 
       {/* Sources table */}
       <h2 className="text-white text-base font-semibold mb-4">Calendar Sources</h2>
       <div className="space-y-3">
 
-        {/* Localist — live with real data */}
+        {/* Localist — expandable */}
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
           <div className="grid grid-cols-5 gap-4 px-5 py-3 border-b border-white/[0.06]">
-            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">Source</p>
-            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">Last Pushed</p>
-            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">Pushed</p>
-            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">Skipped</p>
-            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide">Failed</p>
+            {["Source", "Last Pushed", "Pushed", "Skipped", "Failed"].map((h) => (
+              <p key={h} className="text-zinc-500 text-xs font-medium uppercase tracking-wide">{h}</p>
+            ))}
           </div>
 
-          <div className="grid grid-cols-5 gap-4 px-5 py-4 items-start">
+          {/* Clickable row */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="w-full grid grid-cols-5 gap-4 px-5 py-4 items-start text-left hover:bg-white/[0.02] transition group"
+          >
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
@@ -126,55 +126,63 @@ export default function OverviewPage() {
               {localist ? timeAgo(localist.lastRun) : <span className="text-zinc-600">—</span>}
             </p>
 
-            <p className="text-zinc-300 text-sm">
-              {localist ? (
-                <span className="text-emerald-400 font-medium">{localist.pushed}</span>
-              ) : <span className="text-zinc-600">—</span>}
+            <p className="text-sm">
+              {localist ? <span className="text-emerald-400 font-medium">{localist.pushed}</span> : <span className="text-zinc-600">—</span>}
             </p>
 
             <div>
-              <p className="text-zinc-300 text-sm">
-                {localist ? localist.skipped : <span className="text-zinc-600">—</span>}
-              </p>
-              {localist && localist.skipped > 0 && (
-                <p className="text-zinc-600 text-xs mt-0.5">{localist.skippedReason}</p>
-              )}
+              <p className="text-zinc-300 text-sm">{localist ? localist.skipped : <span className="text-zinc-600">—</span>}</p>
             </div>
 
-            <div>
+            <div className="flex items-center justify-between">
               <p className="text-sm">
                 {localist ? (
-                  localist.failed > 0 ? (
-                    <span className="text-red-400 font-medium">{localist.failed}</span>
-                  ) : (
-                    <span className="text-zinc-400">0</span>
-                  )
+                  localist.failed > 0
+                    ? <span className="text-red-400 font-medium">{localist.failed}</span>
+                    : <span className="text-zinc-400">0</span>
                 ) : <span className="text-zinc-600">—</span>}
               </p>
-              {localist && localist.failedEvents?.length > 0 && (
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  className="text-red-400/70 hover:text-red-400 text-xs mt-0.5 transition"
-                >
-                  {expanded ? "Hide details" : "See why"}
-                </button>
-              )}
+              <svg
+                className={`w-4 h-4 text-zinc-600 group-hover:text-zinc-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
+              </svg>
             </div>
-          </div>
+          </button>
 
-          {/* Failed events expanded */}
-          {expanded && localist && localist.failedEvents?.length > 0 && (
-            <div className="border-t border-white/[0.06] px-5 py-4 space-y-2">
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-3">Failed Events</p>
-              {localist.failedEvents.map((e, i) => (
-                <div key={i} className="flex items-start gap-3 text-sm">
-                  <span className="text-red-400 shrink-0 mt-0.5">✗</span>
-                  <div>
-                    <p className="text-white">{e.title}</p>
-                    <p className="text-zinc-500 text-xs mt-0.5">{e.reason}</p>
+          {/* Expanded details */}
+          {expanded && (
+            <div className="border-t border-white/[0.06] px-5 py-5 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/[0.03] rounded-lg p-4">
+                  <p className="text-zinc-500 text-xs uppercase tracking-wide mb-1">Skipped reason</p>
+                  <p className="text-zinc-300 text-sm">{localist?.skippedReason || "—"}</p>
+                </div>
+                <div className="bg-white/[0.03] rounded-lg p-4">
+                  <p className="text-zinc-500 text-xs uppercase tracking-wide mb-1">Last run timestamp</p>
+                  <p className="text-zinc-300 text-sm">{localist ? new Date(localist.lastRun).toLocaleString() : "—"}</p>
+                </div>
+              </div>
+
+              {localist && localist.failedEvents?.length > 0 ? (
+                <div>
+                  <p className="text-zinc-500 text-xs uppercase tracking-wide mb-3">Failed Events</p>
+                  <div className="space-y-2">
+                    {localist.failedEvents.map((e, i) => (
+                      <div key={i} className="flex items-start gap-3 bg-red-400/[0.05] border border-red-400/10 rounded-lg px-4 py-3">
+                        <span className="text-red-400 shrink-0 mt-0.5 text-sm">✗</span>
+                        <div>
+                          <p className="text-white text-sm">{e.title}</p>
+                          <p className="text-zinc-500 text-xs mt-0.5">{e.reason}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              ) : (
+                <p className="text-zinc-600 text-sm">No failed events in the last run.</p>
+              )}
             </div>
           )}
         </div>
