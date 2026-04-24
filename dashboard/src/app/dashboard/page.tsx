@@ -199,12 +199,41 @@ export default function OverviewPage() {
         ))}
       </div>
 
-      {/* What's next */}
-      <div className="mt-8 bg-[#C8102E]/[0.06] border border-[#C8102E]/20 rounded-xl p-5">
-        <p className="text-[#C8102E] text-xs font-semibold uppercase tracking-wide mb-2">Up Next</p>
-        <p className="text-white text-sm font-medium mb-1">AI Deduplication Agent</p>
-        <p className="text-zinc-400 text-sm">
-          The AI agent will compare incoming events against the calendar and flag potential duplicates for human review. Flagged events will appear in the Duplicates tab.
+      {/* AI Analysis */}
+      <div className="mt-8">
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-white text-base font-semibold">AI Analysis</h2>
+          <span className="text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-2.5 py-0.5">Coming Soon</span>
+        </div>
+
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden opacity-50 pointer-events-none select-none">
+          <div className="grid grid-cols-5 gap-4 px-5 py-3 border-b border-white/[0.06]">
+            {["Event", "Source", "Matched To", "Confidence", "Status"].map((h) => (
+              <p key={h} className="text-zinc-500 text-xs font-medium uppercase tracking-wide">{h}</p>
+            ))}
+          </div>
+          {[
+            { event: "Spring Concert", source: "Localist", match: "FAVA Calendar", confidence: "94%", status: "Duplicate" },
+            { event: "Art Exhibition Opening", source: "AMAM", match: "Localist", confidence: "87%", status: "Duplicate" },
+            { event: "Faculty Lecture Series", source: "Localist", match: "City Calendar", confidence: "61%", status: "Review" },
+          ].map((row, i) => (
+            <div key={i} className={`grid grid-cols-5 gap-4 px-5 py-4 ${i !== 2 ? "border-b border-white/[0.04]" : ""}`}>
+              <p className="text-white text-sm">{row.event}</p>
+              <p className="text-zinc-400 text-sm">{row.source}</p>
+              <p className="text-zinc-400 text-sm">{row.match}</p>
+              <p className="text-zinc-300 text-sm font-medium">{row.confidence}</p>
+              <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full w-fit ${
+                row.status === "Duplicate"
+                  ? "bg-red-400/10 text-red-400 border border-red-400/20"
+                  : "bg-amber-400/10 text-amber-400 border border-amber-400/20"
+              }`}>
+                {row.status}
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className="text-zinc-600 text-xs mt-3 text-center">
+          AI deduplication agent will populate this table once active
         </p>
       </div>
     </div>
