@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, where, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface Original {
@@ -141,13 +141,9 @@ export default function ReviewPage() {
         return;
       }
 
-      // Success — mark approved in Firestore and show confirmation
+      // Success — delete from Firestore (frees storage; event is live on CommunityHub)
       const chId = (data as Record<string, unknown>).id ?? (data as Record<string, unknown>).postId;
-      await updateDoc(doc(db, "review_queue", item.id), {
-        status: "approved",
-        approvedAt: new Date().toISOString(),
-        chPostId: chId ?? null,
-      });
+      await deleteDoc(doc(db, "review_queue", item.id));
       setPushResults(prev => ({
         ...prev,
         [item.id]: { state: "success", chId: chId as string | number | undefined },

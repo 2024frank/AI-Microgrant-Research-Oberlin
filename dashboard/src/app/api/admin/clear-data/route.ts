@@ -14,6 +14,17 @@ async function deleteCollection(colName: string) {
   return snap.size;
 }
 
+// Delete only approved docs left over before the delete-on-push fix
+async function purgeApproved() {
+  const db = getAdminDb();
+  const snap = await db.collection("review_queue").where("status", "==", "approved").get();
+  if (snap.empty) return 0;
+  const batch = db.batch();
+  snap.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+  return snap.size;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { idToken, collections } = await req.json();
@@ -29,6 +40,10 @@ export async function POST(req: NextRequest) {
     for (const col of targets) {
       results[col] = await deleteCollection(col);
     }
+
+    // Always purge stale approved docs (from before delete-on-push was added)
+    const purged = await purgeApproved();
+    if (purged > 0) results["review_queue_approved_purge"] = purged;
 
     return NextResponse.json({ ok: true, deleted: results });
   } catch (err: unknown) {
