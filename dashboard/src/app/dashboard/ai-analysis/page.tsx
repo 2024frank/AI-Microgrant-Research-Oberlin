@@ -1,128 +1,411 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-interface SyncStats {
-  analyzed: number;
-  pushed: number;
-  geminiEnabled: boolean;
-  lastRun: string;
+// ── SVG donut pie chart ──────────────────────────────────────────────────────
+
+interface Segment { label: string; value: number; color: string }
+
+function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const x1 = cx + r * Math.cos(toRad(startAngle));
+  const y1 = cy + r * Math.sin(toRad(startAngle));
+  const x2 = cx + r * Math.cos(toRad(endAngle));
+  const y2 = cy + r * Math.sin(toRad(endAngle));
+  const large = endAngle - startAngle > 180 ? 1 : 0;
+  return `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
 }
 
-function timeAgo(iso: string) {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+function DonutChart({ segments, total }: { segments: Segment[]; total: number }) {
+  const size = 160;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 58;
+  const ir = 30; // inner radius for donut hole
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-40">
+        <p className="text-zinc-600 text-sm">No data yet</p>
+      </div>
+    );
+  }
+
+  // Build wedge paths
+  let angle = -90;
+  const paths = segments
+    .filter(s => s.value > 0)
+    .map(s => {
+      const sweep = (s.value / total) * 360;
+      const gap = total > 1 ? 2 : 0;
+      const start = angle + gap / 2;
+      const end = angle + sweep - gap / 2;
+      angle += sweep;
+
+      // Outer arc
+      const toRad = (deg: number) => (deg * Math.PI) / 180;
+      const ox1 = cx + r * Math.cos(toRad(start));
+      const oy1 = cy + r * Math.sin(toRad(start));
+      const ox2 = cx + r * Math.cos(toRad(end));
+      const oy2 = cy + r * Math.sin(toRad(end));
+      const ix1 = cx + ir * Math.cos(toRad(start));
+      const iy1 = cy + ir * Math.sin(toRad(start));
+      const ix2 = cx + ir * Math.cos(toRad(end));
+      const iy2 = cy + ir * Math.sin(toRad(end));
+      const large = sweep > 180 ? 1 : 0;
+
+      const d = [
+        `M ${ix1.toFixed(2)} ${iy1.toFixed(2)}`,
+        `L ${ox1.toFixed(2)} ${oy1.toFixed(2)}`,
+        `A ${r} ${r} 0 ${large} 1 ${ox2.toFixed(2)} ${oy2.toFixed(2)}`,
+        `L ${ix2.toFixed(2)} ${iy2.toFixed(2)}`,
+        `A ${ir} ${ir} 0 ${large} 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)}`,
+        "Z",
+      ].join(" ");
+
+      return { d, color: s.color, value: s.value, label: s.label };
+    });
+
+  const pct = (v: number) => Math.round((v / total) * 100);
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+        {paths.map((p, i) => (
+          <path key={i} d={p.d} fill={p.color} />
+        ))}
+        {/* center label */}
+        <text x={cx} y={cy - 4} textAnchor="middle" fill="white" fontSize="20" fontWeight="700">{total}</text>
+        <text x={cx} y={cy + 13} textAnchor="middle" fill="#71717a" fontSize="9">decisions</text>
+      </svg>
+
+      <div className="space-y-1.5 w-full">
+        {segments.filter(s => s.value > 0).map(s => (
+          <div key={s.label} className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: s.color }} />
+            <span className="text-zinc-400 text-xs flex-1">{s.label}</span>
+            <span className="text-white text-xs font-medium tabular-nums">{s.value}</span>
+            <span className="text-zinc-600 text-[10px] w-7 text-right tabular-nums">{pct(s.value)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
+
+// ── data types ───────────────────────────────────────────────────────────────
+
+interface AgentData {
+  agreed: number;
+  disagreed: number;
+  pending: number;
+}
+
+interface PublicAgentData extends AgentData {
+  agreedPrivate: number;
+  agreedPublic: number;
+  disagreedPrivate: number;
+  disagreedPublic: number;
+}
+
+// ── main page ────────────────────────────────────────────────────────────────
 
 export default function AIAnalysisPage() {
-  const [stats, setStats] = useState<SyncStats | null>(null);
+  const [publicAgent, setPublicAgent] = useState<PublicAgentData | null>(null);
+  const [dupAgent, setDupAgent] = useState<AgentData | null>(null);
+  const [queueOutcomes, setQueueOutcomes] = useState<{ approved: number; rejected: number; pending: number } | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, "syncs", "localist"), (snap) => {
-      if (snap.exists()) setStats(snap.data() as SyncStats);
+    // Watch rejected collection
+    const unsubRejected = onSnapshot(collection(db, "rejected"), (snap) => {
+      const docs = snap.docs.map(d => d.data() as { reason: string; status: string });
+      const privateAgreed = docs.filter(d => d.reason === "private" && d.status === "rejected").length;
+      const privateDisagreed = docs.filter(d => d.reason === "private" && d.status === "overridden").length;
+
+      setPublicAgent(prev => ({
+        agreedPrivate: privateAgreed,
+        agreedPublic: prev?.agreedPublic ?? 0,
+        disagreedPrivate: privateDisagreed,
+        disagreedPublic: prev?.disagreedPublic ?? 0,
+        agreed: privateAgreed + (prev?.agreedPublic ?? 0),
+        disagreed: privateDisagreed + (prev?.disagreedPublic ?? 0),
+        pending: prev?.pending ?? 0,
+      }));
     });
-    return unsub;
+
+    // Watch review_queue
+    const unsubQueue = onSnapshot(collection(db, "review_queue"), (snap) => {
+      const docs = snap.docs.map(d => d.data() as { status: string });
+      const approved = docs.filter(d => d.status === "approved").length;
+      const rejectedManual = docs.filter(d => d.status === "rejected_manual").length;
+      const pending = docs.filter(d => d.status === "pending").length;
+
+      setQueueOutcomes({ approved, rejected: rejectedManual, pending });
+
+      setPublicAgent(prev => {
+        const agreedPublic = approved;
+        const disagreedPublic = rejectedManual;
+        const agreedPrivate = prev?.agreedPrivate ?? 0;
+        const disagreedPrivate = prev?.disagreedPrivate ?? 0;
+        return {
+          agreedPrivate,
+          agreedPublic,
+          disagreedPrivate,
+          disagreedPublic,
+          agreed: agreedPrivate + agreedPublic,
+          disagreed: disagreedPrivate + disagreedPublic,
+          pending,
+        };
+      });
+
+      setLoading(false);
+    });
+
+    // Watch duplicates
+    const unsubDups = onSnapshot(collection(db, "duplicates"), (snap) => {
+      const docs = snap.docs.map(d => d.data() as { status: string });
+      setDupAgent({
+        agreed: docs.filter(d => d.status === "confirmed").length,
+        disagreed: docs.filter(d => d.status === "rejected").length,
+        pending: docs.filter(d => d.status === "pending").length,
+      });
+    });
+
+    return () => { unsubRejected(); unsubQueue(); unsubDups(); };
   }, []);
 
-  const geminiActive = stats?.geminiEnabled === true;
+  const publicTotal = publicAgent ? publicAgent.agreed + publicAgent.disagreed + publicAgent.pending : 0;
+  const dupTotal = dupAgent ? dupAgent.agreed + dupAgent.disagreed + dupAgent.pending : 0;
+  const queueTotal = queueOutcomes ? queueOutcomes.approved + queueOutcomes.rejected + queueOutcomes.pending : 0;
+
+  const publicSegments: Segment[] = [
+    { label: "AI said private — you agreed", value: publicAgent?.agreedPrivate ?? 0, color: "#34d399" },
+    { label: "AI said public — you approved", value: publicAgent?.agreedPublic ?? 0, color: "#6ee7b7" },
+    { label: "AI said private — you overrode", value: publicAgent?.disagreedPrivate ?? 0, color: "#f87171" },
+    { label: "AI said public — you rejected", value: publicAgent?.disagreedPublic ?? 0, color: "#fca5a5" },
+    { label: "Pending your review", value: publicAgent?.pending ?? 0, color: "#3f3f46" },
+  ];
+
+  const dupSegments: Segment[] = [
+    { label: "AI flagged duplicate — you confirmed", value: dupAgent?.agreed ?? 0, color: "#34d399" },
+    { label: "AI flagged duplicate — you rejected", value: dupAgent?.disagreed ?? 0, color: "#f87171" },
+    { label: "Pending your review", value: dupAgent?.pending ?? 0, color: "#3f3f46" },
+  ];
+
+  const queueSegments: Segment[] = [
+    { label: "Approved → pushed to CommunityHub", value: queueOutcomes?.approved ?? 0, color: "#34d399" },
+    { label: "Manually rejected by you", value: queueOutcomes?.rejected ?? 0, color: "#f87171" },
+    { label: "Still pending", value: queueOutcomes?.pending ?? 0, color: "#3f3f46" },
+  ];
+
+  function agreeRate(agreed: number, total: number) {
+    if (total === 0) return null;
+    const reviewed = total - (publicAgent?.pending ?? 0);
+    if (reviewed === 0) return null;
+    return Math.round((agreed / reviewed) * 100);
+  }
+
+  const pubRate = publicAgent
+    ? agreeRate(publicAgent.agreed, publicTotal)
+    : null;
+
+  const dupRate = dupAgent && dupTotal > 0
+    ? (() => {
+        const reviewed = dupAgent.agreed + dupAgent.disagreed;
+        return reviewed === 0 ? null : Math.round((dupAgent.agreed / reviewed) * 100);
+      })()
+    : null;
+
+  const queueApprovalRate = queueTotal > 0 && queueOutcomes
+    ? (() => {
+        const reviewed = queueOutcomes.approved + queueOutcomes.rejected;
+        return reviewed === 0 ? null : Math.round((queueOutcomes.approved / reviewed) * 100);
+      })()
+    : null;
 
   return (
     <div className="p-8 max-w-5xl">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-white text-2xl font-bold tracking-tight">AI Analysis</h1>
-          <p className="text-zinc-500 text-sm mt-1">
-            Gemini-powered description cleaning and duplicate detection across all calendar sources.
-          </p>
-        </div>
-        <span className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1 border ${
-          geminiActive
-            ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
-            : "text-amber-400 bg-amber-400/10 border-amber-400/20"
-        }`}>
-          {geminiActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
-          {geminiActive ? "Gemini Active" : "Gemini Not Configured"}
-        </span>
+      <div className="mb-8">
+        <h1 className="text-white text-2xl font-bold tracking-tight">AI Analysis</h1>
+        <p className="text-zinc-500 text-sm mt-1">
+          How often you agree or disagree with each AI agent's decisions — your grading of the AI.
+        </p>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
-          <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">Events Cleaned</p>
-          <p className="text-3xl font-bold text-white mb-1">{stats ? stats.analyzed.toLocaleString() : "—"}</p>
-          <p className="text-zinc-600 text-xs">descriptions processed this run</p>
-        </div>
-        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
-          <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">Model</p>
-          <p className="text-xl font-bold text-white mb-1 mt-1.5">Gemini 2.5 Flash</p>
-          <p className="text-zinc-600 text-xs">{geminiActive ? "URL removal + summarization" : "not active"}</p>
-        </div>
-        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
-          <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">Last Run</p>
-          <p className="text-3xl font-bold text-white mb-1">{stats ? timeAgo(stats.lastRun) : "—"}</p>
-          <p className="text-zinc-600 text-xs">{stats ? new Date(stats.lastRun).toLocaleString() : "no run yet"}</p>
-        </div>
+      {/* Agent cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+
+        {/* Public Agent */}
+        <AgentCard
+          title="Public Agent"
+          description="Decides whether each event is open to the public or restricted (Oberlin-only / private)."
+          rate={pubRate}
+          rateLabel="agreement rate"
+          loading={loading}
+        >
+          <DonutChart segments={publicSegments} total={publicTotal} />
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <MiniStat label="You agreed" value={publicAgent?.agreed ?? 0} color="emerald" />
+            <MiniStat label="You disagreed" value={publicAgent?.disagreed ?? 0} color="red" />
+          </div>
+        </AgentCard>
+
+        {/* Duplicate Agent */}
+        <AgentCard
+          title="Duplicate Agent"
+          description="Flags events that appear to match an existing CommunityHub listing from another source."
+          rate={dupRate}
+          rateLabel="agreement rate"
+          loading={loading}
+        >
+          <DonutChart segments={dupSegments} total={dupTotal} />
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <MiniStat label="You agreed" value={dupAgent?.agreed ?? 0} color="emerald" />
+            <MiniStat label="You disagreed" value={dupAgent?.disagreed ?? 0} color="red" />
+          </div>
+        </AgentCard>
+
+        {/* Review Queue outcomes */}
+        <AgentCard
+          title="Review Queue"
+          description="Of the events the AI passed to your queue, how many did you approve vs manually reject."
+          rate={queueApprovalRate}
+          rateLabel="approval rate"
+          loading={loading}
+        >
+          <DonutChart segments={queueSegments} total={queueTotal} />
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <MiniStat label="Approved" value={queueOutcomes?.approved ?? 0} color="emerald" />
+            <MiniStat label="Rejected" value={queueOutcomes?.rejected ?? 0} color="red" />
+          </div>
+        </AgentCard>
       </div>
 
-      {/* What Gemini does */}
-      <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-6 mb-6">
-        <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide mb-4">What the AI does on every sync</p>
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            {
-              title: "URL Removal",
-              desc: "Strips all http/https links and streaming video labels (\"Streaming Video:\", \"Watch webcast\", etc.) from event descriptions before posting.",
-              active: true,
-            },
-            {
-              title: "Smart Summarization",
-              desc: "Condenses long descriptions to under 200 characters for the short field and 1,000 for the extended field, always ending at a clean sentence boundary.",
-              active: true,
-            },
-            {
-              title: "Duplicate Detection",
-              desc: "Compares each incoming event against all known events from other sources. Flags likely duplicates for human review instead of posting them twice.",
-              active: false,
-              badge: "Multi-source",
-            },
-            {
-              title: "Cross-Source Matching",
-              desc: "When AMAM, FAVA, and City of Oberlin feeds are added, Gemini will compare titles, dates, and locations across all four calendars.",
-              active: false,
-              badge: "Coming soon",
-            },
-          ].map((f) => (
-            <div key={f.title} className={`rounded-lg border p-4 ${f.active ? "border-white/[0.07] bg-white/[0.02]" : "border-white/[0.04] opacity-50"}`}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${f.active ? "bg-emerald-400" : "bg-zinc-600"}`} />
-                <p className="text-white text-sm font-medium">{f.title}</p>
-                {f.badge && (
-                  <span className="ml-auto text-zinc-500 text-[10px] border border-zinc-700 rounded-full px-1.5 py-0.5">{f.badge}</span>
-                )}
-              </div>
-              <p className="text-zinc-500 text-xs leading-relaxed pl-3.5">{f.desc}</p>
-            </div>
-          ))}
+      {/* Agreement breakdown table */}
+      <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden mb-6">
+        <div className="px-5 py-4 border-b border-white/[0.06]">
+          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide">Decision Breakdown</p>
         </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/[0.05]">
+              <th className="text-left px-5 py-3 text-zinc-600 text-xs font-medium uppercase tracking-wide">Agent</th>
+              <th className="text-right px-5 py-3 text-zinc-600 text-xs font-medium uppercase tracking-wide">Total</th>
+              <th className="text-right px-5 py-3 text-zinc-600 text-xs font-medium uppercase tracking-wide">Agreed</th>
+              <th className="text-right px-5 py-3 text-zinc-600 text-xs font-medium uppercase tracking-wide">Disagreed</th>
+              <th className="text-right px-5 py-3 text-zinc-600 text-xs font-medium uppercase tracking-wide">Pending</th>
+              <th className="text-right px-5 py-3 text-zinc-600 text-xs font-medium uppercase tracking-wide">Agreement %</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/[0.04]">
+            <TableRow
+              agent="Public Agent"
+              total={publicTotal}
+              agreed={publicAgent?.agreed ?? 0}
+              disagreed={publicAgent?.disagreed ?? 0}
+              pending={publicAgent?.pending ?? 0}
+              rate={pubRate}
+            />
+            <TableRow
+              agent="Duplicate Agent"
+              total={dupTotal}
+              agreed={dupAgent?.agreed ?? 0}
+              disagreed={dupAgent?.disagreed ?? 0}
+              pending={dupAgent?.pending ?? 0}
+              rate={dupRate}
+            />
+            <TableRow
+              agent="Review Queue (overall)"
+              total={queueTotal}
+              agreed={queueOutcomes?.approved ?? 0}
+              disagreed={queueOutcomes?.rejected ?? 0}
+              pending={queueOutcomes?.pending ?? 0}
+              rate={queueApprovalRate}
+            />
+          </tbody>
+        </table>
       </div>
 
-      {/* Fallback notice */}
-      {!geminiActive && stats && (
-        <div className="flex items-start gap-3 bg-amber-400/[0.05] border border-amber-400/20 rounded-xl px-5 py-4">
-          <svg className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-          </svg>
-          <p className="text-amber-400 text-sm">
-            <span className="font-medium">Gemini key not detected.</span>{" "}
-            Descriptions are being cleaned with regex fallback. Add <code className="text-amber-300 bg-amber-400/10 px-1 rounded">GEMINI_API_KEY</code> to GitHub Actions secrets to enable AI cleaning.
-          </p>
+      {/* Model info */}
+      <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl px-5 py-4 flex items-center gap-3">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+        <p className="text-zinc-500 text-xs">
+          All agents use <span className="text-zinc-300 font-medium">Gemini 2.5 Flash</span> via Google AI Studio.
+          Decisions run automatically on every hourly sync.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── helper components ─────────────────────────────────────────────────────────
+
+function AgentCard({
+  title, description, rate, rateLabel, loading, children,
+}: {
+  title: string; description: string;
+  rate: number | null; rateLabel: string;
+  loading: boolean; children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5 flex flex-col">
+      <div className="mb-4">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <p className="text-white text-sm font-semibold">{title}</p>
+          {rate !== null && (
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border shrink-0 ${
+              rate >= 70 ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
+                : rate >= 40 ? "text-amber-400 bg-amber-400/10 border-amber-400/20"
+                : "text-red-400 bg-red-400/10 border-red-400/20"
+            }`}>
+              {rate}%
+            </span>
+          )}
         </div>
+        <p className="text-zinc-600 text-xs leading-relaxed">{description}</p>
+      </div>
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center py-10">
+          <div className="w-6 h-6 rounded-full border-2 border-white/10 border-t-white/40 animate-spin" />
+        </div>
+      ) : (
+        <div className="flex-1">{children}</div>
       )}
     </div>
+  );
+}
+
+function MiniStat({ label, value, color }: { label: string; value: number; color: "emerald" | "red" }) {
+  return (
+    <div className={`rounded-lg px-3 py-2 ${color === "emerald" ? "bg-emerald-400/5 border border-emerald-400/10" : "bg-red-400/5 border border-red-400/10"}`}>
+      <p className={`text-xl font-bold ${color === "emerald" ? "text-emerald-400" : "text-red-400"}`}>{value}</p>
+      <p className="text-zinc-600 text-[10px]">{label}</p>
+    </div>
+  );
+}
+
+function TableRow({ agent, total, agreed, disagreed, pending, rate }: {
+  agent: string; total: number; agreed: number; disagreed: number; pending: number; rate: number | null;
+}) {
+  return (
+    <tr>
+      <td className="px-5 py-3 text-zinc-300 text-sm">{agent}</td>
+      <td className="px-5 py-3 text-zinc-400 text-sm text-right tabular-nums">{total}</td>
+      <td className="px-5 py-3 text-emerald-400 text-sm text-right font-medium tabular-nums">{agreed}</td>
+      <td className="px-5 py-3 text-red-400 text-sm text-right font-medium tabular-nums">{disagreed}</td>
+      <td className="px-5 py-3 text-zinc-600 text-sm text-right tabular-nums">{pending}</td>
+      <td className="px-5 py-3 text-right">
+        {rate !== null ? (
+          <span className={`text-sm font-semibold ${rate >= 70 ? "text-emerald-400" : rate >= 40 ? "text-amber-400" : "text-red-400"}`}>
+            {rate}%
+          </span>
+        ) : (
+          <span className="text-zinc-600 text-sm">—</span>
+        )}
+      </td>
+    </tr>
   );
 }
