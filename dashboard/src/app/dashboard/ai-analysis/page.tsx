@@ -110,12 +110,20 @@ interface PublicAgentData extends AgentData {
   disagreedPublic: number;
 }
 
+interface WriterAgentData {
+  acceptedAsIs: number;   // approved, writerEdited=false
+  editedThenApproved: number; // approved, writerEdited=true
+  rejected: number;       // rejected_manual (user didn't want the event at all)
+  pending: number;
+}
+
 // ── main page ────────────────────────────────────────────────────────────────
 
 export default function AIAnalysisPage() {
   const [publicAgent, setPublicAgent] = useState<PublicAgentData | null>(null);
   const [dupAgent, setDupAgent] = useState<AgentData | null>(null);
   const [queueOutcomes, setQueueOutcomes] = useState<{ approved: number; rejected: number; pending: number } | null>(null);
+  const [writerAgent, setWriterAgent] = useState<WriterAgentData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -138,10 +146,19 @@ export default function AIAnalysisPage() {
 
     // Watch review_queue
     const unsubQueue = onSnapshot(collection(db, "review_queue"), (snap) => {
-      const docs = snap.docs.map(d => d.data() as { status: string });
+      const docs = snap.docs.map(d => d.data() as { status: string; writerEdited?: boolean });
       const approved = docs.filter(d => d.status === "approved").length;
       const rejectedManual = docs.filter(d => d.status === "rejected_manual").length;
       const pending = docs.filter(d => d.status === "pending").length;
+
+      // Writer Agent stats: was the AI's output accepted as-is or edited?
+      const approvedDocs = docs.filter(d => d.status === "approved");
+      setWriterAgent({
+        acceptedAsIs: approvedDocs.filter(d => d.writerEdited === false).length,
+        editedThenApproved: approvedDocs.filter(d => d.writerEdited === true).length,
+        rejected: rejectedManual,
+        pending,
+      });
 
       setQueueOutcomes({ approved, rejected: rejectedManual, pending });
 
@@ -201,6 +218,20 @@ export default function AIAnalysisPage() {
     { label: "Still pending", value: queueOutcomes?.pending ?? 0, color: "#3f3f46" },
   ];
 
+  const writerTotal = writerAgent
+    ? writerAgent.acceptedAsIs + writerAgent.editedThenApproved + writerAgent.rejected + writerAgent.pending
+    : 0;
+  const writerSegments: Segment[] = [
+    { label: "Accepted as-is (agreed with AI)", value: writerAgent?.acceptedAsIs ?? 0, color: "#34d399" },
+    { label: "Edited before approving", value: writerAgent?.editedThenApproved ?? 0, color: "#f59e0b" },
+    { label: "Event rejected entirely", value: writerAgent?.rejected ?? 0, color: "#f87171" },
+    { label: "Still pending", value: writerAgent?.pending ?? 0, color: "#3f3f46" },
+  ];
+  const writerReviewed = (writerAgent?.acceptedAsIs ?? 0) + (writerAgent?.editedThenApproved ?? 0) + (writerAgent?.rejected ?? 0);
+  const writerAcceptRate = writerReviewed > 0
+    ? Math.round(((writerAgent?.acceptedAsIs ?? 0) / writerReviewed) * 100)
+    : null;
+
   function agreeRate(agreed: number, total: number) {
     if (total === 0) return null;
     const reviewed = total - (publicAgent?.pending ?? 0);
@@ -236,7 +267,7 @@ export default function AIAnalysisPage() {
       </div>
 
       {/* Agent cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
 
         {/* Public Agent */}
         <AgentCard
@@ -282,6 +313,22 @@ export default function AIAnalysisPage() {
             <MiniStat label="Rejected" value={queueOutcomes?.rejected ?? 0} color="red" />
           </div>
         </AgentCard>
+
+        {/* Writer Agent */}
+        <AgentCard
+          title="Writer Agent"
+          description="Cleans and rewrites event descriptions. Did you accept the output as-is, or did you edit it before approving?"
+          rate={writerAcceptRate}
+          rateLabel="accepted as-is"
+          loading={loading}
+        >
+          <DonutChart segments={writerSegments} total={writerTotal} />
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <MiniStat label="Accepted" value={writerAgent?.acceptedAsIs ?? 0} color="emerald" />
+            <MiniStat label="Edited" value={writerAgent?.editedThenApproved ?? 0} color="red" />
+          </div>
+        </AgentCard>
+
       </div>
 
       {/* Agreement breakdown table */}
@@ -324,6 +371,14 @@ export default function AIAnalysisPage() {
               disagreed={queueOutcomes?.rejected ?? 0}
               pending={queueOutcomes?.pending ?? 0}
               rate={queueApprovalRate}
+            />
+            <TableRow
+              agent="Writer Agent (accepted as-is)"
+              total={writerTotal}
+              agreed={writerAgent?.acceptedAsIs ?? 0}
+              disagreed={writerAgent?.editedThenApproved ?? 0}
+              pending={writerAgent?.pending ?? 0}
+              rate={writerAcceptRate}
             />
           </tbody>
         </table>

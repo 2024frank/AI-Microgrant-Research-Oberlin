@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface Original {
@@ -59,6 +59,9 @@ export default function ReviewPage() {
   const [pushing, setPushing] = useState<Set<string>>(new Set());
   const [pushResults, setPushResults] = useState<Record<string, PushResult>>({});
   const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({});
+  // Persists across save() — tracks whether the user ever edited this item
+  const [everEdited, setEverEdited] = useState<Set<string>>(new Set());
+  const [everEditedFields, setEverEditedFields] = useState<Record<string, Set<string>>>({});
 
   useEffect(() => {
     const q = query(collection(db, "review_queue"), where("status", "==", "pending"));
@@ -141,9 +144,17 @@ export default function ReviewPage() {
         return;
       }
 
-      // Success — delete from Firestore (frees storage; event is live on CommunityHub)
+      // Success — mark as approved (keep in Firestore for stats/analysis)
       const chId = (data as Record<string, unknown>).id ?? (data as Record<string, unknown>).postId;
-      await deleteDoc(doc(db, "review_queue", item.id));
+      const writerEdited = everEdited.has(item.id);
+      const writerEditedFields = [...(everEditedFields[item.id] || [])];
+      await updateDoc(doc(db, "review_queue", item.id), {
+        status: "approved",
+        approvedAt: new Date().toISOString(),
+        chPostId: chId ?? null,
+        writerEdited,
+        writerEditedFields,
+      });
       setPushResults(prev => ({
         ...prev,
         [item.id]: { state: "success", chId: chId as string | number | undefined },
@@ -172,6 +183,12 @@ export default function ReviewPage() {
 
   function setEdit(id: string, field: string, value: unknown) {
     setEdits(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+    setEverEdited(prev => new Set(prev).add(id));
+    setEverEditedFields(prev => {
+      const fields = new Set(prev[id] || []);
+      fields.add(field);
+      return { ...prev, [id]: fields };
+    });
   }
 
   function toggleSelect(id: string) {
