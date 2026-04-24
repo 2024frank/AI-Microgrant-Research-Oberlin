@@ -75,24 +75,28 @@ export default function OverviewPage() {
         <StatCard
           label="Total Events on Calendar"
           value={localist ? localist.total.toString() : "—"}
-          sub={localist ? `across all runs` : "waiting for first run"}
+          sub={localist ? "across all runs" : "waiting for first run"}
         />
         <StatCard
           label="Active Sources"
           value="1"
           sub="Oberlin Localist"
         />
-        <StatCard
-          label="Last Run"
-          value={localist ? timeAgo(localist.lastRun) : "—"}
-          sub={localist ? new Date(localist.lastRun).toLocaleString() : "no data yet"}
-        />
-        <StatCard
-          label="Last Run Result"
-          value={localist ? (localist.failed === 0 ? "Clean" : `${localist.failed} failed`) : "—"}
-          sub={localist ? `${localist.pushed} pushed · ${localist.skipped} skipped` : "no data yet"}
-          highlight={localist?.failed === 0}
-        />
+        {localist && (
+          <StatCard
+            label="Last Run"
+            value={timeAgo(localist.lastRun)}
+            sub={new Date(localist.lastRun).toLocaleString()}
+          />
+        )}
+        {localist && (
+          <StatCard
+            label="Last Run Result"
+            value={localist.failed === 0 ? "Clean" : `${localist.failed} failed`}
+            sub={`${localist.pushed} pushed · ${localist.skipped} skipped`}
+            highlight={localist.failed === 0}
+          />
+        )}
       </div>
 
       {/* Sources table */}
