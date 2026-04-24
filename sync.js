@@ -70,8 +70,10 @@ async function fetchImageAsBase64(url) {
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "image/jpeg";
     const buffer = await res.arrayBuffer();
-    return Buffer.from(buffer).toString("base64");
+    const base64 = Buffer.from(buffer).toString("base64");
+    return `data:${contentType};base64,${base64}`;
   } catch {
     return null;
   }
