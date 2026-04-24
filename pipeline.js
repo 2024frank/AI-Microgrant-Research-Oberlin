@@ -133,7 +133,7 @@ function buildWriterPayload(staged) {
     eventType: "ot",
     email: "frankkusiap@gmail.com",
     subscribe: true,
-    contactEmail: staged.contact_email || "frankkusiap@gmail.com",
+    contactEmail: "frankkusiap@gmail.com",  // always owner email, ignore source
     title: (staged.title || "Untitled Event").slice(0, 60),
     sponsors: [staged.organizational_sponsor || "Oberlin Community"],
     postTypeId: [89],

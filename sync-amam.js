@@ -21,7 +21,8 @@ import {
   MIN_GEMINI_CONFIDENCE,
 } from "./lib/duplicate-agent.js";
 
-const FALLBACK_EMAIL = process.env.FALLBACK_EMAIL || "fkusiapp@oberlin.edu";
+// Always use the owner's email for contactEmail — never pull from the source event.
+const OWNER_EMAIL = "frankkusiap@gmail.com";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL   = "gemini-2.5-flash";
 
@@ -91,9 +92,9 @@ async function buildPayloadFromStaged(ev) {
 
   const payload = {
     eventType:          "ot",
-    email:              ev.contact_email || FALLBACK_EMAIL,
+    email:              OWNER_EMAIL,
     subscribe:          true,
-    contactEmail:       ev.contact_email || FALLBACK_EMAIL,
+    contactEmail:       OWNER_EMAIL,
     title:              (ev.title || "Untitled").slice(0, 60),
     sponsors:           [ev.organizational_sponsor || ev.source_name || "Allen Memorial Art Museum"],
     postTypeId:         inferPostTypeIds(ev.title, ev.extended_description, kind),

@@ -27,7 +27,8 @@ const LOCALIST_API = "https://calendar.oberlin.edu/api/2/events";
 const COMMUNITYHUB_POSTS_API =
   "https://oberlin.communityhub.cloud/api/legacy/calendar/posts?limit=10000&page=0&filter=future&tab=main-feed&isJobs=false&order=ASC&postType=All&allPosts";
 const PUSHED_IDS_FILE = "pushed_ids.json";
-const FALLBACK_EMAIL = process.env.FALLBACK_EMAIL || "fkusiapp@oberlin.edu";
+// Always use the owner's email for contactEmail — never pull from the source event.
+const OWNER_EMAIL = "frankkusiap@gmail.com";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = "gemini-2.5-flash";
 
@@ -276,7 +277,8 @@ async function buildWriterPayload(e) {
   description = description || "No description provided.";
   extendedDescription = extendedDescription || description;
 
-  const contactEmail = e.custom_fields?.contact_email_address || FALLBACK_EMAIL;
+  // Always submit under the owner's email regardless of what the source event says.
+  const contactEmail = OWNER_EMAIL;
   const location = e.address || e.location_name || e.location || "Oberlin, OH";
   const streamUrl = e.stream_url || undefined;
   const website = e.localist_url || e.url || undefined;
