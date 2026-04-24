@@ -17,6 +17,25 @@ const nav = [
     ),
   },
   {
+    label: "Sources",
+    href: "/dashboard/sources",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+      </svg>
+    ),
+  },
+  {
+    label: "AI Analysis",
+    href: "/dashboard/ai-analysis",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
+      </svg>
+    ),
+    badge: "soon",
+  },
+  {
     label: "Duplicates",
     href: "/dashboard/duplicates",
     icon: (
@@ -24,7 +43,7 @@ const nav = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
       </svg>
     ),
-    badge: true,
+    badge: "count",
   },
 ];
 
@@ -34,7 +53,6 @@ export default function Sidebar() {
 
   return (
     <aside className="w-60 shrink-0 flex flex-col bg-[#120000] border-r border-white/[0.06] min-h-screen">
-      {/* Logo */}
       <div className="px-5 py-5 border-b border-white/[0.06]">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#C8102E] flex items-center justify-center shadow-md shadow-[#C8102E]/30">
@@ -49,7 +67,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {nav.map((item) => {
           const active = pathname === item.href;
@@ -58,35 +75,29 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                active
-                  ? "bg-[#C8102E]/15 text-white"
-                  : "text-zinc-400 hover:text-white hover:bg-white/[0.05]"
+                active ? "bg-[#C8102E]/15 text-white" : "text-zinc-400 hover:text-white hover:bg-white/[0.05]"
               }`}
             >
               <span className={active ? "text-[#C8102E]" : ""}>{item.icon}</span>
               {item.label}
-              {item.badge && (
-                <span className="ml-auto bg-[#C8102E] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  0
-                </span>
+              {item.badge === "count" && (
+                <span className="ml-auto bg-[#C8102E] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+              )}
+              {item.badge === "soon" && (
+                <span className="ml-auto text-amber-400 text-[10px] font-semibold border border-amber-400/30 px-1.5 py-0.5 rounded-full">Soon</span>
               )}
             </Link>
           );
         })}
       </nav>
 
-      {/* User */}
       <div className="px-3 py-4 border-t border-white/[0.06]">
         <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg">
           <div className="w-7 h-7 rounded-full bg-[#C8102E]/20 flex items-center justify-center text-[#C8102E] text-xs font-bold uppercase shrink-0">
             {user?.email?.[0] ?? "U"}
           </div>
           <p className="text-zinc-400 text-xs truncate flex-1">{user?.email}</p>
-          <button
-            onClick={() => signOut(auth)}
-            title="Sign out"
-            className="text-zinc-600 hover:text-white transition shrink-0"
-          >
+          <button onClick={() => signOut(auth)} title="Sign out" className="text-zinc-600 hover:text-white transition shrink-0">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
             </svg>
