@@ -66,7 +66,18 @@ function truncate(str, max) {
   return str.length <= max ? str : str.slice(0, max - 1).trimEnd() + "…";
 }
 
-function buildPayload(e) {
+async function fetchImageAsBase64(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buffer = await res.arrayBuffer();
+    return Buffer.from(buffer).toString("base64");
+  } catch {
+    return null;
+  }
+}
+
+async function buildPayload(e) {
   const inst = e.event_instances?.[0]?.event_instance || {};
   const startTime = inst.start ? toUnix(inst.start) : toUnix(new Date().toISOString());
   const endTime = inst.end ? toUnix(inst.end) : startTime + 3600;
@@ -86,6 +97,7 @@ function buildPayload(e) {
   const website = e.localist_url || e.url || undefined;
   const location = e.address || e.location_name || e.location || undefined;
   const streamUrl = e.stream_url || undefined;
+  const imageBase64 = e.photo_url ? await fetchImageAsBase64(e.photo_url) : null;
 
   const payload = {
     eventType: "ot",
@@ -115,6 +127,8 @@ function buildPayload(e) {
   if (locationType === "on" || locationType === "bo") {
     payload.urlLink = streamUrl || website || "https://calendar.oberlin.edu";
   }
+
+  if (imageBase64) payload.image = imageBase64;
 
   if (e.ticket_url) {
     payload.buttons = [{ title: "Learn More", link: e.ticket_url }];
@@ -199,7 +213,7 @@ async function main() {
     }
 
     try {
-      const payload = buildPayload(e);
+      const payload = await buildPayload(e);
       await pushToCommunityHub(payload);
       pushedIds.add(id);
       pushed++;
