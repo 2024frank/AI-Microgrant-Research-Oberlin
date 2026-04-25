@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, where, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface Original {
@@ -65,8 +65,29 @@ export default function ReviewPage() {
 
   useEffect(() => {
     const q = query(collection(db, "review_queue"), where("status", "==", "pending"));
-    const unsub = onSnapshot(q, snap => {
+    const unsub = onSnapshot(q, async snap => {
+      const now = Math.floor(Date.now() / 1000);
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as QueueItem));
+
+      // Auto-reject pending events whose date has already passed
+      const expired = docs.filter(item => {
+        const ts = item.writerPayload?.sessions?.[0]?.startTime;
+        return ts !== undefined && ts < now;
+      });
+      if (expired.length > 0) {
+        const batch = writeBatch(db);
+        for (const item of expired) {
+          batch.update(doc(db, "review_queue", item.id), {
+            status: "auto_rejected",
+            autoRejectedReason: "Event date has already passed",
+            rejectedAt: new Date().toISOString(),
+          });
+        }
+        await batch.commit();
+        // Firestore snapshot will re-fire with updated statuses — no manual state update needed
+        return;
+      }
+
       docs.sort((a, b) => new Date(a.detectedAt).getTime() - new Date(b.detectedAt).getTime());
       setItems(docs);
       setLoading(false);
