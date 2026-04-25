@@ -91,7 +91,10 @@ export default function ReviewPage() {
       const now = Math.floor(Date.now() / 1000);
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as QueueItem));
 
-      // Auto-reject pending events whose date has already passed
+      // Auto-reject pending events whose date has already passed.
+      // We do the batch write but DON'T return early — we still render the
+      // remaining (non-expired) events immediately so the UI doesn't stay blank
+      // while waiting for Firestore to re-fire the snapshot.
       const expired = docs.filter(item => {
         const ts = item.writerPayload?.sessions?.[0]?.startTime;
         return ts !== undefined && ts < now;
@@ -105,13 +108,13 @@ export default function ReviewPage() {
             rejectedAt: new Date().toISOString(),
           });
         }
-        await batch.commit();
-        // Firestore snapshot will re-fire with updated statuses — no manual state update needed
-        return;
+        batch.commit().catch(console.warn); // fire-and-forget — snapshot will re-fire anyway
       }
 
-      docs.sort((a, b) => new Date(a.detectedAt).getTime() - new Date(b.detectedAt).getTime());
-      setItems(docs);
+      // Sort newest-queued first so events from the latest sync run appear at the top.
+      const live = docs.filter(item => !expired.find(e => e.id === item.id));
+      live.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
+      setItems(live);
       setLoading(false);
     });
     return unsub;
