@@ -82,22 +82,36 @@ async function buildPayloadFromStaged(ev) {
 
   // Build one session per showtime across the 14-day window.
   // raw_payload.showtimesForMovie = { "YYYY-MM-DD": [{ startsAt, isExpired, ... }] }
-  const showtimesMap = ev.raw_payload?.showtimesForMovie || {};
+  const showtimesMap   = ev.raw_payload?.showtimesForMovie || {};
+  const hasScheduleData = ev.raw_payload?.hasScheduleData ?? Object.keys(showtimesMap).length > 0;
   const sessions = [];
-  for (const slots of Object.values(showtimesMap)) {
-    for (const slot of slots) {
-      if (slot.isExpired || !slot.startsAt) continue;
-      const start = toUnix(slot.startsAt);
+
+  if (hasScheduleData) {
+    // Real showtime data from the schedule API — one session per slot
+    for (const slots of Object.values(showtimesMap)) {
+      for (const slot of slots) {
+        if (slot.isExpired || !slot.startsAt) continue;
+        const start = toUnix(slot.startsAt);
+        sessions.push({ startTime: start, endTime: start + runtimeSec });
+      }
+    }
+  } else {
+    // Schedule API was unavailable — one session per day at 7 PM ET (reasonable default for a cinema)
+    const scheduledDays = ev.raw_payload?.scheduledDays || ev.playing_dates || [];
+    for (const day of scheduledDays) {
+      const start = toUnix(`${day}T19:00:00`);
       sessions.push({ startTime: start, endTime: start + runtimeSec });
     }
+    console.log(`  ℹ Using 7 PM fallback sessions for "${ev.title}" (schedule API was unavailable)`);
   }
-  // Sort sessions by startTime and deduplicate
+
+  // Sort and deduplicate
   sessions.sort((a, b) => a.startTime - b.startTime);
   const uniqueSessions = sessions.filter(
     (s, i) => i === 0 || s.startTime !== sessions[i - 1].startTime
   );
 
-  // Fallback: if nothing in showtimesMap, use the first showtime we stored
+  // Last resort: use whatever start_datetime we captured
   if (!uniqueSessions.length) {
     const start = toUnix(ev.start_datetime || new Date().toISOString());
     uniqueSessions.push({ startTime: start, endTime: start + runtimeSec });

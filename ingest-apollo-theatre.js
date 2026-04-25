@@ -82,15 +82,28 @@ function ticketUrl(showtimesForMovie) {
 
 // ─── API calls ────────────────────────────────────────────────────────────────
 
-async function apiGet(path) {
-  const res = await fetch(`${BASE_API}/${path}`, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-      "Accept": "application/json",
-    },
-  });
-  if (!res.ok) throw new Error(`API ${res.status} for ${path}`);
-  return res.json();
+async function apiGet(path, { retries = 3, delayMs = 3000 } = {}) {
+  let lastErr;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(`${BASE_API}/${path}`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+          "Accept": "application/json",
+          "Connection": "keep-alive",
+        },
+      });
+      if (!res.ok) throw new Error(`API HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < retries) {
+        console.warn(`  ⚠ API attempt ${attempt} failed (${err.message}) — retrying in ${delayMs / 1000}s…`);
+        await new Promise(r => setTimeout(r, delayMs * attempt)); // exponential: 3s, 6s
+      }
+    }
+  }
+  throw lastErr;
 }
 
 async function fetchScheduledMovies() {
@@ -107,8 +120,15 @@ async function fetchSchedule(start, end) {
   const theaterParam = encodeURIComponent(JSON.stringify({ id: THEATER_ID, timeZone: THEATER_TZ }));
   const from = start.toISOString().slice(0, 19);
   const to   = end.toISOString().slice(0, 19);
-  const data = await apiGet(`schedule?from=${from}&theaters=${theaterParam}&to=${to}`);
-  return data?.[THEATER_ID]?.schedule || {};
+  try {
+    const data = await apiGet(`schedule?from=${from}&theaters=${theaterParam}&to=${to}`);
+    return data?.[THEATER_ID]?.schedule || {};
+  } catch (err) {
+    // Non-fatal: the schedule API can ECONNRESET on GitHub Actions IPs.
+    // We fall back to one session per scheduled day at 7 PM ET in the ingester.
+    console.warn(`  ⚠ fetchSchedule failed (${err.message}) — will use 7 PM defaults per day`);
+    return {};
+  }
 }
 
 // ─── Description builder ──────────────────────────────────────────────────────
@@ -201,11 +221,12 @@ export async function runIngester() {
     }
 
     const showtimesForMovie = schedule[movieId] || {};
+    const hasScheduleData   = Object.keys(showtimesForMovie).length > 0;
     const daysInWindow = (scheduledDays[movieId] || [])
       .filter(d => d >= windowStart_str && d <= windowEnd_str).sort();
     if (!daysInWindow.length) continue;
 
-    // First upcoming non-expired slot on the first available day
+    // First showtime: use real API data if available, else default to 7 PM on first day
     const firstDay   = daysInWindow[0];
     const firstSlots = (showtimesForMovie[firstDay] || []).filter(s => !s.isExpired);
     const firstSlot  = firstSlots[0];
@@ -268,6 +289,7 @@ export async function runIngester() {
         title,
         scheduledDays:    daysInWindow,
         showtimesForMovie,
+        hasScheduleData,  // false → sync script uses 7 PM fallback sessions
       },
     };
 
