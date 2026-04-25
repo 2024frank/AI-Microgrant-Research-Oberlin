@@ -25,21 +25,39 @@ interface QueueItem {
   };
 }
 
+// Known source labels — any unknown key falls back to its raw value
 const SOURCE_LABEL: Record<string, string> = {
-  localist:        "Oberlin Localist",
-  amam:            "Allen Memorial Art Museum",
-  heritage_center: "Oberlin Heritage Center",
+  localist:         "Oberlin Localist",
+  amam:             "Allen Memorial Art Museum",
+  heritage_center:  "Oberlin Heritage Center",
+  apollo_theatre:   "Apollo Theater",
+  oberlin_libcal:   "Oberlin College Libraries",
+};
+
+// Short display name for pills/badges (first word or explicit short label)
+const SOURCE_SHORT: Record<string, string> = {
+  localist:         "Localist",
+  amam:             "AMAM",
+  heritage_center:  "Heritage",
+  apollo_theatre:   "Apollo",
+  oberlin_libcal:   "LibCal",
 };
 
 const SOURCE_COLOR: Record<string, string> = {
-  localist:        "text-blue-400 bg-blue-400/10 border-blue-400/20",
-  amam:            "text-purple-400 bg-purple-400/10 border-purple-400/20",
-  heritage_center: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+  localist:         "text-blue-400 bg-blue-400/10 border-blue-400/20",
+  amam:             "text-purple-400 bg-purple-400/10 border-purple-400/20",
+  heritage_center:  "text-amber-400 bg-amber-400/10 border-amber-400/20",
+  apollo_theatre:   "text-rose-400 bg-rose-400/10 border-rose-400/20",
+  oberlin_libcal:   "text-teal-400 bg-teal-400/10 border-teal-400/20",
 };
+
+function sourceLabel(key: string) { return SOURCE_LABEL[key] ?? key; }
+function sourceShort(key: string) { return SOURCE_SHORT[key] ?? key; }
+function sourceColor(key: string) { return SOURCE_COLOR[key] ?? "text-zinc-400 bg-white/[0.04] border-white/[0.08]"; }
 
 type DateFilter = "future" | "past" | "all";
 type StatusFilter = "all" | "pending" | "approved" | "rejected_manual" | "auto_rejected";
-type SourceFilter = "all" | "localist" | "amam" | "heritage_center";
+type SourceFilter = string; // dynamic — "all" or any source key
 
 function fmtDate(ts: number) {
   return new Date(ts * 1000).toLocaleDateString("en-US", {
@@ -163,12 +181,19 @@ export default function EventsPage() {
       });
   }, [items, sourceFilter, statusFilter, dateFilter, search, now]);
 
-  // Counts by source (all items, respecting current date+status filters)
+  // All distinct source keys present in the full dataset (for filter buttons)
+  const allSourceKeys = useMemo(() => {
+    const keys = new Set<string>();
+    items.forEach(item => keys.add(getSourceKey(item)));
+    return Array.from(keys).sort();
+  }, [items]);
+
+  // Counts by source key (respecting current date+status filters)
   const countsBySource = useMemo(() => {
     const counts: Record<string, number> = {};
     filtered.forEach(item => {
-      const s = SOURCE_LABEL[getSourceKey(item)] ?? getSourceKey(item);
-      counts[s] = (counts[s] ?? 0) + 1;
+      const k = getSourceKey(item);
+      counts[k] = (counts[k] ?? 0) + 1;
     });
     return counts;
   }, [filtered]);
@@ -242,9 +267,9 @@ export default function EventsPage() {
           ))}
         </div>
 
-        {/* Source */}
-        <div className="flex rounded-lg border border-white/[0.08] overflow-hidden">
-          {(["all", "localist", "amam", "heritage_center"] as SourceFilter[]).map(s => (
+        {/* Source — dynamic from actual data */}
+        <div className="flex flex-wrap rounded-lg border border-white/[0.08] overflow-hidden">
+          {(["all", ...allSourceKeys] as SourceFilter[]).map(s => (
             <button
               key={s}
               onClick={() => setSourceFilter(s)}
@@ -254,7 +279,7 @@ export default function EventsPage() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              {s === "all" ? "All sources" : SOURCE_LABEL[s] ?? s}
+              {s === "all" ? "All sources" : sourceLabel(s)}
             </button>
           ))}
         </div>
@@ -289,10 +314,16 @@ export default function EventsPage() {
       {/* Source breakdown pills */}
       {Object.keys(countsBySource).length > 1 && (
         <div className="flex flex-wrap gap-2 mb-5">
-          {Object.entries(countsBySource).map(([label, count]) => (
-            <span key={label} className="text-zinc-500 text-[11px] border border-white/[0.06] rounded-full px-2.5 py-1">
-              {label} <span className="text-zinc-300 font-semibold">{count}</span>
-            </span>
+          {Object.entries(countsBySource).map(([key, count]) => (
+            <button
+              key={key}
+              onClick={() => setSourceFilter(sourceFilter === key ? "all" : key)}
+              className={`text-[11px] border rounded-full px-2.5 py-1 transition hover:opacity-80 ${
+                sourceFilter === key ? sourceColor(key) : "text-zinc-500 border-white/[0.06]"
+              }`}
+            >
+              {sourceLabel(key)} <span className="font-semibold">{count}</span>
+            </button>
           ))}
         </div>
       )}
@@ -348,8 +379,8 @@ export default function EventsPage() {
                     )}
                   </div>
 
-                  <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full border w-fit ${SOURCE_COLOR[sourceKey] ?? "text-zinc-400 bg-white/[0.04] border-white/[0.08]"}`}>
-                    {(SOURCE_LABEL[sourceKey] ?? sourceKey).split(" ")[0]}
+                  <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full border w-fit ${sourceColor(sourceKey)}`}>
+                    {sourceShort(sourceKey)}
                   </span>
 
                   <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full border w-fit ${STATUS_STYLE[item.status] ?? STATUS_STYLE.pending}`}>
