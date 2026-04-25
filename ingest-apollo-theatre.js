@@ -120,13 +120,13 @@ async function fetchSchedule(start, end) {
   const theaterParam = encodeURIComponent(JSON.stringify({ id: THEATER_ID, timeZone: THEATER_TZ }));
   const from = start.toISOString().slice(0, 19);
   const to   = end.toISOString().slice(0, 19);
+  // Use retries:1 so we don't burn 9+ seconds on attempts we know will fail on GitHub Actions IPs.
+  // Any failure here is non-fatal — the caller falls back to 7 PM sessions per scheduled day.
   try {
-    const data = await apiGet(`schedule?from=${from}&theaters=${theaterParam}&to=${to}`);
+    const data = await apiGet(`schedule?from=${from}&theaters=${theaterParam}&to=${to}`, { retries: 1 });
     return data?.[THEATER_ID]?.schedule || {};
   } catch (err) {
-    // Non-fatal: the schedule API can ECONNRESET on GitHub Actions IPs.
-    // We fall back to one session per scheduled day at 7 PM ET in the ingester.
-    console.warn(`  ⚠ fetchSchedule failed (${err.message}) — will use 7 PM defaults per day`);
+    console.warn(`  ⚠ fetchSchedule failed (${err.message}) — using 7 PM fallback sessions`);
     return {};
   }
 }
