@@ -111,10 +111,28 @@ interface PublicAgentData extends AgentData {
 }
 
 interface WriterAgentData {
-  acceptedAsIs: number;   // approved, writerEdited=false
-  editedThenApproved: number; // approved, writerEdited=true
-  rejected: number;       // rejected_manual (user didn't want the event at all)
+  acceptedAsIs: number;
+  editedThenApproved: number;
+  rejected: number;
   pending: number;
+}
+
+interface PrivateEvent {
+  source: string;
+  confidence: number;
+  geminiReason: string;
+  status: "rejected" | "overridden";
+}
+
+interface PublicEvent {
+  source: string;
+  confidence: number;
+  userStatus: "approved" | "rejected_manual" | "pending" | "auto_rejected";
+}
+
+interface PublicDeepDive {
+  privateEvents: PrivateEvent[];
+  publicEvents: PublicEvent[];
 }
 
 // ── main page ────────────────────────────────────────────────────────────────
@@ -124,14 +142,29 @@ export default function AIAnalysisPage() {
   const [dupAgent, setDupAgent] = useState<AgentData | null>(null);
   const [queueOutcomes, setQueueOutcomes] = useState<{ approved: number; rejected: number; pending: number } | null>(null);
   const [writerAgent, setWriterAgent] = useState<WriterAgentData | null>(null);
+  const [deepDive, setDeepDive] = useState<PublicDeepDive>({ privateEvents: [], publicEvents: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Watch rejected collection
     const unsubRejected = onSnapshot(collection(db, "rejected"), (snap) => {
-      const docs = snap.docs.map(d => d.data() as { reason: string; status: string });
-      const privateAgreed = docs.filter(d => d.reason === "private" && d.status === "rejected").length;
-      const privateDisagreed = docs.filter(d => d.reason === "private" && d.status === "overridden").length;
+      const docs = snap.docs.map(d => d.data() as {
+        reason: string; status: string;
+        confidence?: number; geminiReason?: string; source?: string;
+      });
+      const privateAll = docs.filter(d => d.reason === "private");
+      const privateAgreed = privateAll.filter(d => d.status === "rejected").length;
+      const privateDisagreed = privateAll.filter(d => d.status === "overridden").length;
+
+      setDeepDive(prev => ({
+        ...prev,
+        privateEvents: privateAll.map(d => ({
+          source: d.source ?? "unknown",
+          confidence: d.confidence ?? 0,
+          geminiReason: d.geminiReason ?? "",
+          status: d.status === "overridden" ? "overridden" : "rejected",
+        })),
+      }));
 
       setPublicAgent(prev => ({
         agreedPrivate: privateAgreed,
@@ -146,10 +179,23 @@ export default function AIAnalysisPage() {
 
     // Watch review_queue
     const unsubQueue = onSnapshot(collection(db, "review_queue"), (snap) => {
-      const docs = snap.docs.map(d => d.data() as { status: string; writerEdited?: boolean });
+      const docs = snap.docs.map(d => d.data() as {
+        status: string; writerEdited?: boolean;
+        source?: string; source_id?: string;
+        publicCheck?: { isPublic: boolean; confidence: number; reason: string };
+      });
       const approved = docs.filter(d => d.status === "approved").length;
       const rejectedManual = docs.filter(d => d.status === "rejected_manual").length;
       const pending = docs.filter(d => d.status === "pending").length;
+
+      setDeepDive(prev => ({
+        ...prev,
+        publicEvents: docs.map(d => ({
+          source: d.source_id ?? d.source ?? "unknown",
+          confidence: d.publicCheck?.confidence ?? 0,
+          userStatus: d.status as PublicEvent["userStatus"],
+        })),
+      }));
 
       // Writer Agent stats: was the AI's output accepted as-is or edited?
       const approvedDocs = docs.filter(d => d.status === "approved");
@@ -384,6 +430,9 @@ export default function AIAnalysisPage() {
         </table>
       </div>
 
+      {/* ── Public / Private Agent Deep Dive ─────────────────────────────── */}
+      <PublicAgentDeepDive deepDive={deepDive} loading={loading} />
+
       {/* Model info */}
       <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl px-5 py-4 flex items-center gap-3">
         <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
@@ -438,6 +487,236 @@ function MiniStat({ label, value, color }: { label: string; value: number; color
     <div className={`rounded-lg px-3 py-2 ${color === "emerald" ? "bg-emerald-400/5 border border-emerald-400/10" : "bg-red-400/5 border border-red-400/10"}`}>
       <p className={`text-xl font-bold ${color === "emerald" ? "text-emerald-400" : "text-red-400"}`}>{value}</p>
       <p className="text-zinc-600 text-[10px]">{label}</p>
+    </div>
+  );
+}
+
+// ── Public Agent Deep Dive ────────────────────────────────────────────────────
+
+const SOURCE_LABEL: Record<string, string> = {
+  localist:        "Oberlin Localist",
+  amam:            "Allen Memorial Art Museum",
+  heritage_center: "Oberlin Heritage Center",
+  apollo_theatre:  "Apollo Theater",
+  oberlin_libcal:  "Oberlin College Libraries",
+};
+
+function BarRow({ label, value, max, color, sub }: {
+  label: string; value: number; max: number; color: string; sub?: string;
+}) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  return (
+    <div className="flex items-center gap-3">
+      <p className="text-zinc-400 text-xs w-32 shrink-0 truncate">{label}</p>
+      <div className="flex-1 h-2 bg-white/[0.06] rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <p className="text-white text-xs font-semibold tabular-nums w-6 text-right">{value}</p>
+      {sub && <p className="text-zinc-600 text-[10px] w-12 text-right">{sub}</p>}
+    </div>
+  );
+}
+
+function PublicAgentDeepDive({ deepDive, loading }: { deepDive: PublicDeepDive; loading: boolean }) {
+  const { privateEvents, publicEvents } = deepDive;
+
+  // ── 1. By-source breakdown ─────────────────────────────────────────────────
+  const allSources = Array.from(new Set([
+    ...privateEvents.map(e => e.source),
+    ...publicEvents.map(e => e.source),
+  ])).sort();
+
+  const bySource = allSources.map(src => {
+    const priv = privateEvents.filter(e => e.source === src);
+    const pub = publicEvents.filter(e => e.source === src);
+    return {
+      src,
+      blocked: priv.length,
+      overridden: priv.filter(e => e.status === "overridden").length,
+      passed: pub.length,
+      approved: pub.filter(e => e.userStatus === "approved").length,
+    };
+  });
+
+  // ── 2. Confidence distribution for private decisions ───────────────────────
+  const confBuckets = [
+    { label: "High (90–100%)", events: privateEvents.filter(e => e.confidence >= 90) },
+    { label: "Medium (75–89%)", events: privateEvents.filter(e => e.confidence >= 75 && e.confidence < 90) },
+    { label: "Low (<75%)", events: privateEvents.filter(e => e.confidence < 75) },
+  ].map(b => ({
+    ...b,
+    agreed: b.events.filter(e => e.status === "rejected").length,
+    overridden: b.events.filter(e => e.status === "overridden").length,
+  }));
+
+  // Also for public-passed events
+  const pubConfBuckets = [
+    { label: "High (90–100%)", events: publicEvents.filter(e => e.confidence >= 90) },
+    { label: "Medium (75–89%)", events: publicEvents.filter(e => e.confidence >= 75 && e.confidence < 90) },
+    { label: "Low (<75%)", events: publicEvents.filter(e => e.confidence < 75) },
+  ].map(b => ({
+    ...b,
+    approved: b.events.filter(e => e.userStatus === "approved").length,
+    rejected: b.events.filter(e => e.userStatus === "rejected_manual").length,
+  }));
+
+  // ── 3. Top reasons for blocking ────────────────────────────────────────────
+  const reasonCounts: Record<string, number> = {};
+  privateEvents.forEach(e => {
+    if (!e.geminiReason) return;
+    // Truncate to first sentence for grouping
+    const key = e.geminiReason.split(".")[0].trim().slice(0, 80);
+    reasonCounts[key] = (reasonCounts[key] ?? 0) + 1;
+  });
+  const topReasons = Object.entries(reasonCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  const maxReasonCount = topReasons[0]?.[1] ?? 1;
+
+  if (loading) return null;
+  if (privateEvents.length === 0 && publicEvents.length === 0) return null;
+
+  return (
+    <div className="mb-6">
+      <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide mb-4">
+        Public / Private Agent — Deep Dive
+      </p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* By source */}
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
+          <p className="text-white text-sm font-semibold mb-1">By Source</p>
+          <p className="text-zinc-600 text-xs mb-4">How each source fares against the public filter.</p>
+          {bySource.length === 0 ? (
+            <p className="text-zinc-600 text-xs">No data yet.</p>
+          ) : (
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  <th className="text-left pb-2 text-zinc-600 font-medium">Source</th>
+                  <th className="text-right pb-2 text-zinc-600 font-medium">Blocked</th>
+                  <th className="text-right pb-2 text-zinc-600 font-medium">Passed</th>
+                  <th className="text-right pb-2 text-zinc-600 font-medium">Override</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {bySource.map(row => (
+                  <tr key={row.src}>
+                    <td className="py-2 text-zinc-300">{SOURCE_LABEL[row.src] ?? row.src}</td>
+                    <td className="py-2 text-amber-400 text-right tabular-nums font-medium">{row.blocked}</td>
+                    <td className="py-2 text-emerald-400 text-right tabular-nums font-medium">{row.passed}</td>
+                    <td className="py-2 text-right tabular-nums">
+                      {row.blocked > 0
+                        ? <span className="text-red-400">{row.overridden}</span>
+                        : <span className="text-zinc-700">—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Confidence distribution */}
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
+          <p className="text-white text-sm font-semibold mb-1">Confidence vs Outcome</p>
+          <p className="text-zinc-600 text-xs mb-4">Does higher AI confidence mean better decisions?</p>
+
+          {privateEvents.length > 0 && (
+            <>
+              <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-2">Private decisions</p>
+              <div className="space-y-2 mb-4">
+                {confBuckets.map(b => (
+                  <div key={b.label} className="space-y-0.5">
+                    <div className="flex justify-between text-[10px] text-zinc-500 mb-0.5">
+                      <span>{b.label}</span>
+                      <span>{b.events.length} events · {b.overridden} overridden</span>
+                    </div>
+                    <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden flex">
+                      {b.agreed > 0 && (
+                        <div
+                          className="h-full bg-emerald-500 transition-all"
+                          style={{ width: `${privateEvents.length > 0 ? (b.agreed / privateEvents.length) * 100 : 0}%` }}
+                        />
+                      )}
+                      {b.overridden > 0 && (
+                        <div
+                          className="h-full bg-red-500 transition-all"
+                          style={{ width: `${privateEvents.length > 0 ? (b.overridden / privateEvents.length) * 100 : 0}%` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {publicEvents.length > 0 && (
+            <>
+              <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-2">Public decisions</p>
+              <div className="space-y-2">
+                {pubConfBuckets.map(b => (
+                  <div key={b.label} className="space-y-0.5">
+                    <div className="flex justify-between text-[10px] text-zinc-500 mb-0.5">
+                      <span>{b.label}</span>
+                      <span>{b.events.length} events</span>
+                    </div>
+                    <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden flex">
+                      {b.approved > 0 && (
+                        <div
+                          className="h-full bg-emerald-500"
+                          style={{ width: `${publicEvents.length > 0 ? (b.approved / publicEvents.length) * 100 : 0}%` }}
+                        />
+                      )}
+                      {b.rejected > 0 && (
+                        <div
+                          className="h-full bg-red-500"
+                          style={{ width: `${publicEvents.length > 0 ? (b.rejected / publicEvents.length) * 100 : 0}%` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div className="flex gap-3 mt-4 pt-3 border-t border-white/[0.06]">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-[10px] text-zinc-500">Agreed</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+              <span className="text-[10px] text-zinc-500">Overridden / rejected</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Top block reasons */}
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
+          <p className="text-white text-sm font-semibold mb-1">Top Block Reasons</p>
+          <p className="text-zinc-600 text-xs mb-4">Most common reasons the AI gives for flagging an event as private.</p>
+          {topReasons.length === 0 ? (
+            <p className="text-zinc-600 text-xs">No blocked events yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {topReasons.map(([reason, count]) => (
+                <BarRow
+                  key={reason}
+                  label={reason}
+                  value={count}
+                  max={maxReasonCount}
+                  color="#f59e0b"
+                  sub={`${Math.round((count / privateEvents.length) * 100)}%`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
