@@ -132,6 +132,14 @@ export default function SourcesPage() {
     return () => clearInterval(interval);
   }, [fetchRuns, runs]);
 
+  // Auto-clear a per-source action message after a delay
+  function setMsgWithAutoClear(id: string, msg: string, delayMs = 8000) {
+    setActionMsg(prev => ({ ...prev, [id]: msg }));
+    if (delayMs > 0) {
+      setTimeout(() => setActionMsg(prev => prev[id] === msg ? { ...prev, [id]: "" } : prev), delayMs);
+    }
+  }
+
   // Start a workflow run
   async function handleStart(source: typeof SOURCES[0]) {
     if (!user) return;
@@ -144,17 +152,20 @@ export default function SourcesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workflow: source.workflow, idToken }),
       });
-      const data = await res.json();
+      // Try to parse JSON; fall back to raw text so we can show a real error
+      let data: Record<string, unknown> = {};
+      try { data = await res.json(); } catch { data = { error: await res.text().catch(() => `HTTP ${res.status}`) }; }
+
       if (!res.ok) {
-        setActionMsg(prev => ({ ...prev, [source.id]: data.error || "Failed to start" }));
+        setMsgWithAutoClear(source.id, String(data.error || `HTTP ${res.status} — failed to start`));
       } else {
-        setActionMsg(prev => ({ ...prev, [source.id]: "Started — fetching status…" }));
+        setMsgWithAutoClear(source.id, "Started — fetching status…", 12000);
         // Poll aggressively right after dispatch so the button flips quickly
         setTimeout(fetchRuns, 3000);
         setTimeout(fetchRuns, 7000);
       }
-    } catch {
-      setActionMsg(prev => ({ ...prev, [source.id]: "Something went wrong" }));
+    } catch (err) {
+      setMsgWithAutoClear(source.id, err instanceof Error ? err.message : "Network error — try again");
     } finally {
       setActionLoading(prev => ({ ...prev, [source.id]: false }));
     }
@@ -175,15 +186,17 @@ export default function SourcesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ run_id: run.run_id, idToken }),
       });
-      const data = await res.json();
+      let data: Record<string, unknown> = {};
+      try { data = await res.json(); } catch { data = { error: await res.text().catch(() => `HTTP ${res.status}`) }; }
+
       if (!res.ok) {
-        setActionMsg(prev => ({ ...prev, [source.id]: data.error || "Failed to stop" }));
+        setMsgWithAutoClear(source.id, String(data.error || "Failed to stop"));
       } else {
-        setActionMsg(prev => ({ ...prev, [source.id]: "Cancelling…" }));
+        setMsgWithAutoClear(source.id, "Cancelling…", 12000);
         setTimeout(fetchRuns, 5000);
       }
-    } catch {
-      setActionMsg(prev => ({ ...prev, [source.id]: "Something went wrong" }));
+    } catch (err) {
+      setMsgWithAutoClear(source.id, err instanceof Error ? err.message : "Network error — try again");
     } finally {
       setActionLoading(prev => ({ ...prev, [source.id]: false }));
     }
