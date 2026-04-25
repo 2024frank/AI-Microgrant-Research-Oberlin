@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signOut } from "firebase/auth";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -44,6 +44,12 @@ const nav = [
     icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>,
   },
   {
+    label: "Chat",
+    href: "/dashboard/chat",
+    badge: "chat",
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>,
+  },
+  {
     label: "AI Analysis",
     href: "/dashboard/ai-analysis",
     icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" /></svg>,
@@ -53,17 +59,26 @@ const nav = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, isAdmin } = useAuth();
-  const [counts, setCounts] = useState({ review: 0, rejected: 0, duplicates: 0 });
+  const [counts, setCounts] = useState({ review: 0, rejected: 0, duplicates: 0, chat: 0 });
+  const lastSeenChat = useRef<string>(typeof window !== "undefined" ? localStorage.getItem("lastSeenChat") ?? "" : "");
 
   useEffect(() => {
     const q1 = query(collection(db, "review_queue"), where("status", "==", "pending"));
     const q2 = query(collection(db, "rejected"), where("status", "==", "rejected"));
     const q3 = query(collection(db, "duplicates"), where("status", "==", "pending"));
+    const q4 = collection(db, "chat_messages");
     const u1 = onSnapshot(q1, s => setCounts(c => ({ ...c, review: s.size })));
     const u2 = onSnapshot(q2, s => setCounts(c => ({ ...c, rejected: s.size })));
     const u3 = onSnapshot(q3, s => setCounts(c => ({ ...c, duplicates: s.size })));
-    return () => { u1(); u2(); u3(); };
-  }, []);
+    const u4 = onSnapshot(q4, s => {
+      const unseen = s.docs.filter(d => {
+        const ts = (d.data().createdAt as string) ?? "";
+        return ts > lastSeenChat.current && d.data().user !== user?.email;
+      }).length;
+      setCounts(c => ({ ...c, chat: unseen }));
+    });
+    return () => { u1(); u2(); u3(); u4(); };
+  }, [user?.email]);
 
   return (
     <aside className="w-60 shrink-0 flex flex-col bg-[#120000] border-r border-white/[0.06] min-h-screen">
@@ -102,7 +117,8 @@ export default function Sidebar() {
               {count > 0 && (
                 <span className={`ml-auto text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                   item.badge === "review" ? "bg-emerald-600" :
-                  item.badge === "rejected" ? "bg-amber-600" : "bg-[#C8102E]"
+                  item.badge === "rejected" ? "bg-amber-600" :
+                  item.badge === "chat" ? "bg-blue-600" : "bg-[#C8102E]"
                 }`}>{count}</span>
               )}
             </Link>

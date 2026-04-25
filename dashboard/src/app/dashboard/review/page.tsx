@@ -19,6 +19,8 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, where, doc, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
+import { logActivity } from "@/lib/logActivity";
 
 interface Original {
   title: string; date: string; endDate: string; location: string;
@@ -71,6 +73,7 @@ type PushResult =
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 export default function ReviewPage() {
+  const { user } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null); // only one card open at a time
@@ -201,6 +204,12 @@ export default function ReviewPage() {
         writerEdited,
         writerEditedFields,
       });
+      logActivity(
+        user?.email ?? "unknown",
+        "approved_event",
+        `Approved: ${getPayload(item).title || item.original?.title || item.id}`,
+        writerEdited ? `Edited fields: ${writerEditedFields.join(", ")}` : "Accepted as-is",
+      );
       setPushResults(prev => ({
         ...prev,
         [item.id]: { state: "success", chId: chId as string | number | undefined },
@@ -217,6 +226,11 @@ export default function ReviewPage() {
 
   async function reject(item: QueueItem) {
     await updateDoc(doc(db, "review_queue", item.id), { status: "rejected_manual", rejectedAt: new Date().toISOString() });
+    logActivity(
+      user?.email ?? "unknown",
+      "rejected_event",
+      `Rejected: ${item.writerPayload?.title || item.original?.title || item.id}`,
+    );
   }
 
   async function approveSelected() {

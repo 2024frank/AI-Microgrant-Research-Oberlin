@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
+import { logActivity } from "@/lib/logActivity";
 
 interface ManifestEntry {
   id: string;
@@ -43,6 +45,7 @@ function ConfidenceBadge({ score }: { score: number }) {
 }
 
 export default function DuplicatesPage() {
+  const { user } = useAuth();
   const [duplicates, setDuplicates] = useState<Duplicate[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -67,6 +70,14 @@ export default function DuplicatesPage() {
 
   async function updateStatus(id: string, status: "confirmed" | "rejected") {
     await updateDoc(doc(db, "duplicates", id), { status });
+    const dup = duplicates.find(d => d.id === id);
+    logActivity(
+      user?.email ?? "unknown",
+      status === "confirmed" ? "confirmed_duplicate" : "rejected_duplicate",
+      status === "confirmed"
+        ? `Confirmed duplicate: "${dup?.eventA.title}" vs "${dup?.eventB.title}"`
+        : `Rejected duplicate flag: "${dup?.eventA.title}"`,
+    );
   }
 
   const pending = duplicates.filter(d => d.status === "pending");

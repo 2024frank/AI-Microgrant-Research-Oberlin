@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
+import { logActivity } from "@/lib/logActivity";
 
 interface RejectedEvent {
   id: string;
@@ -28,6 +30,7 @@ function timeAgo(iso: string) {
 }
 
 export default function RejectedPage() {
+  const { user } = useAuth();
   const [rejected, setRejected] = useState<RejectedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
@@ -62,6 +65,12 @@ export default function RejectedPage() {
         overriddenFromRejected: true,
       });
       await updateDoc(doc(db, "rejected", item.id), { status: "overridden" });
+      logActivity(
+        user?.email ?? "unknown",
+        "overrode_private",
+        `Overrode AI block: ${item.original.title}`,
+        `AI had ${item.confidence}% confidence it was private`,
+      );
     } finally {
       setActing(null);
     }

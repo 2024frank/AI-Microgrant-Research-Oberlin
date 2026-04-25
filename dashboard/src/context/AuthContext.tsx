@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export const ADMIN_EMAIL = "frankkusiap@gmail.com";
 
@@ -17,11 +18,23 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true, 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const lastRecordedEmail = useRef<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);
+      // Record login time once per session (guard against repeated fires)
+      if (u?.email && u.email !== lastRecordedEmail.current) {
+        lastRecordedEmail.current = u.email;
+        try {
+          await setDoc(
+            doc(db, "user_activity", u.email),
+            { email: u.email, lastLogin: new Date().toISOString() },
+            { merge: true },
+          );
+        } catch { /* best-effort */ }
+      }
     });
     return unsubscribe;
   }, []);

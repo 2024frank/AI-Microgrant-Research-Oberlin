@@ -1,7 +1,14 @@
 name: AMAM → CommunityHub Sync
 
 on:
-  workflow_dispatch: # manual trigger from dashboard Start button
+  schedule:
+    - cron: "0 * * * *"  # runs every hour automatically — no need to click Start again
+  workflow_dispatch:       # Start button triggers an immediate run outside the schedule
+  # ─── Adding a new source? Copy this workflow and:
+  #   1. Change the name above
+  #   2. Change the cron if a different interval is needed
+  #   3. Change the "run" step to point to your new ingest script
+  #   4. Keep schedule + workflow_dispatch so it auto-runs AND is manually triggerable
 
 permissions:
   contents: write
