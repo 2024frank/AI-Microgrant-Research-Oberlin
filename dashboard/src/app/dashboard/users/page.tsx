@@ -158,7 +158,7 @@ export default function UsersPage() {
         <div>
           <h1 className="text-white text-2xl font-bold tracking-tight">Users & Activity</h1>
           <p className="text-zinc-500 text-sm mt-1">
-            Manage access, see who's logged in, and track every action taken in the dashboard.
+            Manage access, see who is logged in, and track every action taken in the dashboard.
           </p>
         </div>
         {activity.length > 0 && (

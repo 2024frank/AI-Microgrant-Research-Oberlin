@@ -1,422 +1,226 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useAuth } from "@/context/AuthContext";
 
-interface SyncStats {
-  queued: number;
-  skipped: number;
-  analyzed: number;
-  duplicatesFlagged: number;
-  rejectedPrivate: number;
-  total: number;
-  lastRun: string;
-  geminiEnabled: boolean;
-}
+type SourceStatus = "ready" | "needs-check" | "paused";
 
-interface RunStatus {
-  run_id?: number;
-  status: "queued" | "in_progress" | "completed" | "unknown" | "never_run";
-  conclusion?: "success" | "failure" | "cancelled" | null;
-  startedAt?: string;
-  updatedAt?: string;
-  url?: string;
-}
+type AutomationReport = {
+  id?: string;
+  sourceId?: string;
+  sourceName?: string;
+  status?: "success" | "failed" | "partial";
+  finishedAt?: string;
+  found?: number;
+  queued?: number;
+  rejected?: number;
+  duplicates?: number;
+  recurringSkipped?: number;
+  errors?: string[];
+};
 
-const SOURCES = [
+const SOURCES: Array<{
+  id: string;
+  name: string;
+  url: string;
+  method: string;
+  cadence: string;
+  status: SourceStatus;
+  notes: string;
+}> = [
   {
-    id: "localist",
-    name: "Oberlin Localist",
-    url: "calendar.oberlin.edu",
-    workflow: "sync.yml",
-    firestoreDoc: "localist",
-    description: "Oberlin College's official event calendar",
+    id: "oberlin_college",
+    name: "Oberlin College",
+    url: "https://calendar.oberlin.edu",
+    method: "Localist API",
+    cadence: "hourly",
+    status: "ready",
+    notes: "Use Audience tag. Require Open to all members of the public. Reject athletics.",
   },
   {
     id: "amam",
     name: "Allen Memorial Art Museum",
-    url: "amam.oberlin.edu",
-    workflow: "sync-amam.yml",
-    firestoreDoc: "amam",
-    description: "AMAM public exhibitions and events",
-  },
-  {
-    id: "heritage_center",
-    name: "Oberlin Heritage Center",
-    url: "oberlinheritagecenter.org",
-    workflow: "sync-heritage-center.yml",
-    firestoreDoc: "heritage_center",
-    description: "Heritage Center tours, workshops, and community events",
+    url: "https://amam.oberlin.edu/exhibitions-events/events",
+    method: "agent scrape",
+    cadence: "daily",
+    status: "ready",
+    notes: "Static event cards plus detail metadata. Public wording still checked.",
   },
   {
     id: "apollo_theatre",
     name: "Apollo Theatre",
-    url: "clevelandcinemas.com/apollo-theatre",
-    workflow: "sync-apollo-theatre.yml",
-    firestoreDoc: "apollo_theatre",
-    description: "Movies playing at the Apollo Theatre in Oberlin — next 14 days",
+    url: "https://www.clevelandcinemas.com/our-locations/x03gq-apollo-theatre/",
+    method: "agent-discovered feed",
+    cadence: "daily",
+    status: "ready",
+    notes: "One movie post with showtimes as sessions. Skip recurring-style series.",
+  },
+  {
+    id: "heritage_center",
+    name: "Oberlin Heritage Center",
+    url: "https://www.oberlinheritagecenter.org/events/",
+    method: "agent-discovered WordPress feed",
+    cadence: "daily",
+    status: "ready",
+    notes: "WordPress event data is available; preserve source URL for review.",
   },
   {
     id: "oberlin_libcal",
     name: "Oberlin College Libraries",
-    url: "oberlin.libcal.com/calendar/events",
-    workflow: "sync-oberlin-libcal.yml",
-    firestoreDoc: "oberlin_libcal",
-    description: "Library events, author talks, concerts, and public exhibitions",
+    url: "https://oberlin.libcal.com/calendar/events",
+    method: "agent-discovered LibCal feed",
+    cadence: "daily",
+    status: "ready",
+    notes: "Library calendars often include public events and displays; reject internal-only items.",
+  },
+  {
+    id: "fava",
+    name: "FAVA Gallery",
+    url: "https://www.favagallery.org/calendar",
+    method: "agent scrape",
+    cadence: "daily",
+    status: "ready",
+    notes: "Calendar links to class and event detail pages.",
+  },
+  {
+    id: "oberlin_library",
+    name: "Oberlin Public Library",
+    url: "https://www.oberlinlibrary.org/events",
+    method: "agent-discovered WhoFi feed",
+    cadence: "daily",
+    status: "ready",
+    notes: "Events are in the embedded WhoFi calendar feed.",
+  },
+  {
+    id: "city_of_oberlin",
+    name: "City of Oberlin",
+    url: "https://cityofoberlin.com/event/",
+    method: "agent scrape",
+    cadence: "daily",
+    status: "ready",
+    notes: "WordPress event pages are visible. Civic meetings can be queued when public.",
+  },
+  {
+    id: "experience_oberlin",
+    name: "Experience Oberlin",
+    url: "https://www.experienceoberlin.com/events",
+    method: "paused",
+    cadence: "paused",
+    status: "paused",
+    notes: "Left out for now. Wix calendar data needs deeper widget extraction.",
   },
 ];
 
-function timeAgo(iso: string) {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+function timeAgo(iso?: string) {
+  if (!iso) return "never";
+  const diff = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
   if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function StatusDot({ run }: { run: RunStatus | null }) {
-  if (!run || run.status === "unknown" || run.status === "never_run") {
-    return <span className="w-2 h-2 rounded-full bg-zinc-600 shrink-0" />;
-  }
-  if (run.status === "in_progress" || run.status === "queued") {
-    return <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />;
-  }
-  if (run.conclusion === "success") {
-    return <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />;
-  }
-  return <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />;
+function StatusPill({ status }: { status: SourceStatus }) {
+  const classes = {
+    ready: "bg-emerald-400/10 text-emerald-300",
+    "needs-check": "bg-amber-400/10 text-amber-300",
+    paused: "bg-zinc-500/10 text-zinc-400",
+  }[status];
+  return <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full ${classes}`}>{status}</span>;
 }
 
 export default function SourcesPage() {
-  const { user, isAdmin } = useAuth();
-  const [stats, setStats] = useState<Record<string, SyncStats | null>>({});
-  const [runs, setRuns] = useState<Record<string, RunStatus | null>>({});
-  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
-  const [actionMsg, setActionMsg] = useState<Record<string, string>>({});
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [clearing, setClearing] = useState(false);
-  const [clearMsg, setClearMsg] = useState("");
-
-  // Live Firestore stats
-  useEffect(() => {
-    const unsubs = SOURCES.map(s =>
-      onSnapshot(doc(db, "syncs", s.firestoreDoc), snap => {
-        setStats(prev => ({ ...prev, [s.id]: snap.exists() ? (snap.data() as SyncStats) : null }));
-      })
-    );
-    return () => unsubs.forEach(u => u());
-  }, []);
-
-  // Poll GitHub run status every 10s while any run is active, 30s otherwise
-  const fetchRuns = useCallback(async () => {
-    for (const s of SOURCES) {
-      try {
-        const res = await fetch(`/api/sync/trigger?workflow=${s.workflow}`);
-        const data: RunStatus = await res.json();
-        setRuns(prev => ({ ...prev, [s.id]: data }));
-      } catch { /* ignore */ }
-    }
-  }, []);
+  const [reports, setReports] = useState<AutomationReport[]>([]);
 
   useEffect(() => {
-    fetchRuns();
-    // Server-side cache is 20 s — poll at 25 s (active) / 60 s (idle) to
-    // stay well under GitHub's secondary rate limit (10 requests / 60 s per
-    // endpoint). Three workflows × 25 s = 7 API calls/min max.
-    const anyRunning = Object.values(runs).some(
-      r => r?.status === "in_progress" || r?.status === "queued"
-    );
-    const interval = setInterval(fetchRuns, anyRunning ? 25000 : 60000);
-    return () => clearInterval(interval);
-  }, [fetchRuns, runs]);
+    const reportsQuery = query(collection(db, "automation_runs"), orderBy("finishedAt", "desc"), limit(30));
+    const unsubscribe = onSnapshot(reportsQuery, snap => {
+      setReports(snap.docs.map(d => ({ id: d.id, ...d.data() } as AutomationReport)));
+    });
+    return unsubscribe;
+  }, []);
 
-  // Auto-clear a per-source action message after a delay
-  function setMsgWithAutoClear(id: string, msg: string, delayMs = 8000) {
-    setActionMsg(prev => ({ ...prev, [id]: msg }));
-    if (delayMs > 0) {
-      setTimeout(() => setActionMsg(prev => prev[id] === msg ? { ...prev, [id]: "" } : prev), delayMs);
-    }
-  }
-
-  // Start a workflow run
-  async function handleStart(source: typeof SOURCES[0]) {
-    if (!user) return;
-    setActionLoading(prev => ({ ...prev, [source.id]: true }));
-    setActionMsg(prev => ({ ...prev, [source.id]: "" }));
-    try {
-      const idToken = await user.getIdToken();
-      const res = await fetch("/api/sync/trigger", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workflow: source.workflow, idToken }),
-      });
-      // Try to parse JSON; fall back to raw text so we can show a real error
-      let data: Record<string, unknown> = {};
-      try { data = await res.json(); } catch { data = { error: await res.text().catch(() => `HTTP ${res.status}`) }; }
-
-      if (!res.ok) {
-        setMsgWithAutoClear(source.id, String(data.error || `HTTP ${res.status} — failed to start`));
-      } else {
-        setMsgWithAutoClear(source.id, "Started — fetching status…", 12000);
-        // Poll aggressively right after dispatch so the button flips quickly
-        setTimeout(fetchRuns, 3000);
-        setTimeout(fetchRuns, 7000);
-      }
-    } catch (err) {
-      setMsgWithAutoClear(source.id, err instanceof Error ? err.message : "Network error — try again");
-    } finally {
-      setActionLoading(prev => ({ ...prev, [source.id]: false }));
-    }
-  }
-
-  // Cancel a running workflow run
-  async function handleStop(source: typeof SOURCES[0]) {
-    if (!user) return;
-    const run = runs[source.id];
-    if (!run?.run_id) return;
-
-    setActionLoading(prev => ({ ...prev, [source.id]: true }));
-    setActionMsg(prev => ({ ...prev, [source.id]: "" }));
-    try {
-      const idToken = await user.getIdToken();
-      const res = await fetch("/api/sync/trigger", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ run_id: run.run_id, idToken }),
-      });
-      let data: Record<string, unknown> = {};
-      try { data = await res.json(); } catch { data = { error: await res.text().catch(() => `HTTP ${res.status}`) }; }
-
-      if (!res.ok) {
-        setMsgWithAutoClear(source.id, String(data.error || "Failed to stop"));
-      } else {
-        setMsgWithAutoClear(source.id, "Cancelling…", 12000);
-        setTimeout(fetchRuns, 5000);
-      }
-    } catch (err) {
-      setMsgWithAutoClear(source.id, err instanceof Error ? err.message : "Network error — try again");
-    } finally {
-      setActionLoading(prev => ({ ...prev, [source.id]: false }));
-    }
-  }
-
-  // Clear all Firestore event data
-  async function handleClear() {
-    if (!user) return;
-    if (!confirm("Delete ALL review queue, rejected, duplicate, and sync data? This cannot be undone.")) return;
-    setClearing(true);
-    setClearMsg("");
-    try {
-      const idToken = await user.getIdToken();
-      const res = await fetch("/api/admin/clear-data", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setClearMsg(data.error || "Failed to clear data");
-      } else {
-        const total = Object.values(data.deleted as Record<string, number>).reduce((a, b) => a + b, 0);
-        setClearMsg(`Cleared ${total} documents`);
-      }
-    } catch {
-      setClearMsg("Something went wrong");
-    } finally {
-      setClearing(false);
-    }
+  function latestFor(sourceId: string) {
+    return reports.find(r => r.sourceId === sourceId || r.sourceName === SOURCES.find(s => s.id === sourceId)?.name);
   }
 
   return (
-    <div className="p-8 max-w-4xl">
-      {/* Page header */}
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-white text-2xl font-bold tracking-tight">Sources</h1>
-          <p className="text-zinc-500 text-sm mt-1">
-            Calendar sources feeding into the review pipeline.
-          </p>
-        </div>
-        {isAdmin && (
-          <div className="flex items-center gap-3">
-            {clearMsg && <p className="text-zinc-400 text-xs">{clearMsg}</p>}
-            <button
-              onClick={handleClear}
-              disabled={clearing}
-              className="text-xs font-medium text-zinc-500 hover:text-red-400 border border-white/[0.07] hover:border-red-400/30 px-3 py-2 rounded-lg transition disabled:opacity-40"
-            >
-              {clearing ? "Clearing…" : "Clear all data"}
-            </button>
-          </div>
-        )}
+    <div className="p-8 max-w-6xl">
+      <div className="mb-8">
+        <p className="text-[#C8102E] text-xs font-semibold uppercase tracking-wide mb-2">Automation inputs</p>
+        <h1 className="text-white text-2xl font-bold tracking-tight">Sources</h1>
+        <p className="text-zinc-500 text-sm mt-1 max-w-3xl">
+          The runner should accept any source URL, discover feeds or scrape pages, skip recurring submissions, and report every run back here.
+        </p>
       </div>
 
-      {/* Source cards */}
-      <div className="space-y-3">
+      <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden mb-6">
+        <div className="grid grid-cols-[1.1fr_1fr_0.7fr_0.7fr] gap-4 px-5 py-3 border-b border-white/[0.06] text-zinc-500 text-[10px] uppercase tracking-wide">
+          <span>Source</span>
+          <span>Method</span>
+          <span>Cadence</span>
+          <span>Latest report</span>
+        </div>
+
         {SOURCES.map(source => {
-          const stat = stats[source.id];
-          const run = runs[source.id];
-          const loading = actionLoading[source.id];
-          const msg = actionMsg[source.id];
-          const isExpanded = expanded === source.id;
-          const isRunning = run?.status === "in_progress" || run?.status === "queued";
-
+          const latest = latestFor(source.id);
           return (
-            <div key={source.id} className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
-
-              {/* ── Main row ── */}
-              <div className="px-5 py-4 flex items-center gap-4">
-
-                {/* Status dot + name */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <StatusDot run={run} />
-                  <div className="min-w-0">
-                    <p className="text-white text-sm font-medium">{source.name}</p>
-                    <p className="text-zinc-600 text-xs truncate">{source.url}</p>
-                  </div>
+            <div key={source.id} className="grid grid-cols-[1.1fr_1fr_0.7fr_0.7fr] gap-4 px-5 py-4 border-b border-white/[0.04] last:border-b-0 items-start">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-white text-sm font-medium truncate">{source.name}</p>
+                  <StatusPill status={source.status} />
                 </div>
-
-                {/* Stats strip */}
-                <div className="hidden sm:flex items-center gap-6">
-                  <div className="text-center">
-                    <p className="text-zinc-500 text-[10px] uppercase tracking-wide">Queued</p>
-                    <p className="text-emerald-400 text-sm font-semibold mt-0.5">{stat?.queued ?? "—"}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-zinc-500 text-[10px] uppercase tracking-wide">Skipped</p>
-                    <p className="text-zinc-300 text-sm font-semibold mt-0.5">{stat?.skipped ?? "—"}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-zinc-500 text-[10px] uppercase tracking-wide">Last run</p>
-                    <p className="text-zinc-300 text-sm font-semibold mt-0.5">
-                      {stat?.lastRun ? timeAgo(stat.lastRun) : run?.updatedAt ? timeAgo(run.updatedAt) : "—"}
-                    </p>
-                  </div>
-                  <div className="text-center min-w-[56px]">
-                    <p className="text-zinc-500 text-[10px] uppercase tracking-wide">Status</p>
-                    <p className="text-sm font-semibold mt-0.5">
-                      {!run || run.status === "unknown" || run.status === "never_run"
-                        ? <span className="text-zinc-600">—</span>
-                        : isRunning
-                        ? <span className="text-amber-400">Running</span>
-                        : run.conclusion === "success"
-                        ? <span className="text-emerald-400">Done</span>
-                        : run.conclusion === "cancelled"
-                        ? <span className="text-zinc-400">Stopped</span>
-                        : run.conclusion === "failure"
-                        ? <span className="text-red-400">Failed</span>
-                        : <span className="text-zinc-400 capitalize">{run.conclusion ?? run.status}</span>
-                      }
-                    </p>
-                  </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-2 shrink-0">
-                  {isAdmin && (
-                    isRunning ? (
-                      <button
-                        onClick={() => handleStop(source)}
-                        disabled={loading}
-                        className="flex items-center gap-1.5 text-xs font-medium text-red-400 border border-red-400/30 hover:bg-red-400/10 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg transition"
-                      >
-                        {/* Stop icon */}
-                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                          <rect x="4" y="4" width="16" height="16" rx="2" />
-                        </svg>
-                        {loading ? "Stopping…" : "Stop"}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleStart(source)}
-                        disabled={loading}
-                        className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#C8102E]/80 hover:bg-[#C8102E] disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg transition"
-                      >
-                        {/* Play icon */}
-                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M5 3l14 9-14 9V3z" />
-                        </svg>
-                        {loading ? "Starting…" : "Start"}
-                      </button>
-                    )
-                  )}
-
-                  {/* Expand toggle */}
-                  <button
-                    onClick={() => setExpanded(isExpanded ? null : source.id)}
-                    className="text-zinc-600 hover:text-zinc-400 transition p-1"
-                  >
-                    <svg
-                      className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
+                <a className="text-zinc-500 hover:text-zinc-300 text-xs truncate block" href={source.url} target="_blank" rel="noreferrer">
+                  {source.url}
+                </a>
+                <p className="text-zinc-600 text-xs mt-2 leading-relaxed">{source.notes}</p>
               </div>
 
-              {/* Inline feedback message */}
-              {msg && (
-                <div className="px-5 pb-3">
-                  <p className="text-zinc-400 text-xs">{msg}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-zinc-300 text-sm">{source.method}</p>
+                <p className="text-zinc-600 text-xs mt-2">
+                  The agent should inspect visible HTML, embedded calendars, scripts, feeds, and detail links.
+                </p>
+              </div>
 
-              {/* ── Expanded details ── */}
-              {isExpanded && (
-                <div className="border-t border-white/[0.06] px-5 py-5">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-                    <div className="bg-white/[0.03] rounded-lg p-3.5">
-                      <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Analyzed</p>
-                      <p className="text-white text-sm font-semibold">{stat?.analyzed ?? "—"}</p>
-                    </div>
-                    <div className="bg-white/[0.03] rounded-lg p-3.5">
-                      <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Duplicates flagged</p>
-                      <p className="text-white text-sm font-semibold">{stat?.duplicatesFlagged ?? "—"}</p>
-                    </div>
-                    <div className="bg-white/[0.03] rounded-lg p-3.5">
-                      <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Rejected (private)</p>
-                      <p className="text-white text-sm font-semibold">{stat?.rejectedPrivate ?? "—"}</p>
-                    </div>
-                    <div className="bg-white/[0.03] rounded-lg p-3.5">
-                      <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Workflow file</p>
-                      <p className="text-zinc-300 text-sm font-mono">{source.workflow}</p>
-                    </div>
-                    <div className="bg-white/[0.03] rounded-lg p-3.5">
-                      <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Gemini</p>
-                      <p className="text-sm font-semibold">
-                        {stat
-                          ? stat.geminiEnabled
-                            ? <span className="text-emerald-400">Active</span>
-                            : <span className="text-amber-400">Not configured</span>
-                          : <span className="text-zinc-600">—</span>
-                        }
-                      </p>
-                    </div>
-                    <div className="bg-white/[0.03] rounded-lg p-3.5">
-                      <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Run ID</p>
-                      <p className="text-zinc-300 text-sm">{run?.run_id ?? "—"}</p>
-                    </div>
-                  </div>
+              <div>
+                <p className="text-zinc-300 text-sm capitalize">{source.cadence}</p>
+                {source.status !== "paused" && <p className="text-zinc-600 text-xs mt-2">Configurable later</p>}
+              </div>
 
-                  {run?.url && (
-                    <a
-                      href={run.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-zinc-500 hover:text-white transition underline"
-                    >
-                      View run on GitHub →
-                    </a>
-                  )}
-                </div>
-              )}
+              <div>
+                {latest ? (
+                  <>
+                    <p className="text-zinc-300 text-sm">{timeAgo(latest.finishedAt)}</p>
+                    <p className="text-zinc-600 text-xs mt-2">
+                      {latest.found ?? 0} found · {latest.queued ?? 0} queued · {latest.recurringSkipped ?? 0} recurring skipped
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-zinc-600 text-sm">No run yet</p>
+                )}
+              </div>
             </div>
           );
         })}
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
+          <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-2">Ready sources</p>
+          <p className="text-white text-3xl font-bold">{SOURCES.filter(s => s.status === "ready").length}</p>
+        </div>
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
+          <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-2">Paused</p>
+          <p className="text-zinc-300 text-3xl font-bold">{SOURCES.filter(s => s.status === "paused").length}</p>
+        </div>
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
+          <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-2">Recurring policy</p>
+          <p className="text-amber-300 text-sm font-semibold">Do not submit recurring events</p>
+          <p className="text-zinc-600 text-xs mt-1">Count them in automation reports instead.</p>
+        </div>
       </div>
     </div>
   );
