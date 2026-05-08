@@ -17,7 +17,6 @@ export async function POST(req: NextRequest) {
       at: new Date().toISOString(),
       env: {
         hasFirebaseServiceAccount: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT),
-        hasGithubPat: Boolean(process.env.GITHUB_PAT),
       },
       firestore: { ok: false },
       communityhub: { ok: false },
