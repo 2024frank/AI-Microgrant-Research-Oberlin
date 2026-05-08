@@ -89,7 +89,6 @@ export default function RejectedPage() {
   }
 
   async function remove(item: RejectedEvent) {
-    if (!confirm(`Remove "${item.original.title}" permanently?`)) return;
     setActing(item.id);
     setError(null);
     try {
@@ -121,7 +120,6 @@ export default function RejectedPage() {
 
   async function removeSelected() {
     if (selected.size === 0 || bulkDeleting) return;
-    if (!confirm(`Delete ${selected.size} selected rejected event${selected.size > 1 ? "s" : ""}?`)) return;
     setBulkDeleting(true);
     setError(null);
     try {

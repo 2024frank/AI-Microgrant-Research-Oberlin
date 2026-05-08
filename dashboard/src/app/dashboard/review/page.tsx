@@ -93,6 +93,9 @@ export default function ReviewPage() {
   const [rejectReasonCode, setRejectReasonCode] = useState<RejectReasonCode>("not_public");
   const [rejectReasonNote, setRejectReasonNote] = useState("");
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [fromDateTime, setFromDateTime] = useState<string>("");
+  const [toDateTime, setToDateTime] = useState<string>("");
 
   useEffect(() => {
     const db = getClientDb();
@@ -307,6 +310,18 @@ export default function ReviewPage() {
 
   if (loading) return <div className="p-8"><p className="text-zinc-500 text-sm">Loading…</p></div>;
 
+  const sourceOptions = [...new Set(items.map(item => item.source_id || item.source).filter(Boolean))];
+  const fromTs = fromDateTime ? fromLocal(fromDateTime) : null;
+  const toTs = toDateTime ? fromLocal(toDateTime) : null;
+  const filteredItems = items.filter(item => {
+    const sourceKey = item.source_id || item.source || "";
+    if (sourceFilter !== "all" && sourceKey !== sourceFilter) return false;
+    const startTs = item.writerPayload?.sessions?.[0]?.startTime;
+    if (fromTs !== null && (startTs === undefined || startTs < fromTs)) return false;
+    if (toTs !== null && (startTs === undefined || startTs > toTs)) return false;
+    return true;
+  });
+
   return (
     <div className="p-8 max-w-6xl">
       <div className="mb-8 flex items-start justify-between">
@@ -326,14 +341,62 @@ export default function ReviewPage() {
         )}
       </div>
 
-      {items.length === 0 ? (
+      <div className="mb-6 bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+        <div className="grid md:grid-cols-4 gap-3">
+          <div>
+            <label className="text-zinc-500 text-[10px] uppercase tracking-wide block mb-1">Source</label>
+            <select
+              value={sourceFilter}
+              onChange={e => setSourceFilter(e.target.value)}
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+            >
+              <option value="all">All sources</option>
+              {sourceOptions.map(source => (
+                <option key={source} value={source}>{SOURCE_LABEL[source] ?? source}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-zinc-500 text-[10px] uppercase tracking-wide block mb-1">From date/time</label>
+            <input
+              type="datetime-local"
+              value={fromDateTime}
+              onChange={e => setFromDateTime(e.target.value)}
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+            />
+          </div>
+          <div>
+            <label className="text-zinc-500 text-[10px] uppercase tracking-wide block mb-1">To date/time</label>
+            <input
+              type="datetime-local"
+              value={toDateTime}
+              onChange={e => setToDateTime(e.target.value)}
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={() => { setSourceFilter("all"); setFromDateTime(""); setToDateTime(""); }}
+              className="w-full text-xs text-zinc-300 hover:text-white border border-white/[0.08] px-3 py-2 rounded-lg transition"
+            >
+              Clear filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {filteredItems.length === 0 ? (
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-white font-medium mb-2">Queue is empty</p>
-          <p className="text-zinc-500 text-sm max-w-sm">New events will appear here after the hourly sync runs and passes them through the AI pipeline.</p>
+          <p className="text-white font-medium mb-2">{items.length === 0 ? "Queue is empty" : "No events match filters"}</p>
+          <p className="text-zinc-500 text-sm max-w-sm">
+            {items.length === 0
+              ? "New events will appear here after the hourly sync runs and passes them through the AI pipeline."
+              : "Try broadening the source or date range filters."}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {items.map(item => {
+          {filteredItems.map(item => {
             const isExpanded  = expanded === item.id;
             const isSelected  = selected.has(item.id);
             const isPushing   = pushing.has(item.id);
