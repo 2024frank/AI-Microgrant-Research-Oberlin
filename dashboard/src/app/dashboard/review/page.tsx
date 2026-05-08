@@ -72,6 +72,7 @@ type PushResult =
   | { state: "error"; message: string; raw?: string };
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+type RejectReasonCode = "not_public" | "not_local" | "duplicate" | "low_quality" | "incomplete" | "other";
 
 export default function ReviewPage() {
   const { user } = useAuth();
@@ -88,6 +89,10 @@ export default function ReviewPage() {
   // the AI's output — useful for measuring Writer Agent quality over time.
   const [everEdited, setEverEdited] = useState<Set<string>>(new Set());
   const [everEditedFields, setEverEditedFields] = useState<Record<string, Set<string>>>({});
+  const [rejectingItem, setRejectingItem] = useState<QueueItem | null>(null);
+  const [rejectReasonCode, setRejectReasonCode] = useState<RejectReasonCode>("not_public");
+  const [rejectReasonNote, setRejectReasonNote] = useState("");
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
 
   useEffect(() => {
     const db = getClientDb();
@@ -234,14 +239,40 @@ export default function ReviewPage() {
     }
   }
 
-  async function reject(item: QueueItem) {
+  function openRejectModal(item: QueueItem) {
+    setRejectingItem(item);
+    setRejectReasonCode("not_public");
+    setRejectReasonNote("");
+  }
+
+  async function reject(item: QueueItem, reasonCode: RejectReasonCode, reasonNote: string) {
     const db = getClientDb();
-    await updateDoc(doc(db, "review_queue", item.id), { status: "rejected_manual", rejectedAt: new Date().toISOString() });
+    const reasonText = reasonNote.trim();
+    await updateDoc(doc(db, "review_queue", item.id), {
+      status: "rejected_manual",
+      rejectedAt: new Date().toISOString(),
+      rejectionReasonCode: reasonCode,
+      rejectionReasonText: reasonText || null,
+      rejectedBy: user?.email ?? "unknown",
+    });
     logActivity(
       user?.email ?? "unknown",
       "rejected_event",
       `Rejected: ${item.writerPayload?.title || item.original?.title || item.id}`,
+      `Reason: ${reasonCode}${reasonText ? ` | ${reasonText}` : ""}`,
     );
+  }
+
+  async function submitReject() {
+    if (!rejectingItem || rejectSubmitting) return;
+    setRejectSubmitting(true);
+    try {
+      await reject(rejectingItem, rejectReasonCode, rejectReasonNote);
+      setRejectingItem(null);
+      setRejectReasonNote("");
+    } finally {
+      setRejectSubmitting(false);
+    }
   }
 
   async function approveSelected() {
@@ -391,7 +422,7 @@ export default function ReviewPage() {
                   </button>
                   <div className="flex gap-2 shrink-0">
                     <button
-                      onClick={() => reject(item)}
+                      onClick={() => openRejectModal(item)}
                       className="text-xs text-zinc-500 hover:text-white border border-white/[0.08] hover:border-white/20 px-3 py-1.5 rounded-lg transition"
                     >
                       Reject
@@ -523,6 +554,18 @@ export default function ReviewPage() {
                         />
                       )}
 
+                      <Field label="Source Name" value={SOURCE_LABEL[item.source_id || item.source] ?? item.source ?? "Unknown source"} />
+                      <div>
+                        <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Source URL</p>
+                        {original.url ? (
+                          <a href={original.url} target="_blank" rel="noreferrer" className="text-[#C8102E] text-xs hover:underline break-all">
+                            {original.url}
+                          </a>
+                        ) : (
+                          <p className="text-zinc-400 text-xs">—</p>
+                        )}
+                      </div>
+
                       <EditField
                         label="Title" value={e.title ?? wp.title}
                         onChange={v => setEdit(item.id, "title", v)} maxLen={60}
@@ -624,6 +667,63 @@ export default function ReviewPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {rejectingItem && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#171717] border border-white/[0.12] rounded-xl p-5">
+            <h2 className="text-white text-lg font-semibold mb-1">Reject event</h2>
+            <p className="text-zinc-400 text-sm mb-4">
+              Save why this event was rejected so the automation agents can learn from reviewer decisions.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-zinc-500 text-[10px] uppercase tracking-wide block mb-1">Reason</label>
+                <select
+                  value={rejectReasonCode}
+                  onChange={e => setRejectReasonCode(e.target.value as RejectReasonCode)}
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-400"
+                >
+                  <option value="not_public">Not public</option>
+                  <option value="not_local">Not local / not relevant to Oberlin</option>
+                  <option value="duplicate">Duplicate event</option>
+                  <option value="low_quality">Low quality / spammy</option>
+                  <option value="incomplete">Missing key details</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-zinc-500 text-[10px] uppercase tracking-wide block mb-1">Notes (optional)</label>
+                <textarea
+                  value={rejectReasonNote}
+                  onChange={e => setRejectReasonNote(e.target.value)}
+                  rows={4}
+                  placeholder="Explain what was wrong so automation can improve next runs."
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-400"
+                />
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setRejectingItem(null)}
+                disabled={rejectSubmitting}
+                className="text-sm text-zinc-400 hover:text-white border border-white/[0.08] px-3 py-2 rounded-lg transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReject}
+                disabled={rejectSubmitting}
+                className="text-sm font-medium text-white bg-[#C8102E]/80 hover:bg-[#C8102E] disabled:opacity-50 px-3 py-2 rounded-lg transition"
+              >
+                {rejectSubmitting ? "Saving..." : "Reject and save reason"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
