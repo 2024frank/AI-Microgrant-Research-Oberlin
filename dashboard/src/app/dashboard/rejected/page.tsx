@@ -24,19 +24,14 @@ interface RejectedEvent {
   status: "rejected" | "overridden";
 }
 
-function timeAgo(iso: string) {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
-
 export default function RejectedPage() {
   const { user } = useAuth();
   const [rejected, setRejected] = useState<RejectedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     const db = getClientDb();
@@ -53,6 +48,7 @@ export default function RejectedPage() {
 
   async function override(item: RejectedEvent) {
     setActing(item.id);
+    setError(null);
     try {
       const db = getClientDb();
       // Move to review_queue as pending
@@ -76,6 +72,8 @@ export default function RejectedPage() {
         `Overrode AI block: ${item.original.title}`,
         `AI had ${item.confidence}% confidence it was private`,
       );
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to move event to review queue.");
     } finally {
       setActing(null);
     }
@@ -84,11 +82,52 @@ export default function RejectedPage() {
   async function remove(item: RejectedEvent) {
     if (!confirm(`Remove "${item.original.title}" permanently?`)) return;
     setActing(item.id);
+    setError(null);
     try {
       const db = getClientDb();
       await deleteDoc(doc(db, "rejected", item.id));
+      logActivity(
+        user?.email ?? "unknown",
+        "deleted_rejected_event",
+        `Deleted rejected event: ${item.original.title}`,
+      );
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete rejected event.");
     } finally {
       setActing(null);
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function removeSelected() {
+    if (selected.size === 0 || bulkDeleting) return;
+    if (!confirm(`Delete ${selected.size} selected rejected event${selected.size > 1 ? "s" : ""}?`)) return;
+    setBulkDeleting(true);
+    setError(null);
+    try {
+      const selectedItems = rejected.filter(item => selected.has(item.id));
+      await Promise.all(selectedItems.map(item => deleteDoc(doc(db, "rejected", item.id))));
+      logActivity(
+        user?.email ?? "unknown",
+        "deleted_rejected_events_bulk",
+        `Deleted ${selectedItems.length} rejected event${selectedItems.length > 1 ? "s" : ""}`,
+      );
+      setSelected(new Set());
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete selected rejected events.");
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -102,6 +141,18 @@ export default function RejectedPage() {
         <p className="text-zinc-500 text-sm mt-1">
           Events blocked by the AI agents. Override any to send it to the Review Queue instead.
         </p>
+        {selected.size > 0 && (
+          <div className="mt-4 flex items-center gap-3">
+            <p className="text-zinc-400 text-xs">{selected.size} selected</p>
+            <button
+              onClick={removeSelected}
+              disabled={bulkDeleting}
+              className="text-xs font-medium text-white bg-red-500/80 hover:bg-red-500 disabled:opacity-50 px-3 py-1.5 rounded-lg transition"
+            >
+              {bulkDeleting ? "Deleting..." : `Delete ${selected.size} selected`}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-8">
@@ -117,6 +168,12 @@ export default function RejectedPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-6 bg-red-500/[0.08] border border-red-500/30 rounded-xl px-4 py-3">
+          <p className="text-red-300 text-sm">{error}</p>
+        </div>
+      )}
+
       {!loading && rejected.length === 0 && (
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl flex items-center justify-center py-16 text-center">
           <p className="text-zinc-500 text-sm">No rejected events.</p>
@@ -126,7 +183,15 @@ export default function RejectedPage() {
       {privateEvents.length > 0 && (
         <Section title="Private / Restricted" color="amber">
           {privateEvents.map(item => (
-            <EventCard key={item.id} item={item} acting={acting} onOverride={() => override(item)} onRemove={() => remove(item)} />
+            <EventCard
+              key={item.id}
+              item={item}
+              acting={acting}
+              selected={selected.has(item.id)}
+              onToggleSelect={() => toggleSelect(item.id)}
+              onOverride={() => override(item)}
+              onRemove={() => remove(item)}
+            />
           ))}
         </Section>
       )}
@@ -134,7 +199,15 @@ export default function RejectedPage() {
       {duplicateEvents.length > 0 && (
         <Section title="Duplicate of Existing CommunityHub Event" color="red">
           {duplicateEvents.map(item => (
-            <EventCard key={item.id} item={item} acting={acting} onOverride={() => override(item)} onRemove={() => remove(item)} />
+            <EventCard
+              key={item.id}
+              item={item}
+              acting={acting}
+              selected={selected.has(item.id)}
+              onToggleSelect={() => toggleSelect(item.id)}
+              onOverride={() => override(item)}
+              onRemove={() => remove(item)}
+            />
           ))}
         </Section>
       )}
@@ -154,8 +227,9 @@ function Section({ title, color, children }: { title: string; color: string; chi
   );
 }
 
-function EventCard({ item, acting, onOverride, onRemove }: {
+function EventCard({ item, acting, selected, onToggleSelect, onOverride, onRemove }: {
   item: RejectedEvent; acting: string | null;
+  selected: boolean; onToggleSelect: () => void;
   onOverride: () => void; onRemove: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -165,6 +239,13 @@ function EventCard({ item, acting, onOverride, onRemove }: {
   return (
     <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
       <div className="flex items-start gap-4 px-5 py-4">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          className="mt-1 w-4 h-4 accent-[#C8102E] shrink-0"
+          aria-label={`Select ${item.original.title}`}
+        />
         <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left">
           <p className="text-white text-sm font-medium">{item.original.title}</p>
           <p className="text-zinc-500 text-xs mt-0.5">

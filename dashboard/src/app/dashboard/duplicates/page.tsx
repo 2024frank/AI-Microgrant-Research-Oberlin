@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, setDoc, updateDoc } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { logActivity } from "@/lib/logActivity";
@@ -23,6 +23,24 @@ interface Duplicate {
   reason: string;
   status: "pending" | "confirmed" | "rejected";
   detectedAt: string;
+  reviewQueueId?: string;
+  localistId?: string;
+  source?: string;
+  source_id?: string;
+  incomingEvent?: {
+    id?: string;
+    localistId?: string;
+    source?: string;
+    source_id?: string;
+    title?: string;
+    date?: string;
+    location?: string;
+    description?: string;
+    sponsors?: string[];
+    url?: string;
+    writerPayload?: unknown;
+    [key: string]: unknown;
+  };
 }
 
 function timeAgo(iso: string) {
@@ -45,21 +63,27 @@ function ConfidenceBadge({ score }: { score: number }) {
 }
 
 export default function DuplicatesPage() {
+  const db = getClientDb();
   const { user } = useAuth();
   const [duplicates, setDuplicates] = useState<Duplicate[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [actingIds, setActingIds] = useState<Set<string>>(new Set());
+  const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
 
   function toggleExpand(id: string) {
     setExpanded(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }
 
   useEffect(() => {
-    const db = getClientDb();
     const unsub = onSnapshot(collection(db, "duplicates"), (snap) => {
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Duplicate));
       docs.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
@@ -69,17 +93,89 @@ export default function DuplicatesPage() {
     return unsub;
   }, []);
 
-  async function updateStatus(id: string, status: "confirmed" | "rejected") {
-    const db = getClientDb();
-    await updateDoc(doc(db, "duplicates", id), { status });
-    const dup = duplicates.find(d => d.id === id);
-    logActivity(
-      user?.email ?? "unknown",
-      status === "confirmed" ? "confirmed_duplicate" : "rejected_duplicate",
-      status === "confirmed"
-        ? `Confirmed duplicate: "${dup?.eventA.title}" vs "${dup?.eventB.title}"`
-        : `Rejected duplicate flag: "${dup?.eventA.title}"`,
+  function getReviewQueueId(dup?: Duplicate) {
+    if (!dup) return null;
+    return (
+      dup.reviewQueueId ??
+      dup.localistId ??
+      dup.incomingEvent?.localistId ??
+      null
     );
+  }
+
+  async function resendToReviewQueue(dup?: Duplicate) {
+    const reviewQueueId = getReviewQueueId(dup);
+    if (!dup || !reviewQueueId) {
+      throw new Error("Cannot resend: missing review queue id.");
+    }
+
+    const source = dup.incomingEvent?.source ?? dup.incomingEvent?.source_id ?? dup.source ?? dup.source_id ?? dup.eventA?.source ?? "unknown";
+    const title = dup.incomingEvent?.title ?? dup.eventA?.title ?? "";
+    const date = dup.incomingEvent?.date ?? dup.eventA?.date ?? "";
+    const location = dup.incomingEvent?.location ?? dup.eventA?.location ?? "";
+    const description = dup.incomingEvent?.description ?? dup.eventA?.description ?? "";
+    const sponsors = Array.isArray(dup.incomingEvent?.sponsors) ? dup.incomingEvent.sponsors : [];
+    const url = typeof dup.incomingEvent?.url === "string" ? dup.incomingEvent.url : "";
+
+    await setDoc(
+      doc(db, "review_queue", reviewQueueId),
+      {
+        localistId: reviewQueueId,
+        source,
+        status: "pending",
+        detectedAt: new Date().toISOString(),
+        original: { title, date, location, description, sponsors, url },
+        writerPayload: dup.incomingEvent?.writerPayload ?? null,
+        approvedAt: null,
+        rejectedAt: null,
+        chPostId: null,
+        autoRejectedReason: null,
+        duplicateDecision: "not_duplicate",
+        duplicateDecisionAt: new Date().toISOString(),
+        duplicateDecisionBy: user?.email ?? "unknown",
+        duplicateId: dup.id,
+      },
+      { merge: true },
+    );
+  }
+
+  async function updateStatus(id: string, status: "confirmed" | "rejected") {
+    const dup = duplicates.find(d => d.id === id);
+    if (!dup) return;
+
+    setActingIds(prev => new Set(prev).add(id));
+    setActionErrors(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+
+    try {
+      // "Not a duplicate" should send the candidate back to the review queue first.
+      if (status === "rejected") {
+        await resendToReviewQueue(dup);
+      }
+      await updateDoc(doc(db, "duplicates", id), { status });
+
+      logActivity(
+        user?.email ?? "unknown",
+        status === "confirmed" ? "confirmed_duplicate" : "rejected_duplicate",
+        status === "confirmed"
+          ? `Confirmed duplicate: "${dup.eventA.title}" vs "${dup.eventB.title}"`
+          : `Rejected duplicate flag: "${dup.eventA.title}"`,
+      );
+    } catch (err: unknown) {
+      setActionErrors(prev => ({
+        ...prev,
+        [id]: err instanceof Error ? err.message : "Failed to update duplicate decision.",
+      }));
+    } finally {
+      setActingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   }
 
   const pending = duplicates.filter(d => d.status === "pending");
@@ -120,6 +216,8 @@ export default function DuplicatesPage() {
           <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide">Pending Review</p>
           {pending.map((dup) => {
             const isOpen = expanded.has(dup.id);
+            const isActing = actingIds.has(dup.id);
+            const actionError = actionErrors[dup.id];
             return (
               <div key={dup.id} className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
                 <button
@@ -159,18 +257,25 @@ export default function DuplicatesPage() {
                     </div>
                   ))}
                 </div>
+                {actionError && (
+                  <div className="px-5 py-2 border-t border-red-500/20 bg-red-500/[0.06]">
+                    <p className="text-red-300 text-xs">{actionError}</p>
+                  </div>
+                )}
                 <div className="px-5 py-3 border-t border-white/[0.06] flex gap-2 justify-end">
                   <button
                     onClick={() => updateStatus(dup.id, "rejected")}
-                    className="text-xs font-medium text-zinc-400 hover:text-white border border-white/[0.08] hover:border-white/20 px-3 py-1.5 rounded-lg transition"
+                    disabled={isActing}
+                    className="text-xs font-medium text-zinc-400 hover:text-white disabled:opacity-50 border border-white/[0.08] hover:border-white/20 px-3 py-1.5 rounded-lg transition"
                   >
-                    Not a duplicate
+                    {isActing ? "Working..." : "Not a duplicate"}
                   </button>
                   <button
                     onClick={() => updateStatus(dup.id, "confirmed")}
-                    className="text-xs font-medium text-white bg-[#C8102E]/80 hover:bg-[#C8102E] px-3 py-1.5 rounded-lg transition"
+                    disabled={isActing}
+                    className="text-xs font-medium text-white bg-[#C8102E]/80 hover:bg-[#C8102E] disabled:opacity-50 px-3 py-1.5 rounded-lg transition"
                   >
-                    Confirm duplicate
+                    {isActing ? "Working..." : "Confirm duplicate"}
                   </button>
                 </div>
               </div>

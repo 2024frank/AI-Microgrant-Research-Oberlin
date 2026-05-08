@@ -128,6 +128,10 @@ export default function ReviewPage() {
   function getPayload(item: QueueItem): WriterPayload {
     const e = edits[item.id] || {};
     const base = { ...(item.writerPayload || {}) } as WriterPayload;
+    const now = Math.floor(Date.now() / 1000);
+    const existingSession = base.sessions?.[0];
+    const fallbackStart = existingSession?.startTime ?? now;
+    const fallbackEnd = existingSession?.endTime ?? (fallbackStart + 3600);
     if (e.title !== undefined) base.title = e.title as string;
     if (e.description !== undefined) base.description = e.description as string;
     if (e.extendedDescription !== undefined) base.extendedDescription = e.extendedDescription as string;
@@ -138,9 +142,11 @@ export default function ReviewPage() {
     if (e.phone !== undefined) base.phone = e.phone as string;
     if (e.website !== undefined) base.website = e.website as string;
     if (e.startTime !== undefined || e.endTime !== undefined) {
-      const start = e.startTime ? fromLocal(e.startTime) : base.sessions[0].startTime;
-      const end = e.endTime ? fromLocal(e.endTime) : base.sessions[0].endTime;
+      const start = e.startTime ? fromLocal(e.startTime) : fallbackStart;
+      const end = e.endTime ? fromLocal(e.endTime) : fallbackEnd;
       base.sessions = [{ startTime: start, endTime: end }];
+    } else if (!base.sessions?.length) {
+      base.sessions = [{ startTime: fallbackStart, endTime: fallbackEnd }];
     }
     return base;
   }
@@ -259,7 +265,11 @@ export default function ReviewPage() {
   function toggleSelect(id: string) {
     setSelected(prev => {
       const s = new Set(prev);
-      s.has(id) ? s.delete(id) : s.add(id);
+      if (s.has(id)) {
+        s.delete(id);
+      } else {
+        s.add(id);
+      }
       return s;
     });
   }
@@ -300,6 +310,17 @@ export default function ReviewPage() {
             const saveState   = saveStates[item.id] ?? "idle";
             const e           = edits[item.id] || {};
             const wp          = item.writerPayload || {} as WriterPayload;
+            const original = {
+              title: item.original?.title ?? "Untitled event",
+              date: item.original?.date ?? "",
+              endDate: item.original?.endDate ?? "",
+              location: item.original?.location ?? "",
+              description: item.original?.description ?? "",
+              sponsors: item.original?.sponsors ?? [],
+              url: item.original?.url ?? "",
+              photoUrl: item.original?.photoUrl ?? null,
+              experience: item.original?.experience ?? "",
+            };
             const session     = wp.sessions?.[0];
             const hasUnsaved  = Object.keys(e).length > 0;
 
@@ -333,10 +354,10 @@ export default function ReviewPage() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-white text-sm font-medium">{item.original.title}</p>
-                        {item.original.url && (
+                        <p className="text-white text-sm font-medium">{original.title}</p>
+                        {original.url && (
                           <a
-                            href={item.original.url}
+                            href={original.url}
                             target="_blank"
                             rel="noreferrer"
                             onClick={e => e.stopPropagation()}
@@ -351,7 +372,7 @@ export default function ReviewPage() {
                       </div>
                       <p className="text-zinc-500 text-xs mt-0.5">
                         {session ? fmt(session.startTime) : "—"}
-                        {item.original.location ? ` · ${item.original.location}` : ""}
+                        {original.location ? ` · ${original.location}` : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -461,25 +482,25 @@ export default function ReviewPage() {
                         Original ({SOURCE_LABEL[item.source_id || item.source] ?? item.source ?? "Source"})
                       </p>
 
-                      {item.original.photoUrl && (
+                      {original.photoUrl && (
                         <img
-                          src={item.original.photoUrl}
-                          alt={item.original.title}
+                          src={original.photoUrl}
+                          alt={original.title}
                           className="w-full h-36 object-cover rounded-lg"
                         />
                       )}
 
-                      <Field label="Title" value={item.original.title} />
+                      <Field label="Title" value={original.title} />
                       <Field label="Date" value={session ? `${fmt(session.startTime)} → ${fmt(session.endTime)}` : "—"} />
-                      <Field label="Location" value={item.original.location || "—"} />
-                      <Field label="Sponsors" value={item.original.sponsors?.join(", ") || "—"} />
-                      <Field label="Website" value={item.original.url || "—"} />
+                      <Field label="Location" value={original.location || "—"} />
+                      <Field label="Sponsors" value={original.sponsors?.join(", ") || "—"} />
+                      <Field label="Website" value={original.url || "—"} />
                       <div>
                         <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Description (raw)</p>
-                        <p className="text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap break-words">{item.original.description || "—"}</p>
+                        <p className="text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap break-words">{original.description || "—"}</p>
                       </div>
-                      {item.original.url && (
-                        <a href={item.original.url} target="_blank" rel="noreferrer" className="text-[#C8102E] text-xs hover:underline">
+                      {original.url && (
+                        <a href={original.url} target="_blank" rel="noreferrer" className="text-[#C8102E] text-xs hover:underline">
                           View on {SOURCE_LABEL[item.source_id || item.source] ?? "source"} ↗
                         </a>
                       )}
@@ -494,10 +515,10 @@ export default function ReviewPage() {
                         <span className="text-zinc-600 normal-case font-normal">)</span>
                       </p>
 
-                      {item.original.photoUrl && (
+                      {original.photoUrl && (
                         <img
-                          src={item.original.photoUrl}
-                          alt={item.original.title}
+                          src={original.photoUrl}
+                          alt={original.title}
                           className="w-full h-36 object-cover rounded-lg opacity-60"
                         />
                       )}
