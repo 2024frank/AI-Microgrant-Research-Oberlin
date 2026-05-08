@@ -99,18 +99,19 @@ export default function DuplicatesPage() {
       dup.reviewQueueId ??
       dup.localistId ??
       dup.incomingEvent?.localistId ??
-      null
+      dup.incomingEvent?.id ??
+      dup.eventA?.id ??
+      `dup-${dup.id}`
     );
   }
 
   async function resendToReviewQueue(dup?: Duplicate) {
     const db = getClientDb();
     const reviewQueueId = getReviewQueueId(dup);
-    if (!dup || !reviewQueueId) {
-      throw new Error("Cannot resend: missing review queue id.");
-    }
+    if (!dup || !reviewQueueId) throw new Error("Cannot resend duplicate item.");
 
     const source = dup.incomingEvent?.source ?? dup.incomingEvent?.source_id ?? dup.source ?? dup.source_id ?? dup.eventA?.source ?? "unknown";
+    const sourceId = dup.incomingEvent?.source_id ?? dup.source_id ?? source;
     const title = dup.incomingEvent?.title ?? dup.eventA?.title ?? "";
     const date = dup.incomingEvent?.date ?? dup.eventA?.date ?? "";
     const location = dup.incomingEvent?.location ?? dup.eventA?.location ?? "";
@@ -123,6 +124,7 @@ export default function DuplicatesPage() {
       {
         localistId: reviewQueueId,
         source,
+        source_id: sourceId,
         status: "pending",
         detectedAt: new Date().toISOString(),
         original: { title, date, location, description, sponsors, url },
