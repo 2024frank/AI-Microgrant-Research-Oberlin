@@ -1,4 +1,4 @@
-import { db } from "@/lib/firebase";
+import { getClientDb } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
 export async function logActivity(
@@ -8,6 +8,7 @@ export async function logActivity(
   details?: string,
 ) {
   try {
+    const db = getClientDb();
     await addDoc(collection(db, "activity_log"), {
       user,
       action,

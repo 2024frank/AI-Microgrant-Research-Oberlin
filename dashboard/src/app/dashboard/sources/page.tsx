@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getClientDb } from "@/lib/firebase";
 
 type SourceStatus = "ready" | "needs-check" | "paused";
 
@@ -134,6 +134,7 @@ export default function SourcesPage() {
   const [reports, setReports] = useState<AutomationReport[]>([]);
 
   useEffect(() => {
+    const db = getClientDb();
     const reportsQuery = query(collection(db, "automation_runs"), orderBy("finishedAt", "desc"), limit(30));
     const unsubscribe = onSnapshot(reportsQuery, snap => {
       setReports(snap.docs.map(d => ({ id: d.id, ...d.data() } as AutomationReport)));

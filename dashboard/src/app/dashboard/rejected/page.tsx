@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getClientDb } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { logActivity } from "@/lib/logActivity";
 
@@ -36,6 +36,7 @@ export default function RejectedPage() {
   const [acting, setActing] = useState<string | null>(null);
 
   useEffect(() => {
+    const db = getClientDb();
     const unsub = onSnapshot(collection(db, "rejected"), snap => {
       const docs = snap.docs
         .map(d => ({ id: d.id, ...d.data() } as RejectedEvent))
@@ -50,6 +51,7 @@ export default function RejectedPage() {
   async function override(item: RejectedEvent) {
     setActing(item.id);
     try {
+      const db = getClientDb();
       // Move to review_queue as pending
       const { getFirestore } = await import("firebase/firestore");
       const firestore = getFirestore();
@@ -80,6 +82,7 @@ export default function RejectedPage() {
     if (!confirm(`Remove "${item.original.title}" permanently?`)) return;
     setActing(item.id);
     try {
+      const db = getClientDb();
       await deleteDoc(doc(db, "rejected", item.id));
     } finally {
       setActing(null);

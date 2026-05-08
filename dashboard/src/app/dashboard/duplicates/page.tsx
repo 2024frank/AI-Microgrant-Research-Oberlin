@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getClientDb } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { logActivity } from "@/lib/logActivity";
 
@@ -59,6 +59,7 @@ export default function DuplicatesPage() {
   }
 
   useEffect(() => {
+    const db = getClientDb();
     const unsub = onSnapshot(collection(db, "duplicates"), (snap) => {
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Duplicate));
       docs.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
@@ -69,6 +70,7 @@ export default function DuplicatesPage() {
   }, []);
 
   async function updateStatus(id: string, status: "confirmed" | "rejected") {
+    const db = getClientDb();
     await updateDoc(doc(db, "duplicates", id), { status });
     const dup = duplicates.find(d => d.id === id);
     logActivity(

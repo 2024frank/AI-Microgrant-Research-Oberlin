@@ -18,7 +18,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, where, doc, updateDoc, writeBatch } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getClientDb } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { logActivity } from "@/lib/logActivity";
 
@@ -89,6 +89,7 @@ export default function ReviewPage() {
   const [everEditedFields, setEverEditedFields] = useState<Record<string, Set<string>>>({});
 
   useEffect(() => {
+    const db = getClientDb();
     const q = query(collection(db, "review_queue"), where("status", "==", "pending"));
     const unsub = onSnapshot(q, async snap => {
       const now = Math.floor(Date.now() / 1000);
@@ -149,6 +150,7 @@ export default function ReviewPage() {
     setSaveStates(prev => ({ ...prev, [item.id]: "saving" }));
     try {
       const merged = getPayload(item); // edits merged over base
+      const db = getClientDb();
       await updateDoc(doc(db, "review_queue", item.id), { writerPayload: merged });
       // Clear local edits — Firestore snapshot will push back the saved values
       setEdits(prev => { const s = { ...prev }; delete s[item.id]; return s; });
@@ -197,6 +199,7 @@ export default function ReviewPage() {
       const chId = (data as Record<string, unknown>).id ?? (data as Record<string, unknown>).postId;
       const writerEdited = everEdited.has(item.id);
       const writerEditedFields = [...(everEditedFields[item.id] || [])];
+      const db = getClientDb();
       await updateDoc(doc(db, "review_queue", item.id), {
         status: "approved",
         approvedAt: new Date().toISOString(),
@@ -225,6 +228,7 @@ export default function ReviewPage() {
   }
 
   async function reject(item: QueueItem) {
+    const db = getClientDb();
     await updateDoc(doc(db, "review_queue", item.id), { status: "rejected_manual", rejectedAt: new Date().toISOString() });
     logActivity(
       user?.email ?? "unknown",

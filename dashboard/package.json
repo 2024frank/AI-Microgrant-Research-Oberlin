@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "collect:oberlin": "node scripts/oberlin-community-calendar-collect.mjs --verbose",
+    "collect:oberlin:dry": "node scripts/oberlin-community-calendar-collect.mjs --dry-run --verbose"
   },
   "dependencies": {
     "firebase": "^12.12.1",

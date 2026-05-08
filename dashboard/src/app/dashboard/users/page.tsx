@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getClientDb } from "@/lib/firebase";
 import { useAuth, ADMIN_EMAIL } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -62,6 +62,7 @@ export default function UsersPage() {
   // Load users from allowed_users
   useEffect(() => {
     if (!isAdmin) return;
+    const db = getClientDb();
     const unsub = onSnapshot(collection(db, "allowed_users"), async (snap) => {
       const docs = snap.docs.map(d => d.data() as AllowedUser);
       docs.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
@@ -85,6 +86,7 @@ export default function UsersPage() {
   // Live activity log
   useEffect(() => {
     if (!isAdmin) return;
+    const db = getClientDb();
     const unsub = onSnapshot(collection(db, "activity_log"), (snap) => {
       const docs = snap.docs
         .map(d => ({ id: d.id, ...d.data() } as ActivityEntry))

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { auth, db } from "@/lib/firebase";
+import { getClientAuth, getClientDb } from "@/lib/firebase";
 import { ADMIN_EMAIL } from "@/context/AuthContext";
 
 const provider = new GoogleAuthProvider();
@@ -18,6 +18,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
+      const auth = getClientAuth();
+      const db = getClientDb();
       const result = await signInWithPopup(auth, provider);
       const email = result.user.email ?? "";
       if (email !== ADMIN_EMAIL) {

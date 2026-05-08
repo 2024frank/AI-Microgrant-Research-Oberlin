@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { collection, doc, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getClientDb } from "@/lib/firebase";
 
 type RunReport = {
   id?: string;
@@ -59,6 +59,7 @@ export default function OverviewPage() {
   const [reports, setReports] = useState<RunReport[]>([]);
 
   useEffect(() => {
+    const db = getClientDb();
     const pendingQuery = query(collection(db, "review_queue"), where("status", "==", "pending"));
     const duplicateQuery = query(collection(db, "duplicates"), where("status", "==", "pending"));
     const rejectedQuery = query(collection(db, "rejected"), where("status", "==", "rejected"));

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "firebase/auth";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { getClientAuth, getClientDb } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 
 const nav = [
@@ -53,6 +53,7 @@ export default function Sidebar() {
   const [counts, setCounts] = useState({ review: 0, rejected: 0, duplicates: 0 });
 
   useEffect(() => {
+    const db = getClientDb();
     const review = query(collection(db, "review_queue"), where("status", "==", "pending"));
     const rejected = query(collection(db, "rejected"), where("status", "==", "rejected"));
     const duplicates = query(collection(db, "duplicates"), where("status", "==", "pending"));
@@ -119,7 +120,7 @@ export default function Sidebar() {
             {user?.email?.[0] ?? "U"}
           </div>
           <p className="text-zinc-400 text-xs truncate flex-1">{user?.email}</p>
-          <button onClick={() => signOut(auth)} title="Sign out" className="text-zinc-600 hover:text-white transition shrink-0">
+          <button onClick={() => signOut(getClientAuth())} title="Sign out" className="text-zinc-600 hover:text-white transition shrink-0">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
             </svg>

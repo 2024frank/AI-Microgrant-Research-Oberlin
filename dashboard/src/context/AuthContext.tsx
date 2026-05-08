@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { getClientAuth, getClientDb } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 
 export const ADMIN_EMAIL = "frankkusiap@gmail.com";
@@ -21,6 +21,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const lastRecordedEmail = useRef<string | null>(null);
 
   useEffect(() => {
+    const auth = getClientAuth();
+    const db = getClientDb();
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);

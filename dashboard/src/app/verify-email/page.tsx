@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { isSignInWithEmailLink, signInWithEmailLink, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { getClientAuth, getClientDb } from "@/lib/firebase";
 import { ADMIN_EMAIL } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -13,6 +13,8 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     async function completeSignIn() {
+      const auth = getClientAuth();
+      const db = getClientDb();
       if (!isSignInWithEmailLink(auth, window.location.href)) {
         router.replace("/login");
         return;
