@@ -63,7 +63,6 @@ function ConfidenceBadge({ score }: { score: number }) {
 }
 
 export default function DuplicatesPage() {
-  const db = getClientDb();
   const { user } = useAuth();
   const [duplicates, setDuplicates] = useState<Duplicate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,6 +83,7 @@ export default function DuplicatesPage() {
   }
 
   useEffect(() => {
+    const db = getClientDb();
     const unsub = onSnapshot(collection(db, "duplicates"), (snap) => {
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Duplicate));
       docs.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
@@ -104,6 +104,7 @@ export default function DuplicatesPage() {
   }
 
   async function resendToReviewQueue(dup?: Duplicate) {
+    const db = getClientDb();
     const reviewQueueId = getReviewQueueId(dup);
     if (!dup || !reviewQueueId) {
       throw new Error("Cannot resend: missing review queue id.");
@@ -140,6 +141,7 @@ export default function DuplicatesPage() {
   }
 
   async function updateStatus(id: string, status: "confirmed" | "rejected") {
+    const db = getClientDb();
     const dup = duplicates.find(d => d.id === id);
     if (!dup) return;
 
