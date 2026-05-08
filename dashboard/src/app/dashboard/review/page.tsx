@@ -50,6 +50,7 @@ const SOURCE_LABEL: Record<string, string> = {
   heritage_center:  "Oberlin Heritage Center",
   apollo_theatre:   "Apollo Theatre",
   oberlin_libcal:   "Oberlin College Libraries",
+  mad_factory:      "MAD* Factory",
 };
 
 function fmt(ts: number) {

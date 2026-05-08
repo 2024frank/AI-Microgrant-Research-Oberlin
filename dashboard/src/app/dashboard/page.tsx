@@ -25,7 +25,7 @@ type GlobalStats = {
   lastPushedAt?: string;
 };
 
-const SOURCE_COUNT = 8;
+const SOURCE_COUNT = 9;
 
 function timeAgo(iso?: string) {
   if (!iso) return "never";

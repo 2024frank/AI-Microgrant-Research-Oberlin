@@ -102,6 +102,15 @@ const SOURCES: Array<{
     notes: "WordPress event pages are visible. Civic meetings can be queued when public.",
   },
   {
+    id: "mad_factory",
+    name: "MAD* Factory",
+    url: "https://www.madfactory.org/tickets-events",
+    method: "external automation scrape",
+    cadence: "daily",
+    status: "ready",
+    notes: "Scrape tickets/events + performance pages. Extract sessions, og:image, and queue to Firestore review_queue.",
+  },
+  {
     id: "experience_oberlin",
     name: "Experience Oberlin",
     url: "https://www.experienceoberlin.com/events",
