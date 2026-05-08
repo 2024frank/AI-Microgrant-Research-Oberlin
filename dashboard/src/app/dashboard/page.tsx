@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, doc, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 
 type RunReport = {
   id?: string;
@@ -52,11 +53,15 @@ function StatCard({ label, value, sub, tone = "default" }: {
 }
 
 export default function OverviewPage() {
+  const { user, isAdmin } = useAuth();
   const [pending, setPending] = useState(0);
   const [duplicates, setDuplicates] = useState(0);
   const [rejected, setRejected] = useState(0);
   const [global, setGlobal] = useState<GlobalStats>({});
   const [reports, setReports] = useState<RunReport[]>([]);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [healthResult, setHealthResult] = useState<Record<string, unknown> | null>(null);
+  const [healthError, setHealthError] = useState<string | null>(null);
 
   useEffect(() => {
     const db = getClientDb();
@@ -94,6 +99,34 @@ export default function OverviewPage() {
 
   const latest = reports[0];
 
+  async function runHealthCheck() {
+    setHealthError(null);
+    setHealthResult(null);
+    setHealthLoading(true);
+    try {
+      if (!user) throw new Error("Not signed in");
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin/health", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string })?.error ?? `HTTP ${res.status}`);
+      setHealthResult(data as Record<string, unknown>);
+    } catch (err: unknown) {
+      setHealthError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setHealthLoading(false);
+    }
+  }
+
+  async function copyIdToken() {
+    if (!user) return;
+    const idToken = await user.getIdToken();
+    await navigator.clipboard.writeText(idToken);
+  }
+
   return (
     <div className="p-8 max-w-6xl">
       <div className="mb-8">
@@ -110,6 +143,45 @@ export default function OverviewPage() {
         <StatCard label="Duplicates" value={String(duplicates)} sub="waiting in duplicate tab" />
         <StatCard label="Rejected" value={String(rejected)} sub="kept for research metrics" />
       </div>
+
+      {isAdmin && (
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5 mb-8">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h2 className="text-white text-sm font-semibold">Admin Tools</h2>
+              <p className="text-zinc-600 text-xs mt-1">Quickly verify server env + Firestore + CommunityHub.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => runHealthCheck()}
+                disabled={healthLoading}
+                className="px-3 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] disabled:opacity-50 text-white text-xs font-semibold"
+              >
+                {healthLoading ? "Checking…" : "Run Health Check"}
+              </button>
+              <button
+                onClick={() => copyIdToken()}
+                className="px-3 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] text-white text-xs font-semibold"
+                title="Copies your Firebase ID token to clipboard"
+              >
+                Copy ID Token
+              </button>
+            </div>
+          </div>
+
+          {healthError && (
+            <p className="mt-4 text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
+              {healthError}
+            </p>
+          )}
+
+          {healthResult && (
+            <pre className="mt-4 text-[11px] text-zinc-300 bg-black/30 border border-white/[0.06] rounded-lg p-3 overflow-auto">
+              {JSON.stringify(healthResult, null, 2)}
+            </pre>
+          )}
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-5">
         <section className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
