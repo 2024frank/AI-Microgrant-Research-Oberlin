@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, hasFirebaseConfig } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 
 export const ADMIN_EMAIL = "frankkusiap@gmail.com";
@@ -17,10 +17,12 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true, 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(hasFirebaseConfig);
   const lastRecordedEmail = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!hasFirebaseConfig) return;
+
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);

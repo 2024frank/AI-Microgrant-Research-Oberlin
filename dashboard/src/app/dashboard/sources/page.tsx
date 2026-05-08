@@ -148,10 +148,10 @@ export default function SourcesPage() {
   return (
     <div className="p-8 max-w-6xl">
       <div className="mb-8">
-        <p className="text-[#C8102E] text-xs font-semibold uppercase tracking-wide mb-2">Automation inputs</p>
+        <p className="text-[#C8102E] text-xs font-semibold uppercase tracking-wide mb-2">Codex automation inputs</p>
         <h1 className="text-white text-2xl font-bold tracking-tight">Sources</h1>
         <p className="text-zinc-500 text-sm mt-1 max-w-3xl">
-          The runner should accept any source URL, discover feeds or scrape pages, skip recurring submissions, and report every run back here.
+          Codex automation runs should accept each source URL, discover feeds or scrape pages, skip recurring submissions, and report every run back here.
         </p>
       </div>
 

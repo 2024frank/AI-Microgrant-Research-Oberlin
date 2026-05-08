@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 
 const ADMIN_EMAIL = "frankkusiap@gmail.com";
-const COLLECTIONS = ["review_queue", "rejected", "duplicates", "syncs"];
+const COLLECTIONS = ["review_queue", "rejected", "duplicates", "automation_runs", "syncs", "activity_log"];
 
 async function deleteCollection(colName: string) {
   const db = getAdminDb();
@@ -14,7 +14,7 @@ async function deleteCollection(colName: string) {
   return snap.size;
 }
 
-// Delete only approved docs left over before the delete-on-push fix
+// Delete approved queue docs if the caller chooses not to clear the whole queue.
 async function purgeApproved() {
   const db = getAdminDb();
   const snap = await db.collection("review_queue").where("status", "==", "approved").get();
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       results[col] = await deleteCollection(col);
     }
 
-    // Always purge stale approved docs (from before delete-on-push was added)
+    // Always purge stale approved docs from the local queue.
     const purged = await purgeApproved();
     if (purged > 0) results["review_queue_approved_purge"] = purged;
 

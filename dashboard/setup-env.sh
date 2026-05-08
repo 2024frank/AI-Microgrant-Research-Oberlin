@@ -19,6 +19,14 @@ read -p "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:     " storage_bucket
 read -p "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:" messaging_sender
 read -p "NEXT_PUBLIC_FIREBASE_APP_ID:             " app_id
 read -p "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:     " measurement_id
+echo ""
+echo "Paste the Firebase service account JSON as a single line."
+echo "You can leave this blank and add FIREBASE_SERVICE_ACCOUNT manually later."
+read -p "FIREBASE_SERVICE_ACCOUNT:                " service_account
+echo ""
+echo "Create a random token for Codex automation ingest."
+echo "You can leave this blank and add AUTOMATION_INGEST_TOKEN manually later."
+read -p "AUTOMATION_INGEST_TOKEN:                " automation_ingest_token
 
 cat > .env.local <<EOF
 NEXT_PUBLIC_FIREBASE_API_KEY=$api_key
@@ -28,6 +36,8 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$storage_bucket
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$messaging_sender
 NEXT_PUBLIC_FIREBASE_APP_ID=$app_id
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$measurement_id
+FIREBASE_SERVICE_ACCOUNT=$service_account
+AUTOMATION_INGEST_TOKEN=$automation_ingest_token
 EOF
 
 echo ""

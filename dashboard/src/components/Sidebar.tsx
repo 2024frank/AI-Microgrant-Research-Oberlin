@@ -84,7 +84,7 @@ export default function Sidebar() {
           </div>
           <div>
             <p className="text-white text-sm font-semibold leading-none">Source Ops</p>
-            <p className="text-zinc-500 text-[11px] mt-0.5">CommunityHub queue</p>
+            <p className="text-zinc-500 text-[11px] mt-0.5">Codex to CommunityHub</p>
           </div>
         </div>
       </div>

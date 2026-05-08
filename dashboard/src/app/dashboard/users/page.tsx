@@ -35,6 +35,7 @@ const ACTION_COLOR: Record<string, string> = {
   approved_event:       "text-emerald-400",
   rejected_event:       "text-red-400",
   overrode_private:     "text-amber-400",
+  overrode_rejection:   "text-amber-400",
   confirmed_duplicate:  "text-purple-400",
   rejected_duplicate:   "text-zinc-400",
   added_user:           "text-blue-400",

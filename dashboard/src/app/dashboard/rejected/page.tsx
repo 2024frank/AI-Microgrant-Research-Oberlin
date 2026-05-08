@@ -8,25 +8,31 @@ import { logActivity } from "@/lib/logActivity";
 
 interface RejectedEvent {
   id: string;
-  localistId: string;
-  source: string;
-  reason: "private" | "duplicate";
-  confidence: number;
-  geminiReason: string;
+  localistId?: string;
+  source?: string;
+  sourceId?: string;
+  sourceName?: string;
+  sourceEventUrl?: string;
+  title?: string;
+  date?: string;
+  location?: string;
+  description?: string;
+  reason: "private" | "duplicate" | "not_public" | "excluded" | "restricted" | "athletics" | "normalization_error";
+  confidence?: number;
+  geminiReason?: string;
+  publicCheck?: {
+    isPublic?: boolean;
+    confidence?: number;
+    method?: string;
+    details?: string;
+    reason?: string;
+  };
   original: {
-    title: string; date: string; location: string;
-    description: string; sponsors: string[]; url: string;
+    title?: string; date?: string; location?: string;
+    description?: string; sponsors?: string[]; url?: string;
   };
   rejectedAt: string;
   status: "rejected" | "overridden";
-}
-
-function timeAgo(iso: string) {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
 }
 
 export default function RejectedPage() {
@@ -54,9 +60,15 @@ export default function RejectedPage() {
       const { getFirestore } = await import("firebase/firestore");
       const firestore = getFirestore();
       const { setDoc } = await import("firebase/firestore");
-      await setDoc(doc(firestore, "review_queue", item.localistId), {
+      const queueId = item.localistId || item.id;
+      await setDoc(doc(firestore, "review_queue", queueId), {
         localistId: item.localistId,
-        source: item.source,
+        source: item.source || item.sourceId,
+        sourceId: item.sourceId || item.source,
+        sourceName: item.sourceName,
+        sourceEventUrl: item.sourceEventUrl || item.original?.url,
+        title: item.title || item.original?.title,
+        description: item.description || item.original?.description,
         status: "pending",
         detectedAt: new Date().toISOString(),
         publicCheck: { isPublic: true, confidence: 100, reason: "Manually overridden by reviewer" },
@@ -67,9 +79,9 @@ export default function RejectedPage() {
       await updateDoc(doc(db, "rejected", item.id), { status: "overridden" });
       logActivity(
         user?.email ?? "unknown",
-        "overrode_private",
-        `Overrode AI block: ${item.original.title}`,
-        `AI had ${item.confidence}% confidence it was private`,
+        "overrode_rejection",
+        `Overrode rejection: ${eventTitle(item)}`,
+        `Reason was ${reasonLabel(item.reason).toLowerCase()}`,
       );
     } finally {
       setActing(null);
@@ -77,7 +89,7 @@ export default function RejectedPage() {
   }
 
   async function remove(item: RejectedEvent) {
-    if (!confirm(`Remove "${item.original.title}" permanently?`)) return;
+    if (!confirm(`Remove "${eventTitle(item)}" permanently?`)) return;
     setActing(item.id);
     try {
       await deleteDoc(doc(db, "rejected", item.id));
@@ -86,15 +98,16 @@ export default function RejectedPage() {
     }
   }
 
-  const privateEvents = rejected.filter(r => r.reason === "private");
+  const privateEvents = rejected.filter(r => ["private", "not_public", "restricted"].includes(r.reason));
   const duplicateEvents = rejected.filter(r => r.reason === "duplicate");
+  const otherEvents = rejected.filter(r => !privateEvents.includes(r) && !duplicateEvents.includes(r));
 
   return (
     <div className="p-8 max-w-5xl">
       <div className="mb-8">
         <h1 className="text-white text-2xl font-bold tracking-tight">Rejected Events</h1>
         <p className="text-zinc-500 text-sm mt-1">
-          Events blocked by the AI agents. Override any to send it to the Review Queue instead.
+          Events kept out of the queue for research metrics. Override any item that should receive local review.
         </p>
       </div>
 
@@ -102,12 +115,12 @@ export default function RejectedPage() {
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
           <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">Private / Restricted</p>
           <p className="text-3xl font-bold text-white mb-1">{loading ? "—" : privateEvents.length}</p>
-          <p className="text-zinc-600 text-xs">flagged by Public Agent</p>
+          <p className="text-zinc-600 text-xs">failed public eligibility</p>
         </div>
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
           <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">Duplicates Blocked</p>
           <p className="text-3xl font-bold text-white mb-1">{loading ? "—" : duplicateEvents.length}</p>
-          <p className="text-zinc-600 text-xs">flagged by Duplicate Agent</p>
+          <p className="text-zinc-600 text-xs">matched existing events</p>
         </div>
       </div>
 
@@ -132,6 +145,14 @@ export default function RejectedPage() {
           ))}
         </Section>
       )}
+
+      {otherEvents.length > 0 && (
+        <Section title="Other Rejections" color="amber">
+          {otherEvents.map(item => (
+            <EventCard key={item.id} item={item} acting={acting} onOverride={() => override(item)} onRemove={() => remove(item)} />
+          ))}
+        </Section>
+      )}
     </div>
   );
 }
@@ -148,6 +169,43 @@ function Section({ title, color, children }: { title: string; color: string; chi
   );
 }
 
+function eventTitle(item: RejectedEvent) {
+  return item.title || item.original?.title || "Untitled event";
+}
+
+function eventDate(item: RejectedEvent) {
+  return item.date || item.original?.date || "";
+}
+
+function eventLocation(item: RejectedEvent) {
+  return item.location || item.original?.location || "";
+}
+
+function eventDescription(item: RejectedEvent) {
+  return item.description || item.original?.description || "";
+}
+
+function eventUrl(item: RejectedEvent) {
+  return item.sourceEventUrl || item.original?.url || "";
+}
+
+function reasonLabel(reason: RejectedEvent["reason"]) {
+  const labels: Record<RejectedEvent["reason"], string> = {
+    private: "Private",
+    not_public: "Not public",
+    restricted: "Restricted",
+    duplicate: "Duplicate",
+    excluded: "Excluded",
+    athletics: "Athletics",
+    normalization_error: "Normalization error",
+  };
+  return labels[reason] ?? reason;
+}
+
+function rejectionDetails(item: RejectedEvent) {
+  return item.publicCheck?.details || item.publicCheck?.reason || item.geminiReason || "";
+}
+
 function EventCard({ item, acting, onOverride, onRemove }: {
   item: RejectedEvent; acting: string | null;
   onOverride: () => void; onRemove: () => void;
@@ -159,16 +217,17 @@ function EventCard({ item, acting, onOverride, onRemove }: {
     <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
       <div className="flex items-start gap-4 px-5 py-4">
         <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left">
-          <p className="text-white text-sm font-medium">{item.original.title}</p>
+          <p className="text-white text-sm font-medium">{eventTitle(item)}</p>
           <p className="text-zinc-500 text-xs mt-0.5">
-            {item.original.date ? new Date(item.original.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
-            {item.original.location ? ` · ${item.original.location}` : ""}
+            {eventDate(item) ? new Date(eventDate(item)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+            {eventLocation(item) ? ` · ${eventLocation(item)}` : ""}
             {" · "}
-            <span className={item.reason === "private" ? "text-amber-400" : "text-red-400"}>
-              {item.reason === "private" ? "Private" : "Duplicate"} ({item.confidence}% confidence)
+            <span className={item.reason === "duplicate" ? "text-red-400" : "text-amber-400"}>
+              {reasonLabel(item.reason)}
+              {item.confidence ?? item.publicCheck?.confidence ? ` (${item.confidence ?? item.publicCheck?.confidence}% confidence)` : ""}
             </span>
           </p>
-          <p className="text-zinc-600 text-xs mt-0.5 italic">{item.geminiReason}</p>
+          {rejectionDetails(item) && <p className="text-zinc-600 text-xs mt-0.5 italic">{rejectionDetails(item)}</p>}
         </button>
         <div className="flex gap-2 shrink-0">
           <button
@@ -191,10 +250,10 @@ function EventCard({ item, acting, onOverride, onRemove }: {
       {expanded && (
         <div className="border-t border-white/[0.06] px-5 py-4">
           <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-2">Original Description</p>
-          <p className="text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap">{item.original.description || "—"}</p>
-          {item.original.url && (
-            <a href={item.original.url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-[#C8102E] text-xs hover:underline">
-              View on Localist ↗
+          <p className="text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap">{eventDescription(item) || "—"}</p>
+          {eventUrl(item) && (
+            <a href={eventUrl(item)} target="_blank" rel="noreferrer" className="mt-3 inline-block text-[#C8102E] text-xs hover:underline">
+              View source ↗
             </a>
           )}
         </div>

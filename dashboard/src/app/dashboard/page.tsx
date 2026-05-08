@@ -96,10 +96,10 @@ export default function OverviewPage() {
   return (
     <div className="p-8 max-w-6xl">
       <div className="mb-8">
-        <p className="text-[#C8102E] text-xs font-semibold uppercase tracking-wide mb-2">Fresh automation dashboard</p>
+        <p className="text-[#C8102E] text-xs font-semibold uppercase tracking-wide mb-2">Codex automation dashboard</p>
         <h1 className="text-white text-2xl font-bold tracking-tight">Source Operations</h1>
         <p className="text-zinc-500 text-sm mt-1 max-w-3xl">
-          Automations fetch public community events, skip recurring submissions, record duplicates, and queue clean payloads for dashboard review before CommunityHub review.
+          Codex automations fetch public community events, skip recurring submissions, record duplicates, and queue clean payloads for dashboard review before CommunityHub review.
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export default function OverviewPage() {
           {reports.length === 0 ? (
             <div className="border border-dashed border-white/[0.09] rounded-lg p-6">
               <p className="text-zinc-400 text-sm">No automation reports yet.</p>
-              <p className="text-zinc-600 text-xs mt-1">When the runner exists, it should save found, queued, rejected, duplicate, recurring-skip, and error counts here.</p>
+              <p className="text-zinc-600 text-xs mt-1">When a Codex automation runs, it should save found, queued, rejected, duplicate, recurring-skip, and error counts here.</p>
             </div>
           ) : (
             <div className="space-y-3">

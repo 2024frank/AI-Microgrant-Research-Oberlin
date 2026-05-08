@@ -6,7 +6,37 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { logActivity } from "@/lib/logActivity";
 
-interface ManifestEntry {
+interface Duplicate {
+  id: string;
+  incomingEvent?: {
+    sourceId?: string;
+    sourceName?: string;
+    title?: string;
+    startTime?: number;
+    localDate?: string;
+    locationName?: string;
+    locationAddress?: string;
+    description?: string;
+    sourceEventUrl?: string;
+  };
+  matchedCommunityHubEvent?: {
+    id?: string | number;
+    title?: string;
+    startTime?: number;
+    date?: string;
+    location?: string;
+    description?: string;
+    url?: string;
+  };
+  eventA?: LegacyDuplicateEvent;
+  eventB?: LegacyDuplicateEvent;
+  confidence: number;
+  reason: string;
+  status: "pending" | "confirmed" | "rejected";
+  detectedAt: string;
+}
+
+interface LegacyDuplicateEvent {
   id: string;
   source: string;
   title: string;
@@ -15,14 +45,44 @@ interface ManifestEntry {
   description: string;
 }
 
-interface Duplicate {
-  id: string;
-  eventA: ManifestEntry;
-  eventB: ManifestEntry;
-  confidence: number;
-  reason: string;
-  status: "pending" | "confirmed" | "rejected";
-  detectedAt: string;
+type DuplicateSide = Duplicate["incomingEvent"] | Duplicate["matchedCommunityHubEvent"] | LegacyDuplicateEvent | Record<string, never>;
+
+function duplicateSides(dup: Duplicate) {
+  const incoming: DuplicateSide = dup.incomingEvent ?? dup.eventA ?? {};
+  const matched: DuplicateSide = dup.matchedCommunityHubEvent ?? dup.eventB ?? {};
+  const incomingSourceName = "sourceName" in incoming ? incoming.sourceName : undefined;
+  const incomingSourceId = "sourceId" in incoming ? incoming.sourceId : undefined;
+  const incomingSource = "source" in incoming ? incoming.source : undefined;
+  return [
+    {
+      label: incomingSourceName || incomingSourceId || incomingSource || "incoming",
+      title: "title" in incoming && incoming.title ? incoming.title : "Untitled incoming event",
+      date: "startTime" in incoming && incoming.startTime
+        ? new Date(incoming.startTime * 1000).toISOString()
+        : "localDate" in incoming && incoming.localDate
+        ? incoming.localDate
+        : "date" in incoming
+        ? incoming.date
+        : "",
+      location: "locationName" in incoming
+        ? [incoming.locationName, incoming.locationAddress].filter(Boolean).join(", ")
+        : "location" in incoming
+        ? incoming.location
+        : "",
+      description: "description" in incoming && incoming.description ? incoming.description : "",
+    },
+    {
+      label: "CommunityHub",
+      title: "title" in matched && matched.title ? matched.title : "Untitled CommunityHub event",
+      date: "startTime" in matched && matched.startTime
+        ? new Date(matched.startTime * 1000).toISOString()
+        : "date" in matched
+        ? matched.date
+        : "",
+      location: "location" in matched ? matched.location : "",
+      description: "description" in matched && matched.description ? matched.description : "",
+    },
+  ];
 }
 
 function timeAgo(iso: string) {
@@ -53,7 +113,11 @@ export default function DuplicatesPage() {
   function toggleExpand(id: string) {
     setExpanded(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }
@@ -71,12 +135,13 @@ export default function DuplicatesPage() {
   async function updateStatus(id: string, status: "confirmed" | "rejected") {
     await updateDoc(doc(db, "duplicates", id), { status });
     const dup = duplicates.find(d => d.id === id);
+    const [incoming, matched] = dup ? duplicateSides(dup) : [];
     logActivity(
       user?.email ?? "unknown",
       status === "confirmed" ? "confirmed_duplicate" : "rejected_duplicate",
       status === "confirmed"
-        ? `Confirmed duplicate: "${dup?.eventA.title}" vs "${dup?.eventB.title}"`
-        : `Rejected duplicate flag: "${dup?.eventA.title}"`,
+        ? `Confirmed duplicate: "${incoming?.title}" vs "${matched?.title}"`
+        : `Rejected duplicate flag: "${incoming?.title}"`,
     );
   }
 
@@ -89,7 +154,7 @@ export default function DuplicatesPage() {
       <div className="mb-8">
         <h1 className="text-white text-2xl font-bold tracking-tight">Duplicates</h1>
         <p className="text-zinc-500 text-sm mt-1">
-          Events flagged by the AI agent as potential duplicates. Review each one and confirm or reject.
+          Incoming events that look like CommunityHub or local queue duplicates. Review each candidate and confirm or reject it.
         </p>
       </div>
 
@@ -100,7 +165,7 @@ export default function DuplicatesPage() {
           <p className="text-zinc-600 text-xs">events in queue</p>
         </div>
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
-          <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">AI Accuracy</p>
+          <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-2">Duplicate Signal Accuracy</p>
           <p className="text-3xl font-bold text-zinc-400 mb-1">
             {reviewed.length === 0 ? "—" : `${Math.round((confirmed.length / reviewed.length) * 100)}%`}
           </p>
@@ -118,6 +183,7 @@ export default function DuplicatesPage() {
           <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide">Pending Review</p>
           {pending.map((dup) => {
             const isOpen = expanded.has(dup.id);
+            const sides = duplicateSides(dup);
             return (
               <div key={dup.id} className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
                 <button
@@ -139,10 +205,10 @@ export default function DuplicatesPage() {
                   </div>
                 </button>
                 <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
-                  {[dup.eventA, dup.eventB].map((ev, i) => (
+                  {sides.map((ev, i) => (
                     <div key={i} className="px-5 py-4">
                       <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wide mb-2">
-                        {(ev.source || "unknown").toUpperCase()}
+                        {ev.label.toUpperCase()}
                       </p>
                       <p className="text-white text-sm font-medium mb-1">{ev.title}</p>
                       <p className="text-zinc-500 text-xs mb-1">
@@ -181,21 +247,7 @@ export default function DuplicatesPage() {
         <div className="space-y-2">
           <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide mb-3">Reviewed</p>
           {reviewed.map((dup) => (
-            <div key={dup.id} className="bg-white/[0.02] border border-white/[0.05] rounded-xl px-5 py-3 flex items-center justify-between opacity-60">
-              <div className="flex items-center gap-3">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
-                  dup.status === "confirmed"
-                    ? "text-red-400 bg-red-400/10 border-red-400/20"
-                    : "text-zinc-400 bg-white/[0.04] border-white/[0.08]"
-                }`}>
-                  {dup.status === "confirmed" ? "Duplicate" : "Not a duplicate"}
-                </span>
-                <p className="text-zinc-400 text-sm">{dup.eventA.title}</p>
-                <span className="text-zinc-600 text-xs">vs</span>
-                <p className="text-zinc-400 text-sm">{dup.eventB.title}</p>
-              </div>
-              <ConfidenceBadge score={dup.confidence} />
-            </div>
+            <ReviewedDuplicate key={dup.id} dup={dup} />
           ))}
         </div>
       )}
@@ -209,10 +261,31 @@ export default function DuplicatesPage() {
           </div>
           <p className="text-white font-medium mb-2">No duplicates detected</p>
           <p className="text-zinc-500 text-sm max-w-sm">
-            The AI agent checks every event on sync. Duplicates will appear here for your review as more sources are added.
+            Codex automation checks each incoming event. Duplicate candidates will appear here as more sources are added.
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function ReviewedDuplicate({ dup }: { dup: Duplicate }) {
+  const [incoming, matched] = duplicateSides(dup);
+  return (
+    <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl px-5 py-3 flex items-center justify-between opacity-60">
+      <div className="flex items-center gap-3">
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
+          dup.status === "confirmed"
+            ? "text-red-400 bg-red-400/10 border-red-400/20"
+            : "text-zinc-400 bg-white/[0.04] border-white/[0.08]"
+        }`}>
+          {dup.status === "confirmed" ? "Duplicate" : "Not a duplicate"}
+        </span>
+        <p className="text-zinc-400 text-sm">{incoming.title}</p>
+        <span className="text-zinc-600 text-xs">vs</span>
+        <p className="text-zinc-400 text-sm">{matched.title}</p>
+      </div>
+      <ConfidenceBadge score={dup.confidence} />
     </div>
   );
 }

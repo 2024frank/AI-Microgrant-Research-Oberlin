@@ -2,8 +2,8 @@
  * review/page.tsx — Review Queue
  *
  * Displays all events with status "pending" in Firestore review_queue.
- * Each card shows the original source event alongside the Writer Agent's
- * cleaned version (writerPayload). The reviewer can edit any field,
+ * Each card shows the original source event alongside the normalized
+ * CommunityHub payload. The reviewer can edit any field,
  * save changes to Firestore, then approve (→ posted to CommunityHub) or
  * reject (→ status updated, removed from queue view).
  *
@@ -12,7 +12,7 @@
  *   - Save Changes button locks edits into Firestore before approving
  *   - Events whose start time has already passed are auto-rejected on load
  *   - writerEdited flag is written to Firestore on approval so we can
- *     track how often reviewers modify the AI's output
+ *     track how often reviewers modify automation output
  */
 "use client";
 
@@ -23,9 +23,9 @@ import { useAuth } from "@/context/AuthContext";
 import { logActivity } from "@/lib/logActivity";
 
 interface Original {
-  title: string; date: string; endDate: string; location: string;
-  description: string; sponsors: string[]; url: string;
-  photoUrl: string | null; experience: string;
+  title?: string; date?: string; endDate?: string; location?: string;
+  description?: string; sponsors?: string[]; url?: string;
+  photoUrl?: string | null; experience?: string;
 }
 interface WriterPayload {
   title: string; description: string; extendedDescription: string;
@@ -36,20 +36,38 @@ interface WriterPayload {
   [key: string]: unknown;
 }
 interface QueueItem {
-  id: string; localistId?: string; source: string; source_id?: string;
-  status: string; detectedAt: string; original: Original;
-  writerPayload: WriterPayload;
-  publicCheck: { isPublic: boolean; confidence: number; reason: string };
+  id: string; localistId?: string; source?: string; source_id?: string;
+  sourceId?: string; sourceName?: string; sourceEventUrl?: string;
+  status: string; detectedAt?: string; queuedAt?: string;
+  original?: Original;
+  writerPayload?: WriterPayload | null;
+  communityHubPayload?: WriterPayload | null;
+  payload?: WriterPayload | null;
+  title?: string;
+  description?: string;
+  startTime?: number;
+  endTime?: number;
+  locationName?: string;
+  locationAddress?: string;
+  locationType?: string;
+  sponsors?: string[];
+  imageUrl?: string;
+  categoryHints?: string[];
+  publicCheck?: { isPublic: boolean; confidence: number; reason?: string; details?: string };
 }
 
 // Human-readable source labels shown in the review card header and on the
 // "View on source →" link. Add new sources here as they are wired up.
 const SOURCE_LABEL: Record<string, string> = {
-  localist:         "Oberlin Localist",
+  localist:         "Oberlin College",
+  oberlin_college:  "Oberlin College",
   amam:             "Allen Memorial Art Museum",
   heritage_center:  "Oberlin Heritage Center",
   apollo_theatre:   "Apollo Theatre",
   oberlin_libcal:   "Oberlin College Libraries",
+  fava:             "FAVA Gallery",
+  oberlin_library:  "Oberlin Public Library",
+  city_of_oberlin:  "City of Oberlin",
 };
 
 function fmt(ts: number) {
@@ -72,6 +90,66 @@ type PushResult =
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
+function sourceKey(item: QueueItem) {
+  return item.sourceId || item.source_id || item.source || "";
+}
+
+function sourceLabel(item: QueueItem) {
+  return item.sourceName || SOURCE_LABEL[sourceKey(item)] || sourceKey(item) || "Source";
+}
+
+function originalTitle(item: QueueItem) {
+  return item.original?.title || item.title || item.writerPayload?.title || "Untitled event";
+}
+
+function originalUrl(item: QueueItem) {
+  return item.sourceEventUrl || item.original?.url || item.writerPayload?.calendarSourceUrl as string | undefined || "";
+}
+
+function originalLocation(item: QueueItem) {
+  return item.original?.location || item.locationName || item.locationAddress || item.writerPayload?.location || "";
+}
+
+function originalDescription(item: QueueItem) {
+  return item.original?.description || item.description || "";
+}
+
+function originalSponsors(item: QueueItem) {
+  return item.original?.sponsors || item.sponsors || [];
+}
+
+function originalPhoto(item: QueueItem) {
+  return item.original?.photoUrl || item.imageUrl || item.writerPayload?._photoUrl || null;
+}
+
+function queueTime(item: QueueItem) {
+  return item.detectedAt || item.queuedAt || "";
+}
+
+function buildPayloadFromNormalized(item: QueueItem): WriterPayload {
+  const sourceName = sourceLabel(item);
+  const sourceUrl = originalUrl(item);
+  const startTime = item.startTime ?? Math.floor(Date.now() / 1000);
+  const endTime = item.endTime ?? startTime + 3600;
+  return {
+    title: item.title || item.original?.title || "",
+    description: item.description || item.original?.description || "",
+    extendedDescription: item.description || item.original?.description || "",
+    location: [item.locationName, item.locationAddress].filter(Boolean).join(", "),
+    sponsors: item.sponsors?.length ? item.sponsors : [sourceName],
+    contactEmail: "",
+    phone: "",
+    website: sourceUrl,
+    sessions: [{ startTime, endTime }],
+    locationType: item.locationType || "ph2",
+    _photoUrl: item.imageUrl || item.original?.photoUrl || null,
+    eventType: "ot",
+    postTypeId: [89],
+    calendarSourceName: sourceName,
+    calendarSourceUrl: sourceUrl,
+  };
+}
+
 export default function ReviewPage() {
   const { user } = useAuth();
   const [items, setItems] = useState<QueueItem[]>([]);
@@ -82,9 +160,9 @@ export default function ReviewPage() {
   const [pushing, setPushing] = useState<Set<string>>(new Set());   // IDs mid-push to CH
   const [pushResults, setPushResults] = useState<Record<string, PushResult>>({});
   const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({});
-  // everEdited / everEditedFields survive a save() so the "writerEdited" flag
+  // everEdited / everEditedFields survive a save() so the "reviewerEdited" flag
   // written to Firestore on approval accurately reflects whether a human touched
-  // the AI's output — useful for measuring Writer Agent quality over time.
+  // the automation output.
   const [everEdited, setEverEdited] = useState<Set<string>>(new Set());
   const [everEditedFields, setEverEditedFields] = useState<Record<string, Set<string>>>({});
 
@@ -99,7 +177,7 @@ export default function ReviewPage() {
       // remaining (non-expired) events immediately so the UI doesn't stay blank
       // while waiting for Firestore to re-fire the snapshot.
       const expired = docs.filter(item => {
-        const ts = item.writerPayload?.sessions?.[0]?.startTime;
+        const ts = (item.writerPayload || item.communityHubPayload || item.payload)?.sessions?.[0]?.startTime ?? item.startTime;
         return ts !== undefined && ts < now;
       });
       if (expired.length > 0) {
@@ -114,9 +192,9 @@ export default function ReviewPage() {
         batch.commit().catch(console.warn); // fire-and-forget — snapshot will re-fire anyway
       }
 
-      // Sort newest-queued first so events from the latest sync run appear at the top.
+      // Sort newest-queued first so events from the latest automation run appear at the top.
       const live = docs.filter(item => !expired.find(e => e.id === item.id));
-      live.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime());
+      live.sort((a, b) => new Date(queueTime(b)).getTime() - new Date(queueTime(a)).getTime());
       setItems(live);
       setLoading(false);
     });
@@ -125,7 +203,7 @@ export default function ReviewPage() {
 
   function getPayload(item: QueueItem): WriterPayload {
     const e = edits[item.id] || {};
-    const base = { ...(item.writerPayload || {}) } as WriterPayload;
+    const base = { ...(item.writerPayload || item.communityHubPayload || item.payload || buildPayloadFromNormalized(item)) } as WriterPayload;
     if (e.title !== undefined) base.title = e.title as string;
     if (e.description !== undefined) base.description = e.description as string;
     if (e.extendedDescription !== undefined) base.extendedDescription = e.extendedDescription as string;
@@ -136,10 +214,12 @@ export default function ReviewPage() {
     if (e.phone !== undefined) base.phone = e.phone as string;
     if (e.website !== undefined) base.website = e.website as string;
     if (e.startTime !== undefined || e.endTime !== undefined) {
-      const start = e.startTime ? fromLocal(e.startTime) : base.sessions[0].startTime;
-      const end = e.endTime ? fromLocal(e.endTime) : base.sessions[0].endTime;
+      const start = e.startTime ? fromLocal(e.startTime) : base.sessions?.[0]?.startTime ?? item.startTime ?? Math.floor(Date.now() / 1000);
+      const end = e.endTime ? fromLocal(e.endTime) : base.sessions?.[0]?.endTime ?? item.endTime ?? start + 3600;
       base.sessions = [{ startTime: start, endTime: end }];
     }
+    base.calendarSourceName = base.calendarSourceName || sourceLabel(item);
+    base.calendarSourceUrl = base.calendarSourceUrl || originalUrl(item);
     return base;
   }
 
@@ -202,12 +282,14 @@ export default function ReviewPage() {
         approvedAt: new Date().toISOString(),
         chPostId: chId ?? null,
         writerEdited,
+        reviewerEdited: writerEdited,
         writerEditedFields,
+        reviewerEditedFields: writerEditedFields,
       });
       logActivity(
         user?.email ?? "unknown",
         "approved_event",
-        `Approved: ${getPayload(item).title || item.original?.title || item.id}`,
+        `Approved: ${getPayload(item).title || originalTitle(item) || item.id}`,
         writerEdited ? `Edited fields: ${writerEditedFields.join(", ")}` : "Accepted as-is",
       );
       setPushResults(prev => ({
@@ -229,7 +311,7 @@ export default function ReviewPage() {
     logActivity(
       user?.email ?? "unknown",
       "rejected_event",
-      `Rejected: ${item.writerPayload?.title || item.original?.title || item.id}`,
+      `Rejected: ${item.writerPayload?.title || originalTitle(item) || item.id}`,
     );
   }
 
@@ -254,7 +336,11 @@ export default function ReviewPage() {
   function toggleSelect(id: string) {
     setSelected(prev => {
       const s = new Set(prev);
-      s.has(id) ? s.delete(id) : s.add(id);
+      if (s.has(id)) {
+        s.delete(id);
+      } else {
+        s.add(id);
+      }
       return s;
     });
   }
@@ -267,7 +353,7 @@ export default function ReviewPage() {
         <div>
           <h1 className="text-white text-2xl font-bold tracking-tight">Review Queue</h1>
           <p className="text-zinc-500 text-sm mt-1">
-            Events cleaned by the Writer Agent. Review, edit if needed, then approve to push to CommunityHub.
+            Public, non-recurring, non-duplicate events waiting for local approval before CommunityHub submission.
           </p>
         </div>
         {selected.size > 0 && (
@@ -283,7 +369,7 @@ export default function ReviewPage() {
       {items.length === 0 ? (
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl flex flex-col items-center justify-center py-20 text-center">
           <p className="text-white font-medium mb-2">Queue is empty</p>
-          <p className="text-zinc-500 text-sm max-w-sm">New events will appear here after the hourly sync runs and passes them through the AI pipeline.</p>
+          <p className="text-zinc-500 text-sm max-w-sm">New events will appear here after automation runs discover eligible public events.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -294,7 +380,7 @@ export default function ReviewPage() {
             const pushResult  = pushResults[item.id] ?? null;
             const saveState   = saveStates[item.id] ?? "idle";
             const e           = edits[item.id] || {};
-            const wp          = item.writerPayload || {} as WriterPayload;
+            const wp          = getPayload(item);
             const session     = wp.sessions?.[0];
             const hasUnsaved  = Object.keys(e).length > 0;
 
@@ -328,10 +414,10 @@ export default function ReviewPage() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-white text-sm font-medium">{item.original.title}</p>
-                        {item.original.url && (
+                        <p className="text-white text-sm font-medium">{originalTitle(item)}</p>
+                        {originalUrl(item) && (
                           <a
-                            href={item.original.url}
+                            href={originalUrl(item)}
                             target="_blank"
                             rel="noreferrer"
                             onClick={e => e.stopPropagation()}
@@ -346,12 +432,12 @@ export default function ReviewPage() {
                       </div>
                       <p className="text-zinc-500 text-xs mt-0.5">
                         {session ? fmt(session.startTime) : "—"}
-                        {item.original.location ? ` · ${item.original.location}` : ""}
+                        {originalLocation(item) ? ` · ${originalLocation(item)}` : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="text-zinc-500 text-[10px] border border-white/[0.08] rounded-full px-2 py-0.5">
-                        {SOURCE_LABEL[item.source_id || item.source] ?? item.source ?? "—"}
+                        {sourceLabel(item)}
                       </span>
                       {item.publicCheck && (
                         <span className="text-emerald-400 text-xs border border-emerald-400/30 rounded-full px-2 py-0.5">
@@ -453,46 +539,46 @@ export default function ReviewPage() {
                     {/* Original */}
                     <div className="px-5 py-5 space-y-4">
                       <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wide">
-                        Original ({SOURCE_LABEL[item.source_id || item.source] ?? item.source ?? "Source"})
+                        Source ({sourceLabel(item)})
                       </p>
 
-                      {item.original.photoUrl && (
+                      {originalPhoto(item) && (
                         <img
-                          src={item.original.photoUrl}
-                          alt={item.original.title}
+                          src={originalPhoto(item) || ""}
+                          alt={originalTitle(item)}
                           className="w-full h-36 object-cover rounded-lg"
                         />
                       )}
 
-                      <Field label="Title" value={item.original.title} />
+                      <Field label="Title" value={originalTitle(item)} />
                       <Field label="Date" value={session ? `${fmt(session.startTime)} → ${fmt(session.endTime)}` : "—"} />
-                      <Field label="Location" value={item.original.location || "—"} />
-                      <Field label="Sponsors" value={item.original.sponsors?.join(", ") || "—"} />
-                      <Field label="Website" value={item.original.url || "—"} />
+                      <Field label="Location" value={originalLocation(item) || "—"} />
+                      <Field label="Sponsors" value={originalSponsors(item).join(", ") || "—"} />
+                      <Field label="Website" value={originalUrl(item) || "—"} />
                       <div>
                         <p className="text-zinc-500 text-[10px] uppercase tracking-wide mb-1">Description (raw)</p>
-                        <p className="text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap break-words">{item.original.description || "—"}</p>
+                        <p className="text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap break-words">{originalDescription(item) || "—"}</p>
                       </div>
-                      {item.original.url && (
-                        <a href={item.original.url} target="_blank" rel="noreferrer" className="text-[#C8102E] text-xs hover:underline">
-                          View on {SOURCE_LABEL[item.source_id || item.source] ?? "source"} ↗
+                      {originalUrl(item) && (
+                        <a href={originalUrl(item)} target="_blank" rel="noreferrer" className="text-[#C8102E] text-xs hover:underline">
+                          View on {sourceLabel(item)} ↗
                         </a>
                       )}
                     </div>
 
-                    {/* Writer's version — editable, amber border = unsaved */}
+                    {/* CommunityHub payload — editable, amber border = unsaved */}
                     <div className="px-5 py-5 space-y-4">
                       <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wide">
-                        Writer&apos;s Version
+                        CommunityHub Payload
                         <span className="text-zinc-600 normal-case font-normal"> (editable — </span>
                         <span className="text-amber-400 normal-case font-normal">amber = unsaved</span>
                         <span className="text-zinc-600 normal-case font-normal">)</span>
                       </p>
 
-                      {item.original.photoUrl && (
+                      {originalPhoto(item) && (
                         <img
-                          src={item.original.photoUrl}
-                          alt={item.original.title}
+                          src={originalPhoto(item) || ""}
+                          alt={originalTitle(item)}
                           className="w-full h-36 object-cover rounded-lg opacity-60"
                         />
                       )}
