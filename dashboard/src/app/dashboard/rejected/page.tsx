@@ -12,7 +12,10 @@ interface RejectedEvent {
   source: string;
   reason: "private" | "duplicate";
   confidence: number;
-  geminiReason: string;
+  // Preferred provider-agnostic field name:
+  reasonDetail?: string;
+  // Legacy field name used by older docs:
+  geminiReason?: string;
   original: {
     title: string; date: string; location: string;
     description: string; sponsors: string[]; url: string;
@@ -157,6 +160,7 @@ function EventCard({ item, acting, onOverride, onRemove }: {
 }) {
   const [expanded, setExpanded] = useState(false);
   const isActing = acting === item.id;
+  const detail = item.reasonDetail ?? item.geminiReason ?? "";
 
   return (
     <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
@@ -171,7 +175,7 @@ function EventCard({ item, acting, onOverride, onRemove }: {
               {item.reason === "private" ? "Private" : "Duplicate"} ({item.confidence}% confidence)
             </span>
           </p>
-          <p className="text-zinc-600 text-xs mt-0.5 italic">{item.geminiReason}</p>
+          <p className="text-zinc-600 text-xs mt-0.5 italic">{detail || "—"}</p>
         </button>
         <div className="flex gap-2 shrink-0">
           <button
