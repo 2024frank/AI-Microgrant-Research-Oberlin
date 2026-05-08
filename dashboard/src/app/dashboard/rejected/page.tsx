@@ -10,6 +10,7 @@ interface RejectedEvent {
   id: string;
   localistId: string;
   source: string;
+  source_id?: string;
   reason: "private" | "duplicate";
   confidence: number;
   // Preferred provider-agnostic field name:
@@ -23,6 +24,14 @@ interface RejectedEvent {
   rejectedAt: string;
   status: "rejected" | "overridden";
 }
+
+const SOURCE_LABEL: Record<string, string> = {
+  localist: "Oberlin Localist",
+  amam: "Allen Memorial Art Museum",
+  heritage_center: "Oberlin Heritage Center",
+  apollo_theatre: "Apollo Theatre",
+  oberlin_libcal: "Oberlin College Libraries",
+};
 
 export default function RejectedPage() {
   const { user } = useAuth();
@@ -116,6 +125,7 @@ export default function RejectedPage() {
     setBulkDeleting(true);
     setError(null);
     try {
+      const db = getClientDb();
       const selectedItems = rejected.filter(item => selected.has(item.id));
       await Promise.all(selectedItems.map(item => deleteDoc(doc(db, "rejected", item.id))));
       logActivity(
@@ -144,6 +154,13 @@ export default function RejectedPage() {
         {selected.size > 0 && (
           <div className="mt-4 flex items-center gap-3">
             <p className="text-zinc-400 text-xs">{selected.size} selected</p>
+            <button
+              onClick={() => setSelected(new Set())}
+              disabled={bulkDeleting}
+              className="text-xs text-zinc-400 hover:text-white border border-white/[0.08] px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+            >
+              Clear selection
+            </button>
             <button
               onClick={removeSelected}
               disabled={bulkDeleting}
@@ -234,6 +251,8 @@ function EventCard({ item, acting, selected, onToggleSelect, onOverride, onRemov
 }) {
   const [expanded, setExpanded] = useState(false);
   const isActing = acting === item.id;
+  const sourceKey = item.source_id || item.source || "unknown";
+  const sourceLabel = SOURCE_LABEL[sourceKey] ?? sourceKey;
   const detail = item.reasonDetail ?? item.geminiReason ?? "";
 
   return (
@@ -249,6 +268,8 @@ function EventCard({ item, acting, selected, onToggleSelect, onOverride, onRemov
         <button onClick={() => setExpanded(!expanded)} className="flex-1 text-left">
           <p className="text-white text-sm font-medium">{item.original.title}</p>
           <p className="text-zinc-500 text-xs mt-0.5">
+            <span className="text-zinc-400">{sourceLabel}</span>
+            {" · "}
             {item.original.date ? new Date(item.original.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
             {item.original.location ? ` · ${item.original.location}` : ""}
             {" · "}
@@ -282,7 +303,7 @@ function EventCard({ item, acting, selected, onToggleSelect, onOverride, onRemov
           <p className="text-zinc-400 text-xs leading-relaxed whitespace-pre-wrap">{item.original.description || "—"}</p>
           {item.original.url && (
             <a href={item.original.url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-[#C8102E] text-xs hover:underline">
-              View on Localist ↗
+              View on {sourceLabel} ↗
             </a>
           )}
         </div>
