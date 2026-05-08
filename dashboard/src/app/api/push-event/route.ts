@@ -4,8 +4,43 @@ import { FieldValue } from "firebase-admin/firestore";
 
 const CH_CREATE_API = "https://oberlin.communityhub.cloud/api/legacy/calendar/post/submit";
 
+/**
+ * Recursively removes null and undefined values from an object.
+ * This prevents the CommunityHub PHP backend from crashing when it expects
+ * a string but receives null (Argument #1 must be of type string, null given).
+ */
+function sanitize(obj: unknown): unknown {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(sanitize);
+  const result: Record<string, unknown> = {};
+  const record = obj as Record<string, unknown>;
+  for (const key in record) {
+    if (Object.prototype.hasOwnProperty.call(record, key)) {
+      const val = record[key];
+      if (val !== null && val !== undefined) {
+        result[key] = sanitize(val);
+      }
+    }
+  }
+  return result;
+}
+
 export async function POST(req: NextRequest) {
-  const { payload } = await req.json();
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const { payload: rawPayload } = body;
+  if (!rawPayload || typeof rawPayload !== "object") {
+    return NextResponse.json({ error: "Missing or invalid payload" }, { status: 400 });
+  }
+
+  // Clone payload to avoid mutating request body directly if needed,
+  // although NextRequest body isn't usually reused.
+  const payload = { ...rawPayload } as Record<string, unknown>;
 
   const db = getAdminDb();
 
@@ -22,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   // Pull out the internal helper field and map to the API's image_cdn_url field.
   // The CommunityHub API accepts image URLs directly — no base64 conversion needed.
-  const photoUrl: string | null = payload._photoUrl ?? null;
+  const photoUrl = (payload._photoUrl as string | null) ?? null;
   delete payload._photoUrl;
 
   if (photoUrl) {
@@ -35,6 +70,9 @@ export async function POST(req: NextRequest) {
   // Always submit under the admin Gmail
   payload.email = "frankkusiap@gmail.com";
 
+  // Sanitize the final payload to remove null/undefined fields
+  const finalPayload = sanitize(payload) as Record<string, unknown>;
+
   const submitToCommunityHub = async (submitPayload: Record<string, unknown>) => {
     const res = await fetch(CH_CREATE_API, {
       method: "POST",
@@ -45,17 +83,17 @@ export async function POST(req: NextRequest) {
     return { res, text };
   };
 
-  let submission = await submitToCommunityHub(payload as Record<string, unknown>);
+  let submission = await submitToCommunityHub(finalPayload);
 
   const imageFetchFailed =
     !submission.res.ok &&
-    payload.image_cdn_url &&
+    finalPayload.image_cdn_url &&
     /Failed to download image from URL/i.test(submission.text);
 
   if (imageFetchFailed) {
     // Retry once without the image if CH cannot fetch it from the source host.
-    delete payload.image_cdn_url;
-    submission = await submitToCommunityHub(payload as Record<string, unknown>);
+    delete finalPayload.image_cdn_url;
+    submission = await submitToCommunityHub(finalPayload);
     try {
       await pushRef.update({
         retryWithoutImage: true,
@@ -72,12 +110,17 @@ export async function POST(req: NextRequest) {
         status: "error",
         finishedAt: new Date().toISOString(),
         error: `CommunityHub ${submission.res.status}: ${submission.text}`,
+        // Keep the full raw text in a separate field just in case it's helpful
+        rawError: submission.text,
       });
     } catch {
       // Non-fatal: avoid masking the upstream failure
     }
     return NextResponse.json(
-      { error: `CommunityHub ${submission.res.status}: ${submission.text}` },
+      {
+        error: `CommunityHub ${submission.res.status}: ${submission.text}`,
+        status: submission.res.status
+      },
       { status: 502 }
     );
   }
