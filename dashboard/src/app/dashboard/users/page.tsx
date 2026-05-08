@@ -147,7 +147,32 @@ export default function UsersPage() {
     }
   }
 
-  if (authLoading || !isAdmin) return null;
+  if (authLoading) {
+    return (
+      <div className="p-8">
+        <p className="text-zinc-400 text-sm">Loading user access…</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="p-8 max-w-3xl">
+        <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-6">
+          <h1 className="text-white text-xl font-semibold mb-2">Access restricted</h1>
+          <p className="text-zinc-400 text-sm mb-4">
+            The Users page is only available to admin accounts.
+          </p>
+          <button
+            onClick={() => router.replace("/dashboard")}
+            className="text-sm text-white bg-[#C8102E]/80 hover:bg-[#C8102E] px-4 py-2 rounded-lg transition"
+          >
+            Back to dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const allUsers = [
     { email: ADMIN_EMAIL, isAdmin: true } as { email: string; isAdmin: boolean },

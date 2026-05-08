@@ -21,24 +21,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const lastRecordedEmail = useRef<string | null>(null);
 
   useEffect(() => {
-    const auth = getClientAuth();
-    const db = getClientDb();
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      setLoading(false);
-      // Record login time once per session (guard against repeated fires)
-      if (u?.email && u.email !== lastRecordedEmail.current) {
-        lastRecordedEmail.current = u.email;
-        try {
-          await setDoc(
-            doc(db, "user_activity", u.email),
-            { email: u.email, lastLogin: new Date().toISOString() },
-            { merge: true },
-          );
-        } catch { /* best-effort */ }
-      }
-    });
-    return unsubscribe;
+    try {
+      const auth = getClientAuth();
+      const db = getClientDb();
+      const unsubscribe = onAuthStateChanged(auth, async (u) => {
+        setUser(u);
+        setLoading(false);
+        // Record login time once per session (guard against repeated fires)
+        if (u?.email && u.email !== lastRecordedEmail.current) {
+          lastRecordedEmail.current = u.email;
+          try {
+            await setDoc(
+              doc(db, "user_activity", u.email),
+              { email: u.email, lastLogin: new Date().toISOString() },
+              { merge: true },
+            );
+          } catch { /* best-effort */ }
+        }
+      });
+      return unsubscribe;
+    } catch (err) {
+      console.warn("Auth initialization failed:", err);
+      // Fail closed to login route rather than leaving infinite loader.
+      setTimeout(() => setLoading(false), 0);
+      return () => {};
+    }
   }, []);
 
   return (
