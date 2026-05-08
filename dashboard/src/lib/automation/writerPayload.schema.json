@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oberlin.local/schemas/writerPayload.schema.json",
+  "title": "WriterPayload",
+  "description": "Normalized event payload stored in review_queue.writerPayload.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "title",
+    "description",
+    "extendedDescription",
+    "sponsors",
+    "contactEmail",
+    "phone",
+    "website",
+    "sessions",
+    "locationType",
+    "calendarSourceName",
+    "calendarSourceUrl",
+    "postTypeId"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 200
+    },
+    "extendedDescription": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "location": {
+      "type": "string"
+    },
+    "urlLink": {
+      "type": "string",
+      "format": "uri"
+    },
+    "sponsors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "contactEmail": {
+      "type": "string",
+      "format": "email"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string",
+      "format": "uri"
+    },
+    "sessions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "startTime",
+          "endTime"
+        ],
+        "properties": {
+          "startTime": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "endTime": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "locationType": {
+      "type": "string",
+      "enum": [
+        "ph2",
+        "on",
+        "bo",
+        "ne",
+        "in_person"
+      ]
+    },
+    "_photoUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri"
+    },
+    "calendarSourceName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "calendarSourceUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "postTypeId": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer"
+      }
+    }
+  }
+}
