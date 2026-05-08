@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 const ADMIN_EMAIL = "frankkusiap@gmail.com";
-const CH_HOST = "https://oberlin.communityhub.cloud";
+const CH_CREATE_API = "https://oberlin.communityhub.cloud/api/legacy/calendar/post/submit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,9 +38,12 @@ export async function POST(req: NextRequest) {
 
     // CommunityHub reachability.
     try {
-      const res = await fetch(CH_HOST, { method: "HEAD" });
-      checks.communityhub = { ok: res.ok, status: res.status };
-      if (!res.ok) checks.ok = false;
+      // The root domain may legitimately 404; probe a known API path instead.
+      // We treat any non-404 response as "reachable" (even 400/405 are fine here).
+      const res = await fetch(CH_CREATE_API, { method: "OPTIONS" });
+      const reachable = res.status !== 404;
+      checks.communityhub = { ok: reachable, status: res.status };
+      if (!reachable) checks.ok = false;
     } catch (err: unknown) {
       checks.communityhub = { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
       checks.ok = false;
@@ -54,4 +57,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
