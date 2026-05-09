@@ -11,13 +11,20 @@ import type { ReviewPost, ReviewStatus } from "@/lib/postTypes";
 import { getPostTypeLabel } from "@/lib/postTypes";
 import { validatePost } from "@/lib/postValidation";
 
+type BulkAction = ReviewStatus | "delete";
+
 export default function PostsPage() {
-  const { posts, updatePostsStatus } = useReviewStore();
+  const { posts, removePosts, updatePostsStatus } = useReviewStore();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [confirmAction, setConfirmAction] = useState<ReviewStatus | null>(null);
+  const [confirmAction, setConfirmAction] = useState<BulkAction | null>(null);
+  const canDeletePost = (post: ReviewPost) => post.status === "rejected" || post.status === "archived";
   const selectedPosts = useMemo(
     () => posts.filter((post) => selectedIds.includes(post.id)),
     [posts, selectedIds],
+  );
+  const selectedDeletableIds = useMemo(
+    () => selectedPosts.filter(canDeletePost).map((post) => post.id),
+    [selectedPosts],
   );
 
   function togglePost(id: string) {
@@ -30,8 +37,12 @@ export default function PostsPage() {
     setSelectedIds(posts.map((post) => post.id));
   }
 
-  function applyBulkAction(status: ReviewStatus) {
-    updatePostsStatus(selectedIds, status);
+  function applyBulkAction(action: BulkAction) {
+    if (action === "delete") {
+      removePosts(selectedDeletableIds);
+    } else {
+      updatePostsStatus(selectedIds, action);
+    }
     setSelectedIds([]);
     setConfirmAction(null);
   }
@@ -70,6 +81,14 @@ export default function PostsPage() {
         </button>
         <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)] disabled:opacity-50" disabled={selectedIds.length === 0} onClick={() => setConfirmAction("archived")} type="button">
           Archive Selected
+        </button>
+        <button
+          className="rounded border border-[#82303b] px-3 py-2 text-sm text-[#ffb3b3] hover:bg-[#82303b]/20 disabled:opacity-50"
+          disabled={selectedDeletableIds.length === 0}
+          onClick={() => setConfirmAction("delete")}
+          type="button"
+        >
+          Delete Selected
         </button>
         <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)] disabled:opacity-50" disabled={selectedIds.length === 0} onClick={() => setSelectedIds([])} type="button">
           Clear Selection
@@ -137,6 +156,15 @@ export default function PostsPage() {
                           <button className="rounded border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "rejected", "Rejected from queue.")} type="button">
                             Reject
                           </button>
+                          <button
+                            className="rounded border border-[#82303b] px-2 py-1 text-xs text-[#ffb3b3] hover:bg-[#82303b]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={!canDeletePost(post)}
+                            onClick={() => removePosts([post.id])}
+                            title={canDeletePost(post) ? "Delete this post" : "Only rejected or archived posts can be deleted"}
+                            type="button"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -153,7 +181,9 @@ export default function PostsPage() {
           <section className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
             <h2 className="font-[var(--font-public-sans)] text-xl font-semibold">Confirm bulk action</h2>
             <p className="mt-2 text-sm text-[var(--muted)]">
-              Apply {confirmAction.replace("_", " ")} to {selectedPosts.length} selected posts?
+              {confirmAction === "delete"
+                ? `Permanently delete ${selectedDeletableIds.length} rejected/archived selected posts from local queue data?`
+                : `Apply ${confirmAction.replace("_", " ")} to ${selectedPosts.length} selected posts?`}
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button className="rounded border border-[var(--border)] px-3 py-2 text-sm" onClick={() => setConfirmAction(null)} type="button">
