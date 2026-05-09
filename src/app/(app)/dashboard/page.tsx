@@ -1,14 +1,24 @@
 import { AlertTriangle, CalendarCheck, Copy, Database } from "lucide-react";
 
-import { ActivityFeed } from "@/components/ActivityFeed";
+import { ActivityFeed, type ActivityItem } from "@/components/ActivityFeed";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { PostTypeBadge } from "@/components/PostTypeBadge";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { mockActivity } from "@/data/mockActivity";
-import { CivicPost, mockPosts } from "@/data/mockPosts";
+
+type CivicPost = {
+  id: string;
+  title: string;
+  type: "event" | "announcement";
+  status: "pending" | "approved" | "flagged" | "duplicate" | "archived";
+  source: string;
+  date: string;
+};
 
 export default function DashboardPage() {
+  const posts: CivicPost[] = [];
+  const activity: ActivityItem[] = [];
+
   const columns: DataTableColumn<CivicPost>[] = [
     {
       key: "title",
@@ -54,7 +64,7 @@ export default function DashboardPage() {
             <DataTable
               columns={columns}
               emptyText="No posts have been extracted yet."
-              rows={mockPosts.slice(0, 4)}
+              rows={posts}
               getRowKey={(post) => post.id}
             />
           </div>
@@ -70,7 +80,7 @@ export default function DashboardPage() {
         </div>
 
         <aside className="space-y-6">
-          <ActivityFeed items={mockActivity} emptyText="No activity logs yet." />
+          <ActivityFeed items={activity} emptyText="No activity logs yet." />
           <div>
             <h2 className="mb-3 font-[var(--font-public-sans)] text-xl font-semibold text-[var(--text)]">
               Source Activity

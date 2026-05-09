@@ -1,7 +1,18 @@
 import { Database } from "lucide-react";
 
-import type { CivicSource } from "@/data/mockSources";
 import { StatusBadge } from "@/components/StatusBadge";
+
+type CivicSource = {
+  id: string;
+  name: string;
+  type: "calendar" | "rss" | "manual" | "api";
+  status: "healthy" | "warning" | "paused" | "error";
+  owner: string;
+  lastSync: string;
+  postsSynced: number;
+  errorRate: number;
+  coverage: string;
+};
 
 type SourceHealthCardProps = {
   source: CivicSource;

@@ -1,9 +1,18 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import type { CivicPost } from "@/data/mockPosts";
 import { PostTypeBadge } from "@/components/PostTypeBadge";
 import { StatusBadge } from "@/components/StatusBadge";
+
+type CivicPost = {
+  id: string;
+  title: string;
+  type: "event" | "announcement";
+  status: "pending" | "approved" | "flagged" | "duplicate" | "archived";
+  confidence: number;
+  duplicateScore: number;
+  description: string;
+};
 
 type ReviewCardProps = {
   post: CivicPost;

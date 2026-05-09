@@ -1,5 +1,6 @@
-import type { PostType } from "@/data/mockPosts";
 import { cn } from "@/lib/utils";
+
+export type PostType = "event" | "announcement";
 
 const typeStyles: Record<PostType, string> = {
   event: "border-[var(--primary)] bg-[var(--primary-soft)] text-[#ffdad9]",

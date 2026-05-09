@@ -1,7 +1,9 @@
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { ActivityItem, mockActivity } from "@/data/mockActivity";
+import type { ActivityItem } from "@/components/ActivityFeed";
 
 export default function LogsPage() {
+  const activity: ActivityItem[] = [];
+
   const columns: DataTableColumn<ActivityItem>[] = [
     { key: "time", header: "Time", render: (item) => item.time },
     { key: "actor", header: "Actor", render: (item) => item.actor },
@@ -21,7 +23,7 @@ export default function LogsPage() {
       <DataTable
         columns={columns}
         emptyText="No activity logs yet."
-        rows={mockActivity}
+        rows={activity}
         getRowKey={(item) => item.id}
       />
     </div>

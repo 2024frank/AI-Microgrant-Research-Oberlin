@@ -1,4 +1,11 @@
-import type { ActivityItem } from "@/data/mockActivity";
+export type ActivityItem = {
+  id: string;
+  actor: string;
+  action: string;
+  target: string;
+  time: string;
+  severity: "info" | "success" | "warning" | "danger";
+};
 import { cn } from "@/lib/utils";
 
 const dotStyles = {

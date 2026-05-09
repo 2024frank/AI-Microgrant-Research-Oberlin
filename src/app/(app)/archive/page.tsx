@@ -1,10 +1,18 @@
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { PostTypeBadge } from "@/components/PostTypeBadge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { CivicPost, mockPosts } from "@/data/mockPosts";
+
+type CivicPost = {
+  id: string;
+  title: string;
+  type: "event" | "announcement";
+  status: "pending" | "approved" | "flagged" | "duplicate" | "archived";
+  source: string;
+  date: string;
+};
 
 export default function ArchivePage() {
-  const archived = mockPosts.filter((post) => post.status === "archived");
+  const archived: CivicPost[] = [];
   const columns: DataTableColumn<CivicPost>[] = [
     { key: "title", header: "Title", render: (post) => post.title },
     { key: "type", header: "Type", render: (post) => <PostTypeBadge type={post.type} /> },
