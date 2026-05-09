@@ -1,6 +1,6 @@
 {
   "source": "https://calendar.oberlin.edu/api/2/events",
-  "generatedAt": "2026-05-09T10:18:19.095889+00:00",
+  "generatedAt": "2026-05-09T11:06:04.598625+00:00",
   "firestoreWriteMode": "OFF",
   "communityHubWritesExecuted": false,
   "summary": {
@@ -19,7 +19,7 @@
   },
   "mappingExamples": [
     {
-      "eventId": "oberlin-52709032256559",
+      "eventId": "oberlin-52709032256559-52709032257584",
       "eventTypes": [
         "Arts",
         "Music"
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "eventId": "oberlin-52789019205431",
+      "eventId": "oberlin-52789019205431-52789019211576",
       "eventTypes": [
         "Arts",
         "Music"
@@ -39,7 +39,7 @@
       ]
     },
     {
-      "eventId": "oberlin-52790114591154",
+      "eventId": "oberlin-52790114591154-52790114592179",
       "eventTypes": [
         "Arts",
         "Music"
@@ -59,7 +59,7 @@
   "duplicateGroups": [],
   "events": [
     {
-      "id": "oberlin-52709032256559",
+      "id": "oberlin-52709032256559-52709032257584",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Musical Potluck",
@@ -74,13 +74,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778356800000,
-          "endTime": 1778365800000
+          "startTime": 1778356800,
+          "endTime": 1778365800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/musical-potluck",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/musical-potluck",
@@ -90,7 +90,7 @@
       "urlLink": "https://docs.google.com/forms/d/1Ll-XWrjtYZOEpncmp2N7dXZVDA15LjLtP17gi6F8uyU/edit",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093346+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595199+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52709032256559"
       },
@@ -110,7 +110,7 @@
       }
     },
     {
-      "id": "oberlin-52789019205431",
+      "id": "oberlin-52789019205431-52789019211576",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "OCTaiko Final Show/Study Break",
@@ -123,13 +123,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778362200000,
-          "endTime": 1778365800000
+          "startTime": 1778362200,
+          "endTime": 1778365800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/octaiko-final-showstudy-break-4290",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/octaiko-final-showstudy-break-4290",
@@ -139,7 +139,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/octaiko-final-showstudy-break-4290",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093511+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595294+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52789019205431"
       },
@@ -159,7 +159,7 @@
       }
     },
     {
-      "id": "oberlin-52790114591154",
+      "id": "oberlin-52790114591154-52790114592179",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "That's What She Sang: Barbershop Quartet Recital",
@@ -172,13 +172,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778439600000,
-          "endTime": 1778441400000
+          "startTime": 1778439600,
+          "endTime": 1778441400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/thats-what-she-sang-barbershop-quartet-recital",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/thats-what-she-sang-barbershop-quartet-recital",
@@ -188,7 +188,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/thats-what-she-sang-barbershop-quartet-recital",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093528+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595324+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52790114591154"
       },
@@ -208,7 +208,7 @@
       }
     },
     {
-      "id": "oberlin-52354015654357",
+      "id": "oberlin-52354015654357-52354015655383",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "OFS Presents \"The Fog of War\" (2003)",
@@ -223,13 +223,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778444100000,
+          "startTime": 1778444100,
           "endTime": null
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/ofs-presents-the-fog-of-war-2003",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/ofs-presents-the-fog-of-war-2003",
@@ -239,7 +239,7 @@
       "urlLink": "https://www.clevelandcinemas.com/our-locations/x03gq-apollo-theatre/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093559+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595366+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52354015654357"
       },
@@ -261,7 +261,7 @@
       }
     },
     {
-      "id": "oberlin-52806745176587",
+      "id": "oberlin-52806745176587-52806745260556",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Nothing But Treble Final Concert",
@@ -274,13 +274,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778446800000,
+          "startTime": 1778446800,
           "endTime": null
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/nothing-but-treble-final-concert-8025",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/nothing-but-treble-final-concert-8025",
@@ -290,7 +290,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/nothing-but-treble-final-concert-8025",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093583+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595400+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52806745176587"
       },
@@ -313,7 +313,7 @@
       }
     },
     {
-      "id": "oberlin-52754961835214",
+      "id": "oberlin-52754961835214-52754961835215",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Tiny Ref Desk Concert: Abby & Rosalie",
@@ -328,13 +328,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778515200000,
-          "endTime": 1778517900000
+          "startTime": 1778515200,
+          "endTime": 1778517900
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/tiny-ref-desk-concert-abby-rosalie",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/tiny-ref-desk-concert-abby-rosalie",
@@ -344,7 +344,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/tiny-ref-desk-concert-abby-rosalie",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093601+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595427+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52754961835214"
       },
@@ -364,7 +364,7 @@
       }
     },
     {
-      "id": "oberlin-52797193540195",
+      "id": "oberlin-52797193540195-52797193541220",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "The Big Swap",
@@ -379,13 +379,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778601600000,
-          "endTime": 1778634000000
+          "startTime": 1778601600,
+          "endTime": 1778634000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
@@ -395,7 +395,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/the-big-swap",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093632+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595467+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52797193540195"
       },
@@ -418,7 +418,7 @@
       }
     },
     {
-      "id": "oberlin-52624896427651",
+      "id": "oberlin-52624896427651-52624896428676",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Senior Recital: Max Lang, Musical Studies",
@@ -433,13 +433,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778610600000,
+          "startTime": 1778610600,
           "endTime": null
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/senior-recital-max-lang-musical-studies",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/senior-recital-max-lang-musical-studies",
@@ -449,7 +449,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/senior-recital-max-lang-musical-studies",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093647+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595487+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52624896427651"
       },
@@ -469,7 +469,7 @@
       }
     },
     {
-      "id": "oberlin-51959059514013",
+      "id": "oberlin-51959059514013-51959059514014",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Tuesday Tea / Bad Art? Engaging Students with the Unexpected and the Unconventional",
@@ -484,13 +484,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778612400000,
-          "endTime": 1778616000000
+          "startTime": 1778612400,
+          "endTime": 1778616000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/tuesday-tea-bad-art-engaging-students-with-the-unexpected-and-the-unconventional",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/tuesday-tea-bad-art-engaging-students-with-the-unexpected-and-the-unconventional",
@@ -500,7 +500,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/tuesday-tea-bad-art-engaging-students-with-the-unexpected-and-the-unconventional",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093681+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595530+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51959059514013"
       },
@@ -522,7 +522,7 @@
       }
     },
     {
-      "id": "oberlin-52797193540195",
+      "id": "oberlin-52797193540195-52797193542245",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "The Big Swap",
@@ -537,13 +537,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778688000000,
-          "endTime": 1778720400000
+          "startTime": 1778688000,
+          "endTime": 1778720400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
@@ -553,7 +553,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/the-big-swap",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093714+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595570+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52797193540195"
       },
@@ -576,7 +576,7 @@
       }
     },
     {
-      "id": "oberlin-52797193540195",
+      "id": "oberlin-52797193540195-52797193543270",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "The Big Swap",
@@ -591,13 +591,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778774400000,
-          "endTime": 1778806800000
+          "startTime": 1778774400,
+          "endTime": 1778806800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
@@ -607,7 +607,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/the-big-swap",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093743+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595610+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52797193540195"
       },
@@ -630,7 +630,7 @@
       }
     },
     {
-      "id": "oberlin-52797193540195",
+      "id": "oberlin-52797193540195-52797193544295",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "The Big Swap",
@@ -645,13 +645,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778860800000,
-          "endTime": 1778893200000
+          "startTime": 1778860800,
+          "endTime": 1778893200
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
@@ -661,7 +661,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/the-big-swap",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093772+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595646+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52797193540195"
       },
@@ -684,7 +684,7 @@
       }
     },
     {
-      "id": "oberlin-51913428862458",
+      "id": "oberlin-51913428862458-51913428863483",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Observe the Night Sky",
@@ -699,13 +699,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778893200000,
-          "endTime": 1778900400000
+          "startTime": 1778893200,
+          "endTime": 1778900400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/observe-the-night-sky-8138",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/observe-the-night-sky-8138",
@@ -715,7 +715,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/observe-the-night-sky-8138",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093788+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595666+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51913428862458"
       },
@@ -739,7 +739,7 @@
       }
     },
     {
-      "id": "oberlin-52797193540195",
+      "id": "oberlin-52797193540195-52797193545320",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "The Big Swap",
@@ -754,13 +754,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1778947200000,
-          "endTime": 1778979600000
+          "startTime": 1778947200,
+          "endTime": 1778979600
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
@@ -770,7 +770,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/the-big-swap",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093815+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595709+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52797193540195"
       },
@@ -793,7 +793,7 @@
       }
     },
     {
-      "id": "oberlin-52797193540195",
+      "id": "oberlin-52797193540195-52797193546345",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "The Big Swap",
@@ -808,13 +808,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779033600000,
-          "endTime": 1779066000000
+          "startTime": 1779033600,
+          "endTime": 1779066000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
@@ -824,7 +824,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/the-big-swap",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093844+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595748+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52797193540195"
       },
@@ -847,7 +847,7 @@
       }
     },
     {
-      "id": "oberlin-52354028255267",
+      "id": "oberlin-52354028255267-52354028255268",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "OFS Presents \"The Graduate\" (1967)",
@@ -862,13 +862,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779048900000,
+          "startTime": 1779048900,
           "endTime": null
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/ofs-presents-the-graduate-1967",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/ofs-presents-the-graduate-1967",
@@ -878,7 +878,7 @@
       "urlLink": "https://www.clevelandcinemas.com/our-locations/x03gq-apollo-theatre/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093870+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595783+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52354028255267"
       },
@@ -900,7 +900,7 @@
       }
     },
     {
-      "id": "oberlin-52797193540195",
+      "id": "oberlin-52797193540195-52797193547370",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "The Big Swap",
@@ -915,13 +915,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779120000000,
-          "endTime": 1779152400000
+          "startTime": 1779120000,
+          "endTime": 1779152400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
@@ -931,7 +931,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/the-big-swap",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093897+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595817+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52797193540195"
       },
@@ -954,7 +954,7 @@
       }
     },
     {
-      "id": "oberlin-42924343951285",
+      "id": "oberlin-42924343951285-52606955695012",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Self-Guided Tour: Oberlin Origins",
@@ -969,13 +969,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779458400000,
-          "endTime": 1779480000000
+          "startTime": 1779458400,
+          "endTime": 1779480000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -985,7 +985,7 @@
       "urlLink": "https://oberlinheritagecenter.org/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093933+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595863+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "42924343951285"
       },
@@ -1009,7 +1009,7 @@
       }
     },
     {
-      "id": "oberlin-52606955918260",
+      "id": "oberlin-52606955918260-52606955920309",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Guided Tour of the Jewett House by Fanny Jewett",
@@ -1024,13 +1024,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779476400000,
-          "endTime": 1779480000000
+          "startTime": 1779476400,
+          "endTime": 1779480000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -1040,7 +1040,7 @@
       "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.093982+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595932+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52606955918260"
       },
@@ -1064,7 +1064,7 @@
       }
     },
     {
-      "id": "oberlin-52622758664424",
+      "id": "oberlin-52622758664424-52622758664425",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "ENCORE!",
@@ -1083,13 +1083,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779490800000,
-          "endTime": 1779494400000
+          "startTime": 1779490800,
+          "endTime": 1779494400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/encore",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/encore",
@@ -1099,7 +1099,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/encore",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094000+00:00",
+        "extractedAt": "2026-05-09T11:06:04.595960+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52622758664424"
       },
@@ -1123,7 +1123,7 @@
       }
     },
     {
-      "id": "oberlin-52302936266509",
+      "id": "oberlin-52302936266509-52302936266510",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "The Grand Piano Extravaganza",
@@ -1143,13 +1143,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779494400000,
-          "endTime": 1779503400000
+          "startTime": 1779494400,
+          "endTime": 1779503400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/the-grand-piano-extravaganza",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-grand-piano-extravaganza",
@@ -1159,7 +1159,7 @@
       "urlLink": "https://www.oberlin.edu/tickets/event-details?EventId=24201",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094050+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596028+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52302936266509"
       },
@@ -1182,7 +1182,7 @@
       }
     },
     {
-      "id": "oberlin-42924343951285",
+      "id": "oberlin-42924343951285-52606955724713",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Self-Guided Tour: Oberlin Origins",
@@ -1197,13 +1197,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779544800000,
-          "endTime": 1779566400000
+          "startTime": 1779544800,
+          "endTime": 1779566400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -1213,7 +1213,7 @@
       "urlLink": "https://oberlinheritagecenter.org/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094086+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596076+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "42924343951285"
       },
@@ -1237,7 +1237,7 @@
       }
     },
     {
-      "id": "oberlin-52606956662777",
+      "id": "oberlin-52606956662777-52606956662778",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Tour: Freedom’s Friends: Abolition & the Underground Railroad History Walk",
@@ -1252,13 +1252,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779544800000,
-          "endTime": 1779550200000
+          "startTime": 1779544800,
+          "endTime": 1779550200
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -1268,7 +1268,7 @@
       "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094146+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596158+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52606956662777"
       },
@@ -1292,7 +1292,7 @@
       }
     },
     {
-      "id": "oberlin-52833002258892",
+      "id": "oberlin-52833002258892-52833002258893",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "CATSS Open Hours at the First Church Kitten Room",
@@ -1305,13 +1305,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779552000000,
-          "endTime": 1779566400000
+          "startTime": 1779552000,
+          "endTime": 1779566400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "catssoberlin.org",
       "calendarSourceUrl": "catssoberlin.org",
@@ -1321,7 +1321,7 @@
       "urlLink": "catssoberlin.org",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094171+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596194+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52833002258892"
       },
@@ -1344,7 +1344,7 @@
       }
     },
     {
-      "id": "oberlin-52709104074414",
+      "id": "oberlin-52709104074414-52709104075439",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Multifaith End-of-Year Ceremony",
@@ -1359,13 +1359,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779557400000,
+          "startTime": 1779557400,
           "endTime": null
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/multifaith-end-of-year-ceremony",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/multifaith-end-of-year-ceremony",
@@ -1375,7 +1375,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/multifaith-end-of-year-ceremony",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094233+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596278+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52709104074414"
       },
@@ -1400,7 +1400,7 @@
       }
     },
     {
-      "id": "oberlin-52606957045792",
+      "id": "oberlin-52606957045792-52606957046817",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Tour: Architecture History Walk",
@@ -1415,13 +1415,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779557400000,
-          "endTime": 1779562800000
+          "startTime": 1779557400,
+          "endTime": 1779562800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -1431,7 +1431,7 @@
       "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094293+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596363+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52606957045792"
       },
@@ -1455,7 +1455,7 @@
       }
     },
     {
-      "id": "oberlin-52606957629538",
+      "id": "oberlin-52606957629538-52606957630563",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Tour: Civil War to Civil Rights History Walk",
@@ -1470,13 +1470,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779564600000,
-          "endTime": 1779570000000
+          "startTime": 1779564600,
+          "endTime": 1779570000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -1486,7 +1486,7 @@
       "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094355+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596452+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52606957629538"
       },
@@ -1510,7 +1510,7 @@
       }
     },
     {
-      "id": "oberlin-42924343951285",
+      "id": "oberlin-42924343951285-52606955739050",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Self-Guided Tour: Oberlin Origins",
@@ -1525,13 +1525,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779631200000,
-          "endTime": 1779652800000
+          "startTime": 1779631200,
+          "endTime": 1779652800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -1541,7 +1541,7 @@
       "urlLink": "https://oberlinheritagecenter.org/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094393+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596501+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "42924343951285"
       },
@@ -1565,7 +1565,7 @@
       }
     },
     {
-      "id": "oberlin-52606960949403",
+      "id": "oberlin-52606960949403-52606960950428",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Tour: One Step More: Oberlin Women’s History Walk",
@@ -1580,13 +1580,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779631200000,
-          "endTime": 1779635700000
+          "startTime": 1779631200,
+          "endTime": 1779635700
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -1596,7 +1596,7 @@
       "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094456+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596586+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52606960949403"
       },
@@ -1620,7 +1620,7 @@
       }
     },
     {
-      "id": "oberlin-52771856580219",
+      "id": "oberlin-52771856580219-52771856580220",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Biology Greenhouse Tour",
@@ -1635,13 +1635,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779636600000,
+          "startTime": 1779636600,
           "endTime": null
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/biology-greenhouse-tour",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/biology-greenhouse-tour",
@@ -1651,7 +1651,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/biology-greenhouse-tour",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094474+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596609+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52771856580219"
       },
@@ -1675,7 +1675,7 @@
       }
     },
     {
-      "id": "oberlin-52833020293789",
+      "id": "oberlin-52833020293789-52833020294814",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "CATSS Open Hours at 48 W. Lincoln Street",
@@ -1688,13 +1688,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779638400000,
-          "endTime": 1779652800000
+          "startTime": 1779638400,
+          "endTime": 1779652800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "catssoberlin.org",
       "calendarSourceUrl": "catssoberlin.org",
@@ -1704,7 +1704,7 @@
       "urlLink": "catssoberlin.org",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094496+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596641+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52833020293789"
       },
@@ -1727,7 +1727,7 @@
       }
     },
     {
-      "id": "oberlin-52772324399960",
+      "id": "oberlin-52772324399960-52772324400985",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Cinema and Media Department Open House",
@@ -1742,13 +1742,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779638400000,
-          "endTime": 1779643800000
+          "startTime": 1779638400,
+          "endTime": 1779643800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/cinema-and-media-department-open-house",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/cinema-and-media-department-open-house",
@@ -1758,7 +1758,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/cinema-and-media-department-open-house",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094519+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596673+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52772324399960"
       },
@@ -1783,7 +1783,7 @@
       }
     },
     {
-      "id": "oberlin-52816106111030",
+      "id": "oberlin-52816106111030-52816106111031",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Frank Lloyd Wright Open House: Commencement and Milestone Reunion Weekend",
@@ -1798,13 +1798,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779638400000,
-          "endTime": 1779652800000
+          "startTime": 1779638400,
+          "endTime": 1779652800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://amam.oberlin.edu/flw-house",
       "calendarSourceUrl": "https://amam.oberlin.edu/flw-house",
@@ -1814,7 +1814,7 @@
       "urlLink": "No advance tickets are required.",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094579+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596792+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52816106111030"
       },
@@ -1839,7 +1839,7 @@
       }
     },
     {
-      "id": "oberlin-52772305023687",
+      "id": "oberlin-52772305023687-52772305024712",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Dance Department Open House",
@@ -1854,13 +1854,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779645600000,
-          "endTime": 1779652800000
+          "startTime": 1779645600,
+          "endTime": 1779652800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/dance-department-open-house-1922",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/dance-department-open-house-1922",
@@ -1870,7 +1870,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/dance-department-open-house-1922",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094604+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596827+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52772305023687"
       },
@@ -1895,7 +1895,7 @@
       }
     },
     {
-      "id": "oberlin-52606956662777",
+      "id": "oberlin-52606956662777-52606956699649",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Tour: Freedom’s Friends: Abolition & the Underground Railroad History Walk",
@@ -1910,13 +1910,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779645600000,
-          "endTime": 1779651000000
+          "startTime": 1779645600,
+          "endTime": 1779651000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
@@ -1926,7 +1926,7 @@
       "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094663+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596911+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52606956662777"
       },
@@ -1950,7 +1950,7 @@
       }
     },
     {
-      "id": "oberlin-52764344811513",
+      "id": "oberlin-52764344811513-52764344812538",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "A Conversation with Carla Hayden - Librarian of Congress",
@@ -1965,13 +1965,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779647400000,
-          "endTime": 1779651000000
+          "startTime": 1779647400,
+          "endTime": 1779651000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/a-conversation-with-carla-hayden-librarian-of-congress",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/a-conversation-with-carla-hayden-librarian-of-congress",
@@ -1981,7 +1981,7 @@
       "urlLink": "https://docs.google.com/forms/d/e/1FAIpQLSfq1BnabLThEq5cal2d8r3u_iZGWBIzrI9mOw9MvXrk9xT7FA/viewform",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094688+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596943+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52764344811513"
       },
@@ -2006,7 +2006,7 @@
       }
     },
     {
-      "id": "oberlin-52816134314136",
+      "id": "oberlin-52816134314136-52816134315161",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Comparative Literature, French & Italian Open House",
@@ -2022,13 +2022,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779649200000,
-          "endTime": 1779656400000
+          "startTime": 1779649200,
+          "endTime": 1779656400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/comparative-literature-french-italian-open-house",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/comparative-literature-french-italian-open-house",
@@ -2038,7 +2038,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/comparative-literature-french-italian-open-house",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094704+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596964+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52816134314136"
       },
@@ -2063,7 +2063,7 @@
       }
     },
     {
-      "id": "oberlin-52825727222050",
+      "id": "oberlin-52825727222050-52825727223075",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Hispanic Studies & LATS Open House",
@@ -2079,13 +2079,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779649200000,
-          "endTime": 1779656400000
+          "startTime": 1779649200,
+          "endTime": 1779656400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/hispanic-studies-lats-open-house",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/hispanic-studies-lats-open-house",
@@ -2095,7 +2095,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/hispanic-studies-lats-open-house",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094720+00:00",
+        "extractedAt": "2026-05-09T11:06:04.596985+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52825727222050"
       },
@@ -2118,7 +2118,7 @@
       }
     },
     {
-      "id": "oberlin-52648029944548",
+      "id": "oberlin-52648029944548-52648029944549",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Black Families Appreciation Ceremony",
@@ -2133,13 +2133,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779652800000,
-          "endTime": 1779660000000
+          "startTime": 1779652800,
+          "endTime": 1779660000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/black-families-appreciation-ceremony-4517",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/black-families-appreciation-ceremony-4517",
@@ -2149,7 +2149,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/black-families-appreciation-ceremony-4517",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094754+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597035+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52648029944548"
       },
@@ -2173,7 +2173,7 @@
       }
     },
     {
-      "id": "oberlin-51198454378422",
+      "id": "oberlin-51198454378422-51198454378423",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Campus Illumination and Social on the Square",
@@ -2188,13 +2188,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779663600000,
-          "endTime": 1779674400000
+          "startTime": 1779663600,
+          "endTime": 1779674400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/campus-illumination-and-social-on-the-square-1824",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/campus-illumination-and-social-on-the-square-1824",
@@ -2204,7 +2204,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/campus-illumination-and-social-on-the-square-1824",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094776+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597063+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51198454378422"
       },
@@ -2229,7 +2229,7 @@
       }
     },
     {
-      "id": "oberlin-52375092575714",
+      "id": "oberlin-52375092575714-52375092576739",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Oberlin College Commencement",
@@ -2245,13 +2245,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1779715800000,
-          "endTime": 1779726600000
+          "startTime": 1779715800,
+          "endTime": 1779726600
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://www.oberlin.edu/commencement",
       "calendarSourceUrl": "https://www.oberlin.edu/commencement",
@@ -2261,7 +2261,7 @@
       "urlLink": "https://www.oberlin.edu/commencement",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094812+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597106+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52375092575714"
       },
@@ -2285,7 +2285,7 @@
       }
     },
     {
-      "id": "oberlin-52692734504543",
+      "id": "oberlin-52692734504543-52692734505568",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Frank Lloyd Wright Open House / June-November 2026",
@@ -2300,13 +2300,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1780848000000,
-          "endTime": 1780866000000
+          "startTime": 1780848000,
+          "endTime": 1780866000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
       "calendarSourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
@@ -2316,7 +2316,7 @@
       "urlLink": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094912+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597249+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52692734504543"
       },
@@ -2339,7 +2339,7 @@
       }
     },
     {
-      "id": "oberlin-51800468257124",
+      "id": "oberlin-51800468257124-51800468258149",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "\"Sprezzatura and the Italian Baroque\"",
@@ -2352,13 +2352,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1781546400000,
-          "endTime": 1781549400000
+          "startTime": 1781546400,
+          "endTime": 1781549400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/sprezzatura-and-the-italian-baroque",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/sprezzatura-and-the-italian-baroque",
@@ -2368,7 +2368,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/sprezzatura-and-the-italian-baroque",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094933+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597278+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800468257124"
       },
@@ -2388,7 +2388,7 @@
       }
     },
     {
-      "id": "oberlin-51800542052140",
+      "id": "oberlin-51800542052140-51800542052141",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Baroque Performance Institute Faculty Recital",
@@ -2401,13 +2401,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1781913600000,
-          "endTime": 1781919000000
+          "startTime": 1781913600,
+          "endTime": 1781919000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/baroque-performance-institute-faculty-recital-1805",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/baroque-performance-institute-faculty-recital-1805",
@@ -2417,7 +2417,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/baroque-performance-institute-faculty-recital-1805",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094949+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597302+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800542052140"
       },
@@ -2437,7 +2437,7 @@
       }
     },
     {
-      "id": "oberlin-51800568912081",
+      "id": "oberlin-51800568912081-51800568912082",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Baroque Performance Institute Chamber Music Concert",
@@ -2452,13 +2452,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1781976600000,
-          "endTime": 1781991000000
+          "startTime": 1781976600,
+          "endTime": 1781991000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/baroque-performance-institute-chamber-music-concert-43",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/baroque-performance-institute-chamber-music-concert-43",
@@ -2468,7 +2468,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/baroque-performance-institute-chamber-music-concert-43",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094965+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597323+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800568912081"
       },
@@ -2488,7 +2488,7 @@
       }
     },
     {
-      "id": "oberlin-51800642729478",
+      "id": "oberlin-51800642729478-51800642729479",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Oberlin Trumpet Workshop Participant Recital",
@@ -2503,13 +2503,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1782414000000,
-          "endTime": 1782417600000
+          "startTime": 1782414000,
+          "endTime": 1782417600
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/oberlin-trumpet-workshop-participant-recital-8781",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/oberlin-trumpet-workshop-participant-recital-8781",
@@ -2519,7 +2519,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/oberlin-trumpet-workshop-participant-recital-8781",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094977+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597339+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800642729478"
       },
@@ -2539,7 +2539,7 @@
       }
     },
     {
-      "id": "oberlin-51800698270525",
+      "id": "oberlin-51800698270525-51800698270526",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Baroque Performance Institute Participant Chamber Music Concert",
@@ -2554,13 +2554,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1782581400000,
-          "endTime": 1782595800000
+          "startTime": 1782581400,
+          "endTime": 1782595800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/baroque-performance-institute-participant-chamber-music-concert-1790",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/baroque-performance-institute-participant-chamber-music-concert-1790",
@@ -2570,7 +2570,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/baroque-performance-institute-participant-chamber-music-concert-1790",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.094990+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597357+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800698270525"
       },
@@ -2590,7 +2590,7 @@
       }
     },
     {
-      "id": "oberlin-51800621440847",
+      "id": "oberlin-51800621440847-51800621440848",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Oberlin Flute Boot Camp Participant Recital",
@@ -2605,13 +2605,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1782658800000,
-          "endTime": 1782664200000
+          "startTime": 1782658800,
+          "endTime": 1782664200
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/oberlin-flute-boot-camp-participant-recital-552",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/oberlin-flute-boot-camp-participant-recital-552",
@@ -2621,7 +2621,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/oberlin-flute-boot-camp-participant-recital-552",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095003+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597374+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800621440847"
       },
@@ -2641,7 +2641,7 @@
       }
     },
     {
-      "id": "oberlin-52692734504543",
+      "id": "oberlin-52692734504543-52692734505569",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Frank Lloyd Wright Open House / June-November 2026",
@@ -2656,13 +2656,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1783267200000,
-          "endTime": 1783285200000
+          "startTime": 1783267200,
+          "endTime": 1783285200
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
       "calendarSourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
@@ -2672,7 +2672,7 @@
       "urlLink": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095100+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597511+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52692734504543"
       },
@@ -2695,7 +2695,7 @@
       }
     },
     {
-      "id": "oberlin-51800755580642",
+      "id": "oberlin-51800755580642-51800755581667",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Organ Academy Faculty Recital, Jonathan Moyer",
@@ -2710,13 +2710,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1783899000000,
-          "endTime": 1783902600000
+          "startTime": 1783899000,
+          "endTime": 1783902600
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/organ-academy-faculty-recital-jonathan-moyer",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/organ-academy-faculty-recital-jonathan-moyer",
@@ -2726,7 +2726,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/organ-academy-faculty-recital-jonathan-moyer",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095121+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597540+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800755580642"
       },
@@ -2746,7 +2746,7 @@
       }
     },
     {
-      "id": "oberlin-51800796703505",
+      "id": "oberlin-51800796703505-51800796704530",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Organ Academy Faculty Recital - Mark Edwards, harpsichord",
@@ -2761,13 +2761,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1784071800000,
-          "endTime": 1784075400000
+          "startTime": 1784071800,
+          "endTime": 1784075400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/organ-academy-faculty-recital-mark-edwards-harpsichord-9745",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/organ-academy-faculty-recital-mark-edwards-harpsichord-9745",
@@ -2777,7 +2777,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/organ-academy-faculty-recital-mark-edwards-harpsichord-9745",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095132+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597556+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800796703505"
       },
@@ -2797,7 +2797,7 @@
       }
     },
     {
-      "id": "oberlin-51800830121904",
+      "id": "oberlin-51800830121904-51800830122929",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Sonic Arts Workshop Participant Recital",
@@ -2812,13 +2812,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1784401200000,
-          "endTime": 1784449800000
+          "startTime": 1784401200,
+          "endTime": 1784449800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://calendar.oberlin.edu/event/sonic-arts-workshop-participant-recital-6093",
       "calendarSourceUrl": "https://calendar.oberlin.edu/event/sonic-arts-workshop-participant-recital-6093",
@@ -2828,7 +2828,7 @@
       "urlLink": "https://calendar.oberlin.edu/event/sonic-arts-workshop-participant-recital-6093",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095143+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597569+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51800830121904"
       },
@@ -2848,7 +2848,7 @@
       }
     },
     {
-      "id": "oberlin-51815760861682",
+      "id": "oberlin-51815760861682-51815760861683",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Young Composers Workshop",
@@ -2863,13 +2863,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1785022200000,
-          "endTime": 1785025800000
+          "startTime": 1785022200,
+          "endTime": 1785025800
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://www.oberlin.edu/summer-programs/composition-workshop",
       "calendarSourceUrl": "https://www.oberlin.edu/summer-programs/composition-workshop",
@@ -2879,7 +2879,7 @@
       "urlLink": "https://www.oberlin.edu/summer-programs/composition-workshop",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095154+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597584+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51815760861682"
       },
@@ -2899,7 +2899,7 @@
       }
     },
     {
-      "id": "oberlin-51815210388404",
+      "id": "oberlin-51815210388404-51815210389429",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Adult Amateur Piano Festival Guest Concert: Jon Shih",
@@ -2914,13 +2914,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1785108600000,
-          "endTime": 1785114000000
+          "startTime": 1785108600,
+          "endTime": 1785114000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
       "calendarSourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
@@ -2930,7 +2930,7 @@
       "urlLink": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095171+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597606+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51815210388404"
       },
@@ -2950,7 +2950,7 @@
       }
     },
     {
-      "id": "oberlin-51815586487392",
+      "id": "oberlin-51815586487392-51815586488417",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Adult Amateur Piano Festival Concert I",
@@ -2965,13 +2965,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1785353400000,
-          "endTime": 1785360600000
+          "startTime": 1785353400,
+          "endTime": 1785360600
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
       "calendarSourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
@@ -2981,7 +2981,7 @@
       "urlLink": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095183+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597623+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51815586487392"
       },
@@ -3001,7 +3001,7 @@
       }
     },
     {
-      "id": "oberlin-51815547574650",
+      "id": "oberlin-51815547574650-51815547575675",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Adult Amateur Piano Festival Concert II",
@@ -3016,13 +3016,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1785367800000,
-          "endTime": 1785375000000
+          "startTime": 1785367800,
+          "endTime": 1785375000
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
       "calendarSourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
@@ -3032,7 +3032,7 @@
       "urlLink": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095194+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597639+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51815547574650"
       },
@@ -3054,7 +3054,7 @@
       }
     },
     {
-      "id": "oberlin-52692734504543",
+      "id": "oberlin-52692734504543-52692734507618",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Frank Lloyd Wright Open House / June-November 2026",
@@ -3069,13 +3069,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1785686400000,
-          "endTime": 1785704400000
+          "startTime": 1785686400,
+          "endTime": 1785704400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
       "calendarSourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
@@ -3085,7 +3085,7 @@
       "urlLink": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095290+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597777+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52692734504543"
       },
@@ -3108,7 +3108,7 @@
       }
     },
     {
-      "id": "oberlin-51814152694188",
+      "id": "oberlin-51814152694188-51814152694189",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Thomas & Evon Cooper Competition 2026 - Violin: Round 1, Day 1 Session 1",
@@ -3123,13 +3123,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1786041000000,
-          "endTime": 1786052700000
+          "startTime": 1786041000,
+          "endTime": 1786052700
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
       "calendarSourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
@@ -3139,7 +3139,7 @@
       "urlLink": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095375+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597888+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51814152694188"
       },
@@ -3159,7 +3159,7 @@
       }
     },
     {
-      "id": "oberlin-51814262645056",
+      "id": "oberlin-51814262645056-51814262645057",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Thomas & Evon Cooper Competition 2026 - Violin Round 1, Day 2 Session 1",
@@ -3174,13 +3174,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1786127400000,
-          "endTime": 1786139100000
+          "startTime": 1786127400,
+          "endTime": 1786139100
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
       "calendarSourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
@@ -3190,7 +3190,7 @@
       "urlLink": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095455+00:00",
+        "extractedAt": "2026-05-09T11:06:04.597997+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51814262645056"
       },
@@ -3210,7 +3210,7 @@
       }
     },
     {
-      "id": "oberlin-51814457189582",
+      "id": "oberlin-51814457189582-51814457190607",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Thomas & Evon Cooper Competition 2026 - Concerto Finals with the ProMusica Chamber Orchestra, David Danzmayr, conductor.",
@@ -3225,13 +3225,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1786404600000,
-          "endTime": 1786413600000
+          "startTime": 1786404600,
+          "endTime": 1786413600
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
       "calendarSourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
@@ -3241,7 +3241,7 @@
       "urlLink": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095534+00:00",
+        "extractedAt": "2026-05-09T11:06:04.598120+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "51814457189582"
       },
@@ -3261,7 +3261,7 @@
       }
     },
     {
-      "id": "oberlin-52692734504543",
+      "id": "oberlin-52692734504543-52692734508643",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Frank Lloyd Wright Open House / June-November 2026",
@@ -3276,13 +3276,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1788710400000,
-          "endTime": 1788728400000
+          "startTime": 1788710400,
+          "endTime": 1788728400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
       "calendarSourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
@@ -3292,7 +3292,7 @@
       "urlLink": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095634+00:00",
+        "extractedAt": "2026-05-09T11:06:04.598269+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52692734504543"
       },
@@ -3315,7 +3315,7 @@
       }
     },
     {
-      "id": "oberlin-52692734504543",
+      "id": "oberlin-52692734504543-52692734509668",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Frank Lloyd Wright Open House / June-November 2026",
@@ -3330,13 +3330,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1791129600000,
-          "endTime": 1791147600000
+          "startTime": 1791129600,
+          "endTime": 1791147600
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
       "calendarSourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
@@ -3346,7 +3346,7 @@
       "urlLink": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095735+00:00",
+        "extractedAt": "2026-05-09T11:06:04.598413+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52692734504543"
       },
@@ -3369,7 +3369,7 @@
       }
     },
     {
-      "id": "oberlin-52692734504543",
+      "id": "oberlin-52692734504543-52692734511717",
       "eventType": "ot",
       "email": "frankkusiap@gmail.com",
       "title": "Frank Lloyd Wright Open House / June-November 2026",
@@ -3384,13 +3384,13 @@
       ],
       "sessions": [
         {
-          "startTime": 1793552400000,
-          "endTime": 1793570400000
+          "startTime": 1793552400,
+          "endTime": 1793570400
         }
       ],
       "display": "all",
       "screensIds": [],
-      "status": "pending_review",
+      "status": "pending",
       "sourceName": "Oberlin College Calendar",
       "sourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
       "calendarSourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
@@ -3400,7 +3400,7 @@
       "urlLink": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026",
       "aiConfidence": null,
       "extractedMetadata": {
-        "extractedAt": "2026-05-09T10:18:19.095834+00:00",
+        "extractedAt": "2026-05-09T11:06:04.598574+00:00",
         "model": "oberlin-normalizer-v1",
         "sourceRecordId": "52692734504543"
       },

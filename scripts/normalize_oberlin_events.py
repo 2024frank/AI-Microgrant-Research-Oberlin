@@ -21,7 +21,7 @@ from typing import Any
 
 DEFAULT_EMAIL = "frankkusiap@gmail.com"
 DEFAULT_EVENT_TYPE = "ot"
-DEFAULT_STATUS = "pending_review"
+DEFAULT_STATUS = "pending"
 DEFAULT_SOURCE_NAME = "Oberlin College Calendar"
 DEFAULT_SPONSOR = "Oberlin College"
 DEFAULT_DISPLAY = "all"
@@ -67,11 +67,21 @@ def clean_description(description: str, source_url: str) -> str:
   return text
 
 
-def to_epoch_ms(iso_value: str | None) -> int | None:
+def to_epoch_seconds(iso_value: str | None) -> int | None:
   if not iso_value:
     return None
   parsed = dt.datetime.fromisoformat(iso_value)
-  return int(parsed.timestamp() * 1000)
+  return int(parsed.timestamp())
+
+
+def normalized_post_id(event_id: Any, event_instances: list[dict[str, Any]]) -> str:
+  first_instance = event_instances[0].get("event_instance", {}) if event_instances else {}
+  instance_id = first_instance.get("id")
+
+  if instance_id:
+    return f"oberlin-{event_id}-{instance_id}"
+
+  return f"oberlin-{event_id}"
 
 
 def map_post_type_ids(event_type_names: list[str]) -> tuple[list[int], list[str]]:
@@ -175,18 +185,19 @@ def normalize(input_payload: dict[str, Any]) -> dict[str, Any]:
     sponsors = [DEFAULT_SPONSOR, *departments]
     sponsors = sorted(set(sponsors))
 
+    event_instances = event.get("event_instances", [])
     sessions = []
-    for instance in event.get("event_instances", []):
+    for instance in event_instances:
       event_instance = instance.get("event_instance", {})
       sessions.append(
         {
-          "startTime": to_epoch_ms(event_instance.get("start")),
-          "endTime": to_epoch_ms(event_instance.get("end")),
+          "startTime": to_epoch_seconds(event_instance.get("start")),
+          "endTime": to_epoch_seconds(event_instance.get("end")),
         }
       )
 
     normalized = {
-      "id": f"oberlin-{event.get('id')}",
+      "id": normalized_post_id(event.get("id"), event_instances),
       "eventType": DEFAULT_EVENT_TYPE,
       "email": DEFAULT_EMAIL,
       "title": str(event.get("title", "")).strip(),
