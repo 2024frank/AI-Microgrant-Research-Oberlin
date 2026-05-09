@@ -1,7 +1,0 @@
-.vercel
-.env
-.DS_Store
-node_modules/
-dashboard/.next/
-dashboard/node_modules/
-pushed_ids.json
