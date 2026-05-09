@@ -1,0 +1,95 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Activity,
+  Archive,
+  BarChart3,
+  CalendarDays,
+  Copy,
+  Gauge,
+  HeartPulse,
+  LayoutDashboard,
+  MapPinned,
+  Settings,
+  Shield,
+  UserCog,
+} from "lucide-react";
+
+import { useAuth } from "@/context/AuthContext";
+import { canAccessAdminControl } from "@/lib/users";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/posts", label: "Posts", icon: CalendarDays },
+  { href: "/sources", label: "Sources", icon: Gauge },
+  { href: "/ai-analysis", label: "AI Analysis", icon: BarChart3 },
+  { href: "/duplicate-detection", label: "Duplicate Detection", icon: Copy },
+  { href: "/geo-intel", label: "Geo Intel", icon: MapPinned },
+  { href: "/logs", label: "Logs", icon: Activity },
+  { href: "/system-health", label: "System Health", icon: HeartPulse },
+  { href: "/admin-control", label: "Admin Control", icon: UserCog },
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/archive", label: "Archive", icon: Archive },
+];
+
+export function AppSidebar() {
+  const pathname = usePathname();
+  const { role, user } = useAuth();
+  const visibleNavItems = navItems.filter(
+    (item) => item.href !== "/admin-control" || canAccessAdminControl(role),
+  );
+
+  return (
+    <aside className="hidden h-screen w-[240px] shrink-0 border-r border-[var(--border-warm)] bg-[var(--surface)] md:fixed md:left-0 md:top-0 md:flex md:flex-col">
+      <div className="border-b border-[var(--border)] px-5 py-5">
+        <Link className="flex items-center gap-3" href="/dashboard">
+          <div className="flex h-9 w-9 items-center justify-center rounded border border-[var(--border)] bg-[var(--surface-high)] text-[#ffb3b3]">
+            <Shield aria-hidden="true" size={20} />
+          </div>
+          <div>
+            <p className="font-[var(--font-public-sans)] text-lg font-bold text-[var(--text)]">
+              Civic Calendar
+            </p>
+            <p className="font-[var(--font-plex)] text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--muted-warm)]">
+              Admin Console
+            </p>
+          </div>
+        </Link>
+      </div>
+      <nav aria-label="Primary" className="flex-1 overflow-y-auto px-2 py-4">
+        <ul className="space-y-1">
+          {visibleNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+            return (
+              <li key={item.href}>
+                <Link
+                  className={cn(
+                    "flex items-center gap-3 rounded px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--surface-high)] hover:text-[var(--text)]",
+                    isActive &&
+                      "border-r-2 border-[#ffb3b3] bg-[var(--primary-soft)] font-semibold text-[#ffb3b3]",
+                  )}
+                  href={item.href}
+                >
+                  <Icon aria-hidden="true" size={18} />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+      <div className="border-t border-[var(--border)] px-5 py-4 text-sm">
+        <p className="truncate text-[var(--text)]">{user?.displayName ?? user?.email ?? "Admin User"}</p>
+        <p className="font-[var(--font-plex)] text-[11px] uppercase tracking-[0.05em] text-[var(--muted)]">
+          {role ?? "No role"}
+        </p>
+      </div>
+    </aside>
+  );
+}
