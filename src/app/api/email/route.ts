@@ -17,7 +17,7 @@ type EmailRequest =
 const fromAddress = "Civic Calendar <noreply@uhurued.com>";
 
 function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_APP_URL || "https://ai-microgrant-research-oberlin.vercel.app";
 }
 
 function getEmailContent(body: EmailRequest) {
@@ -27,15 +27,15 @@ function getEmailContent(body: EmailRequest) {
   if (body.type === "access-approved") {
     return {
       subject: "Your Civic Calendar access has been approved",
-      text: `Hello ${name},\n\nYour Civic Calendar access has been approved. Sign in here: ${loginUrl}\n\nCivic Infrastructure Systems`,
-      html: `<p>Hello ${name},</p><p>Your Civic Calendar access has been approved.</p><p><a href="${loginUrl}">Log in to Civic Calendar</a></p><p>Civic Infrastructure Systems</p>`,
+      text: `Hello ${name},\n\nYour Civic Calendar access has been approved. Sign in here: ${loginUrl}\n\nKwaku`,
+      html: `<p>Hello ${name},</p><p>Your Civic Calendar access has been approved.</p><p><a href="${loginUrl}">Log in to Civic Calendar</a></p><p>Kwaku</p>`,
     };
   }
 
   return {
     subject: "You’ve been invited to Civic Calendar",
-    text: `Hello ${name},\n\nYou have been invited to Civic Calendar as ${body.role}. Sign in with Google here: ${loginUrl}\n\nCivic Infrastructure Systems`,
-    html: `<p>Hello ${name},</p><p>You have been invited to Civic Calendar as <strong>${body.role}</strong>.</p><p><a href="${loginUrl}">Log in to Civic Calendar</a></p><p>Civic Infrastructure Systems</p>`,
+    text: `Hello ${name},\n\nYou have been invited to Civic Calendar as ${body.role}. Sign in with Google here: ${loginUrl}\n\nKwaku`,
+    html: `<p>Hello ${name},</p><p>You have been invited to Civic Calendar as <strong>${body.role}</strong>.</p><p><a href="${loginUrl}">Log in to Civic Calendar</a></p><p>Kwaku</p>`,
   };
 }
 
