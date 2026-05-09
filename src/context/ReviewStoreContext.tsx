@@ -17,6 +17,7 @@ type ReviewStoreValue = {
   duplicateGroups: DuplicateGroup[];
   updatePost: (id: string, updates: Partial<ReviewPost>) => void;
   updatePostsStatus: (ids: string[], status: ReviewStatus, rejectionReason?: string) => void;
+  removePosts: (ids: string[]) => void;
   updateDuplicateGroup: (id: string, updates: Partial<DuplicateGroup>) => void;
   getPostById: (id: string) => ReviewPost | undefined;
 };
@@ -86,6 +87,17 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
               ? ({ ...post, status, ...(rejectionReason ? { rejectionReason } : {}) } as ReviewPost)
               : post,
           ),
+        );
+      },
+      removePosts: (ids) => {
+        setPosts((current) => current.filter((post) => !ids.includes(post.id)));
+        setDuplicateGroups((current) =>
+          current
+            .map((group) => ({
+              ...group,
+              postIds: group.postIds.filter((postId) => !ids.includes(postId)),
+            }))
+            .filter((group) => group.postIds.length >= 2),
         );
       },
       updateDuplicateGroup: (id, updates) => {
