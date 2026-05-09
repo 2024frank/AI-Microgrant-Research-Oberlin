@@ -8,11 +8,22 @@ and sends an admin stats email via Resend.
 
 Does NOT submit to Community Hub — that only happens when a human reviewer
 clicks Accept/Approve in the frontend.
+
+Usage:
+    python scripts/normalize_oberlin_localist_events.py [options]
+
+Options:
+    --input PATH       Raw Localist JSON  (default: obelrlin_college_events.json)
+    --output PATH      Normalized output  (default: normalized_oberlin_events_for_review.json)
+    --dry-run          Skip Firestore writes, Community Hub fetch, and email
+    --skip-email       Skip admin email only
+    --clear-input      Zero out the events array in the input file after processing
 """
 
 from __future__ import annotations
 
 import argparse
+import copy
 import datetime as dt
 import json
 import logging
@@ -54,8 +65,11 @@ COMMUNITY_HUB_API = (
 SCRIPT_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = SCRIPT_DIR / "config" / "civic_calendar_post_type_map.json"
 
+DUPLICATE_TITLE_THRESHOLD = 0.80
+DUPLICATE_DATE_WINDOW_SECS = 3600 * 3  # 3 hours
+
 # ---------------------------------------------------------------------------
-# Helpers
+# Helpers – text cleaning
 # ---------------------------------------------------------------------------
 
 def _load_config() -> dict[str, Any]:
@@ -72,16 +86,22 @@ def strip_html(value: str) -> str:
     return text
 
 
+_TYPO_FIXES = {
+    "asssorted": "assorted",
+    "occuring": "occurring",
+    "recieve": "receive",
+    "seperate": "separate",
+    "accomodate": "accommodate",
+    "occurence": "occurrence",
+    "reccomend": "recommend",
+    "definately": "definitely",
+    "occassion": "occasion",
+    "publically": "publicly",
+}
+
+
 def _fix_common_typos(text: str) -> str:
-    fixes = {
-        "asssorted": "assorted",
-        "occuring": "occurring",
-        "recieve": "receive",
-        "seperate": "separate",
-        "accomodate": "accommodate",
-        "occurence": "occurrence",
-    }
-    for bad, good in fixes.items():
+    for bad, good in _TYPO_FIXES.items():
         text = re.sub(re.escape(bad), good, text, flags=re.IGNORECASE)
     return text
 
@@ -137,6 +157,10 @@ def _clean_title(title: str) -> tuple[str, list[str]]:
     return t, flags
 
 
+# ---------------------------------------------------------------------------
+# Field mapping helpers
+# ---------------------------------------------------------------------------
+
 def _iso_to_epoch_seconds(iso_str: str | None) -> int | None:
     if not iso_str:
         return None
@@ -163,7 +187,10 @@ def _build_sessions(event: dict) -> tuple[list[dict], list[str]]:
 def _map_location_type(event: dict) -> tuple[str, list[str]]:
     flags: list[str] = []
     experience = (event.get("experience") or "").lower()
-    has_address = bool((event.get("address") or "").strip() or (event.get("location_name") or "").strip())
+    has_address = bool(
+        (event.get("address") or "").strip()
+        or (event.get("location_name") or "").strip()
+    )
     has_stream = bool((event.get("stream_url") or "").strip())
 
     if has_address and has_stream:
@@ -213,10 +240,13 @@ def _resolve_buttons(event: dict) -> list[dict]:
     ticket_url = (event.get("ticket_url") or "").strip()
     if not ticket_url:
         return []
-    title_lower = ticket_url.lower()
-    if "ticket" in title_lower:
+    cost_lower = (event.get("ticket_cost") or "").strip().lower()
+    url_lower = ticket_url.lower()
+    if "ticket" in url_lower or (cost_lower and "free" not in cost_lower):
         label = "Buy Tickets"
-    elif "register" in title_lower or "signup" in title_lower or "forms" in title_lower:
+    elif "register" in url_lower or "signup" in url_lower or "forms" in url_lower:
+        label = "Register"
+    elif "free" in cost_lower:
         label = "Register"
     else:
         label = "Learn More"
@@ -252,6 +282,8 @@ def _map_post_type_ids(
         for f in event.get("filters", {}).get("event_types", [])
     ]
     title_lower = (event.get("title") or "").lower()
+    desc_lower = (event.get("description_text") or "").lower()
+    combined = f"{title_lower} {desc_lower}"
 
     matched_keys: set[str] = set()
     for name in event_type_names:
@@ -262,7 +294,7 @@ def _map_post_type_ids(
                 matched_keys.add(key)
 
     for keyword, key in kw_map.items():
-        if keyword in title_lower:
+        if keyword in combined:
             matched_keys.add(key)
 
     ids: list[int] = []
@@ -281,6 +313,78 @@ def _map_post_type_ids(
 
 
 # ---------------------------------------------------------------------------
+# Quality / AI analysis (rule-based heuristics)
+# ---------------------------------------------------------------------------
+
+def _compute_quality_score(record: dict) -> dict[str, Any]:
+    payload = record["civicCalendarPayload"]
+    issues: list[str] = list(record.get("reviewFlags", []))
+    score = 100
+
+    if not payload.get("title"):
+        issues.append("Missing title")
+        score -= 30
+    if not payload.get("description") or len(payload.get("description", "")) < 10:
+        issues.append("Description too short or missing")
+        score -= 20
+    if not payload.get("sessions"):
+        issues.append("No sessions/dates")
+        score -= 25
+    if not payload.get("image_cdn_url"):
+        issues.append("No image")
+        score -= 5
+    if record.get("reviewFlags"):
+        score -= 3 * len(record["reviewFlags"])
+
+    score = max(10, min(100, score))
+
+    if score >= 85:
+        action = "auto_approve_candidate"
+    elif score >= 60:
+        action = "review_recommended"
+    else:
+        action = "manual_review_required"
+
+    summary_parts = []
+    if payload.get("title"):
+        summary_parts.append(f'Event "{payload["title"]}"')
+    sessions = payload.get("sessions", [])
+    if sessions:
+        summary_parts.append(f"with {len(sessions)} session(s)")
+    summary = " ".join(summary_parts) if summary_parts else f"Quality score {score}/100"
+
+    return {
+        "summary": summary,
+        "qualityScore": score,
+        "issues": issues,
+        "recommendedReviewerAction": action,
+    }
+
+
+def _compute_confidence(record: dict) -> dict[str, Any]:
+    errors = record.get("validationErrors", [])
+    flags = record.get("reviewFlags", [])
+    overall = 1.0 - 0.15 * len(errors) - 0.05 * len(flags)
+    overall = round(max(0.1, min(1.0, overall)), 3)
+
+    field_notes: dict[str, str] = {}
+    for f in flags:
+        fl = f.lower()
+        if "title" in fl:
+            field_notes["title"] = "Title was modified"
+        if "description" in fl:
+            field_notes["description"] = "Description was modified"
+        if "post_type" in fl:
+            field_notes["postTypeId"] = "Post type mapping uncertain"
+        if "address" in fl or "location" in fl:
+            field_notes["location"] = "Location data incomplete"
+        if "end_time" in fl:
+            field_notes["sessions"] = "End time was missing; set equal to start time"
+
+    return {"overall": overall, "fieldNotes": field_notes}
+
+
+# ---------------------------------------------------------------------------
 # Community Hub duplicate check
 # ---------------------------------------------------------------------------
 
@@ -289,7 +393,9 @@ def _normalize_for_compare(s: str) -> str:
 
 
 def _title_similarity(a: str, b: str) -> float:
-    return SequenceMatcher(None, _normalize_for_compare(a), _normalize_for_compare(b)).ratio()
+    return SequenceMatcher(
+        None, _normalize_for_compare(a), _normalize_for_compare(b)
+    ).ratio()
 
 
 def _sessions_overlap(sessions_a: list[dict], sessions_b: list[dict]) -> bool:
@@ -299,11 +405,23 @@ def _sessions_overlap(sessions_a: list[dict], sessions_b: list[dict]) -> bool:
             a_end = sa.get("endTime") or sa.get("end")
             b_start = sb.get("startTime") or sb.get("start")
             b_end = sb.get("endTime") or sb.get("end")
-            if a_start and b_start and a_start == b_start:
-                return True
-            if a_start and a_end and b_start and b_end:
-                if a_start <= b_end and b_start <= a_end:
+            if a_start and b_start:
+                if a_start == b_start:
                     return True
+                if a_end and b_end and a_start <= b_end and b_start <= a_end:
+                    return True
+    return False
+
+
+def _sessions_overlap_window(
+    sessions_a: list[dict], sessions_b: list[dict], window: int
+) -> bool:
+    for sa in sessions_a:
+        for sb in sessions_b:
+            a_start = sa.get("startTime") or 0
+            b_start = sb.get("startTime") or 0
+            if abs(a_start - b_start) <= window:
+                return True
     return False
 
 
@@ -313,7 +431,9 @@ def fetch_community_hub_posts() -> list[dict]:
         ctx = ssl.create_default_context()
         req = urllib.request.Request(
             COMMUNITY_HUB_API,
-            headers={"User-Agent": "CivicCalendarNormalizer/1.0 (fkusiapp@oberlin.edu)"},
+            headers={
+                "User-Agent": "CivicCalendarNormalizer/1.0 (fkusiapp@oberlin.edu)"
+            },
         )
         with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
             data = json.loads(resp.read())
@@ -392,32 +512,35 @@ _firestore_available = False
 def _init_firestore() -> bool:
     global _firestore_db, _firestore_available
     try:
-        import firebase_admin  # noqa: F811
+        import firebase_admin
         from firebase_admin import credentials, firestore
 
-        cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-        project_id = os.environ.get("FIREBASE_PROJECT_ID") or os.environ.get(
-            "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
-        )
+        if not firebase_admin._apps:
+            cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+            project_id = os.environ.get(
+                "FIREBASE_PROJECT_ID"
+            ) or os.environ.get("NEXT_PUBLIC_FIREBASE_PROJECT_ID")
 
-        if cred_path and Path(cred_path).exists():
-            cred = credentials.Certificate(cred_path)
-            firebase_admin.initialize_app(cred)
-        elif project_id:
-            firebase_admin.initialize_app(options={"projectId": project_id})
-        else:
-            log.warning(
-                "No Firebase credentials found. Set GOOGLE_APPLICATION_CREDENTIALS "
-                "or FIREBASE_PROJECT_ID. Firestore writes will be skipped."
-            )
-            return False
+            if cred_path and Path(cred_path).exists():
+                cred = credentials.Certificate(cred_path)
+                firebase_admin.initialize_app(cred)
+            elif project_id:
+                firebase_admin.initialize_app(options={"projectId": project_id})
+            else:
+                log.warning(
+                    "No Firebase credentials found. Set GOOGLE_APPLICATION_CREDENTIALS "
+                    "or FIREBASE_PROJECT_ID. Firestore writes will be skipped."
+                )
+                return False
 
         _firestore_db = firestore.client()
         _firestore_available = True
         log.info("Firestore client initialized successfully")
         return True
     except Exception as exc:
-        log.warning("Firestore initialization failed: %s — writes will be skipped", exc)
+        log.warning(
+            "Firestore initialization failed: %s — writes will be skipped", exc
+        )
         return False
 
 
@@ -425,18 +548,21 @@ def _firestore_get_existing_review_ids() -> set[str]:
     if not _firestore_available or not _firestore_db:
         return set()
     try:
-        docs = _firestore_db.collection("reviewPosts").stream()
         ids = set()
-        for doc in docs:
-            data = doc.to_dict()
-            ids.add(doc.id)
-            src_id = data.get("sourceEventId")
-            if src_id:
-                ids.add(f"oberlin_localist_{src_id}")
-        log.info("Found %d existing review records in Firestore", len(ids))
+        for collection_name in ("reviewPosts", "approvedPosts"):
+            docs = _firestore_db.collection(collection_name).stream()
+            for doc in docs:
+                data = doc.to_dict()
+                ids.add(doc.id)
+                src_id = data.get("sourceEventId")
+                if src_id:
+                    ids.add(f"oberlin_localist_{src_id}")
+        log.info(
+            "Found %d existing review/approved records in Firestore", len(ids)
+        )
         return ids
     except Exception as exc:
-        log.warning("Failed to read Firestore reviewPosts: %s", exc)
+        log.warning("Failed to read Firestore collections: %s", exc)
         return set()
 
 
@@ -466,7 +592,11 @@ def _firestore_write_review_post(record: dict) -> bool:
         )
         return True
     except Exception as exc:
-        log.error("Firestore write failed for %s: %s", record.get("sourceEventId"), exc)
+        log.error(
+            "Firestore write failed for %s: %s",
+            record.get("sourceEventId"),
+            exc,
+        )
         return False
 
 
@@ -479,7 +609,11 @@ def _firestore_write_duplicate_group(group: dict) -> bool:
         )
         return True
     except Exception as exc:
-        log.error("Firestore duplicateGroup write failed for %s: %s", group.get("id"), exc)
+        log.error(
+            "Firestore duplicateGroup write failed for %s: %s",
+            group.get("id"),
+            exc,
+        )
         return False
 
 
@@ -502,39 +636,49 @@ def _firestore_write_source_run(run: dict) -> bool:
 def send_admin_email(summary: dict, run_ts: str) -> bool:
     api_key = os.environ.get("RESEND_API_KEY")
     if not api_key:
-        log.warning("RESEND_API_KEY not set — skipping admin email notification")
+        log.warning(
+            "RESEND_API_KEY not set — skipping admin email notification"
+        )
         return False
 
     try:
         import resend as resend_lib
+
         resend_lib.api_key = api_key
 
         subject = (
             f"Oberlin Normalizer: {summary['events_normalized']} events processed"
-            f" ({summary['duplicates_community_hub']} CH duplicates,"
-            f" {summary['duplicates_firestore']} FS duplicates)"
+            f" ({summary['duplicates_community_hub']} CH dupes,"
+            f" {summary['duplicates_firestore']} FS dupes,"
+            f" {summary['duplicates_batch']} batch dupes)"
         )
 
         body_lines = [
-            f"<h2>Oberlin Localist Normalization Report</h2>",
+            "<h2>Oberlin Localist Normalization Report</h2>",
             f"<p><strong>Run at:</strong> {run_ts}</p>",
-            f"<table style='border-collapse:collapse;'>",
-            f"<tr><td style='padding:4px 12px;'>Events read</td><td><strong>{summary['events_read']}</strong></td></tr>",
+            "<table style='border-collapse:collapse;font-family:sans-serif;'>",
+            f"<tr><td style='padding:4px 12px;'>Events read (raw entries)</td><td><strong>{summary['events_read']}</strong></td></tr>",
+            f"<tr><td style='padding:4px 12px;'>Unique events (after merge)</td><td><strong>{summary['unique_events']}</strong></td></tr>",
             f"<tr><td style='padding:4px 12px;'>Events normalized</td><td><strong>{summary['events_normalized']}</strong></td></tr>",
             f"<tr><td style='padding:4px 12px;'>Queued for review</td><td><strong>{summary['events_queued_for_review']}</strong></td></tr>",
+            f"<tr><td style='padding:4px 12px;'>Already in Firestore</td><td><strong>{summary['events_already_seen']}</strong></td></tr>",
             f"<tr><td style='padding:4px 12px;'>Community Hub duplicates</td><td><strong>{summary['duplicates_community_hub']}</strong></td></tr>",
-            f"<tr><td style='padding:4px 12px;'>Firestore duplicates (already queued)</td><td><strong>{summary['duplicates_firestore']}</strong></td></tr>",
+            f"<tr><td style='padding:4px 12px;'>Batch duplicates</td><td><strong>{summary['duplicates_batch']}</strong></td></tr>",
             f"<tr><td style='padding:4px 12px;'>Validation errors</td><td><strong>{summary['events_with_errors']}</strong></td></tr>",
-            f"<tr><td style='padding:4px 12px;'>Firestore writes succeeded</td><td><strong>{summary['firestore_writes_succeeded']}</strong></td></tr>",
-            f"</table>",
+            f"<tr><td style='padding:4px 12px;'>Firestore writes</td><td><strong>{summary['firestore_writes_succeeded']}</strong></td></tr>",
+            f"<tr><td style='padding:4px 12px;'>Average confidence</td><td><strong>{summary.get('average_confidence', 'N/A')}</strong></td></tr>",
+            "</table>",
+            "<br><p style='color:#888;font-size:12px;'>Automated message from the Civic Calendar normalization pipeline.</p>",
         ]
 
-        resend_lib.Emails.send({
-            "from": "Civic Calendar <noreply@uhurued.com>",
-            "to": [IMPORTER_EMAIL],
-            "subject": subject,
-            "html": "\n".join(body_lines),
-        })
+        resend_lib.Emails.send(
+            {
+                "from": "Civic Calendar <noreply@uhurued.com>",
+                "to": [IMPORTER_EMAIL],
+                "subject": subject,
+                "html": "\n".join(body_lines),
+            }
+        )
         log.info("Admin email sent to %s", IMPORTER_EMAIL)
         return True
     except Exception as exc:
@@ -543,120 +687,169 @@ def send_admin_email(summary: dict, run_ts: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Quality / AI analysis (rule-based heuristics)
+# Recurring event merging
 # ---------------------------------------------------------------------------
 
-def _compute_quality_score(record: dict) -> dict[str, Any]:
-    payload = record["civicCalendarPayload"]
-    issues: list[str] = []
-    score = 100
-
-    if not payload.get("title"):
-        issues.append("Missing title")
-        score -= 30
-    if not payload.get("description") or len(payload.get("description", "")) < 10:
-        issues.append("Description too short or missing")
-        score -= 20
-    if not payload.get("sessions"):
-        issues.append("No sessions/dates")
-        score -= 25
-    if not payload.get("image_cdn_url"):
-        issues.append("No image")
-        score -= 5
-    if record.get("reviewFlags"):
-        score -= 3 * len(record["reviewFlags"])
-
-    score = max(10, min(100, score))
-
-    if score >= 85:
-        action = "auto_approve_candidate"
-    elif score >= 60:
-        action = "review_recommended"
-    else:
-        action = "manual_review_required"
-
-    return {
-        "summary": f"Quality score {score}/100 with {len(issues)} issues",
-        "qualityScore": score,
-        "issues": issues,
-        "recommendedReviewerAction": action,
-    }
-
-
-def _compute_confidence(record: dict) -> dict[str, Any]:
-    errors = record.get("validationErrors", [])
-    flags = record.get("reviewFlags", [])
-    overall = 1.0 - 0.15 * len(errors) - 0.05 * len(flags)
-    overall = round(max(0.1, min(1.0, overall)), 3)
-
-    field_notes: dict[str, str] = {}
-    for f in flags:
-        if "title" in f.lower():
-            field_notes["title"] = "Title was modified"
-        if "description" in f.lower():
-            field_notes["description"] = "Description was modified"
-        if "post_type" in f.lower():
-            field_notes["postTypeId"] = "Post type mapping uncertain"
-        if "address" in f.lower() or "location" in f.lower():
-            field_notes["location"] = "Location data incomplete"
-
-    return {"overall": overall, "fieldNotes": field_notes}
+def _merge_recurring_events(wrapped_events: list[dict]) -> list[dict]:
+    """Localist may return the same event ID multiple times (once per recurring
+    instance page). Merge all event_instances into a single event object."""
+    seen: dict[str, dict] = {}
+    for item in wrapped_events:
+        event = item.get("event", item)
+        eid = str(event.get("id", ""))
+        if eid not in seen:
+            seen[eid] = copy.deepcopy(event)
+        else:
+            existing_inst_ids = {
+                inst.get("event_instance", {}).get("id")
+                for inst in seen[eid].get("event_instances", [])
+            }
+            for inst in event.get("event_instances", []):
+                inst_id = inst.get("event_instance", {}).get("id")
+                if inst_id not in existing_inst_ids:
+                    seen[eid]["event_instances"].append(inst)
+                    existing_inst_ids.add(inst_id)
+    return list(seen.values())
 
 
 # ---------------------------------------------------------------------------
-# Cross-batch duplicate detection (within normalized batch)
+# Batch duplicate detection (within-batch, fuzzy)
 # ---------------------------------------------------------------------------
 
 def detect_batch_duplicates(records: list[dict]) -> list[dict]:
+    """Detect duplicates within the current normalized batch using fuzzy
+    title similarity, session overlap, source URL match, and location."""
     groups: list[dict] = []
-    seen: dict[str, list[int]] = defaultdict(list)
+    n = len(records)
+    assigned_group: dict[int, str] = {}
+    group_counter = 0
 
-    for idx, rec in enumerate(records):
-        payload = rec["civicCalendarPayload"]
-        title_norm = _normalize_for_compare(payload.get("title", ""))
-        first_start = None
-        if payload.get("sessions"):
-            first_start = payload["sessions"][0].get("startTime")
-        key = f"{title_norm}::{first_start}"
-        seen[key].append(idx)
-
-    gid = 1
-    for key, indices in seen.items():
-        if len(indices) < 2:
+    for i in range(n):
+        if i in assigned_group:
             continue
-        group_id = f"batch_dup_{gid}"
-        primary = records[indices[0]]
-        likelies = [records[i] for i in indices[1:]]
-        group = {
-            "id": group_id,
-            "status": "open",
-            "primaryCandidateId": f"oberlin_localist_{primary['sourceEventId']}",
-            "likelyDuplicateIds": [
-                f"oberlin_localist_{r['sourceEventId']}" for r in likelies
-            ],
-            "similarityScore": 0.95,
-            "matchedFields": ["title", "session_start"],
-            "conflictingFields": [],
-            "recommendation": "Review possible batch duplicates before approval.",
-            "createdAt": dt.datetime.now(tz=dt.timezone.utc).isoformat(),
-            "updatedAt": dt.datetime.now(tz=dt.timezone.utc).isoformat(),
-            "sourceSystem": "oberlin_localist",
-        }
-        for i in indices:
-            records[i]["duplicateCheck"]["groupId"] = group_id
-            records[i]["duplicateCheck"]["status"] = "batch_duplicate"
-            records[i]["reviewFlags"].append("batch_duplicate_candidate")
-        groups.append(group)
-        gid += 1
+        rec_a = records[i]
+        payload_a = rec_a["civicCalendarPayload"]
+        members: list[tuple[int, float, list[str], list[str]]] = []
+
+        for j in range(i + 1, n):
+            if j in assigned_group:
+                continue
+            rec_b = records[j]
+            payload_b = rec_b["civicCalendarPayload"]
+
+            matched_fields: list[str] = []
+            conflicting_fields: list[str] = []
+            sim = 0.0
+
+            t_sim = _title_similarity(
+                payload_a.get("title", ""), payload_b.get("title", "")
+            )
+            if t_sim >= DUPLICATE_TITLE_THRESHOLD:
+                matched_fields.append("title")
+                sim = max(sim, t_sim)
+
+            if rec_a["sourceUrl"] and rec_a["sourceUrl"] == rec_b["sourceUrl"]:
+                matched_fields.append("sourceUrl")
+                sim = max(sim, 1.0)
+
+            if _sessions_overlap_window(
+                payload_a.get("sessions", []),
+                payload_b.get("sessions", []),
+                DUPLICATE_DATE_WINDOW_SECS,
+            ):
+                matched_fields.append("session_date")
+                sim = min(sim + 0.1, 1.0)
+
+            place_a = payload_a.get("placeName", "")
+            place_b = payload_b.get("placeName", "")
+            if place_a and place_a == place_b:
+                matched_fields.append("placeName")
+                sim = min(sim + 0.05, 1.0)
+
+            if len(matched_fields) >= 2 and sim >= DUPLICATE_TITLE_THRESHOLD:
+                if payload_a.get("description") != payload_b.get("description"):
+                    conflicting_fields.append("description")
+                if payload_a.get("location") != payload_b.get("location"):
+                    conflicting_fields.append("location")
+                if payload_a.get("sessions") != payload_b.get("sessions"):
+                    conflicting_fields.append("sessions")
+                members.append(
+                    (j, round(sim * 100), matched_fields, conflicting_fields)
+                )
+
+        if members:
+            group_counter += 1
+            group_id = f"batch_dup_{group_counter}"
+            primary_id = f"oberlin_localist_{rec_a['sourceEventId']}"
+            dup_ids: list[str] = []
+
+            rec_a["duplicateCheck"]["status"] = "batch_duplicate"
+            rec_a["duplicateCheck"]["groupId"] = group_id
+            rec_a["status"] = "pending_duplicate_review"
+            rec_a.setdefault("reviewFlags", []).append(
+                "batch_duplicate_candidate"
+            )
+            assigned_group[i] = group_id
+
+            all_matched: list[str] = []
+            all_conflict: list[str] = []
+            max_score = 0
+
+            for j, score, mf, cf in members:
+                dup_doc_id = f"oberlin_localist_{records[j]['sourceEventId']}"
+                dup_ids.append(dup_doc_id)
+                records[j]["duplicateCheck"]["status"] = "batch_duplicate"
+                records[j]["duplicateCheck"]["groupId"] = group_id
+                records[j]["duplicateCheck"]["candidateIds"].append(primary_id)
+                records[j]["duplicateCheck"]["score"] = score
+                records[j]["duplicateCheck"]["matchedFields"] = mf
+                records[j]["duplicateCheck"]["conflictingFields"] = cf
+                records[j]["status"] = "pending_duplicate_review"
+                records[j].setdefault("reviewFlags", []).append(
+                    "batch_duplicate_candidate"
+                )
+                assigned_group[j] = group_id
+                all_matched.extend(mf)
+                all_conflict.extend(cf)
+                max_score = max(max_score, score)
+
+            rec_a["duplicateCheck"]["candidateIds"] = dup_ids
+            rec_a["duplicateCheck"]["score"] = max_score
+            rec_a["duplicateCheck"]["matchedFields"] = sorted(set(all_matched))
+            rec_a["duplicateCheck"]["conflictingFields"] = sorted(
+                set(all_conflict)
+            )
+
+            now_iso = dt.datetime.now(tz=dt.timezone.utc).isoformat()
+            groups.append(
+                {
+                    "id": group_id,
+                    "status": "open",
+                    "primaryCandidateId": primary_id,
+                    "likelyDuplicateIds": dup_ids,
+                    "similarityScore": max_score,
+                    "matchedFields": sorted(set(all_matched)),
+                    "conflictingFields": sorted(set(all_conflict)),
+                    "recommendation": "Review side-by-side and merge or reject duplicate.",
+                    "createdAt": now_iso,
+                    "updatedAt": now_iso,
+                    "sourceSystem": "oberlin_localist",
+                }
+            )
 
     return groups
 
 
 # ---------------------------------------------------------------------------
-# Main normalize
+# Main normalize (single event)
 # ---------------------------------------------------------------------------
 
-def normalize_event(event: dict, config: dict, hub_posts: list[dict], existing_fs_ids: set[str]) -> dict:
+def normalize_event(
+    event: dict,
+    config: dict,
+    hub_posts: list[dict],
+    existing_fs_ids: set[str],
+) -> dict:
     source_id = str(event.get("id", ""))
     source_url = (event.get("localist_url") or "").strip()
     raw_event_ref = f"oberlin_localist:{source_id}"
@@ -769,38 +962,147 @@ def normalize_event(event: dict, config: dict, hub_posts: list[dict], existing_f
         record["duplicateCheck"]["candidateIds"] = [str(match["hub_post_id"])]
         record["duplicateCheck"]["score"] = match["score"]
         record["duplicateCheck"]["matchedFields"] = match["matched_fields"]
-        record["duplicateCheck"]["conflictingFields"] = match["conflicting_fields"]
+        record["duplicateCheck"]["conflictingFields"] = match[
+            "conflicting_fields"
+        ]
         record["reviewFlags"].append("community_hub_duplicate")
 
     return record
 
 
-def run_pipeline(input_path: Path, output_path: Path) -> dict[str, Any]:
+# ---------------------------------------------------------------------------
+# Metrics computation
+# ---------------------------------------------------------------------------
+
+def _compute_metrics(records: list[dict], config: dict[str, Any]) -> dict:
+    labels_cfg = config.get("labels", {})
+    id_to_label: dict[int, str] = {}
+    for key, entry in labels_cfg.items():
+        if isinstance(entry, dict) and "id" in entry:
+            id_to_label[entry["id"]] = entry.get("label", key)
+
+    post_type_dist: dict[str, int] = {}
+    for rec in records:
+        for pt in rec["civicCalendarPayload"].get("postTypeId", []):
+            label = id_to_label.get(pt, f"id_{pt}")
+            post_type_dist[label] = post_type_dist.get(label, 0) + 1
+
+    location_type_dist: dict[str, int] = {}
+    for rec in records:
+        lt = rec["civicCalendarPayload"].get("locationType", "unknown")
+        location_type_dist[lt] = location_type_dist.get(lt, 0) + 1
+
+    flag_dist: dict[str, int] = {}
+    for rec in records:
+        for flag in rec.get("reviewFlags", []):
+            flag_dist[flag] = flag_dist.get(flag, 0) + 1
+
+    confidence_values = [
+        rec["confidence"]["overall"]
+        for rec in records
+        if isinstance(rec.get("confidence", {}).get("overall"), (int, float))
+    ]
+    confidence_buckets = {
+        "high_0.9_1.0": 0,
+        "good_0.7_0.89": 0,
+        "medium_0.5_0.69": 0,
+        "low_0_0.49": 0,
+    }
+    for c in confidence_values:
+        if c >= 0.9:
+            confidence_buckets["high_0.9_1.0"] += 1
+        elif c >= 0.7:
+            confidence_buckets["good_0.7_0.89"] += 1
+        elif c >= 0.5:
+            confidence_buckets["medium_0.5_0.69"] += 1
+        else:
+            confidence_buckets["low_0_0.49"] += 1
+
+    avg_confidence = (
+        round(sum(confidence_values) / len(confidence_values), 3)
+        if confidence_values
+        else 0
+    )
+
+    return {
+        "postTypeDistribution": dict(
+            sorted(post_type_dist.items(), key=lambda x: -x[1])
+        ),
+        "locationTypeDistribution": location_type_dist,
+        "reviewFlagDistribution": dict(
+            sorted(flag_dist.items(), key=lambda x: -x[1])
+        ),
+        "confidenceDistribution": confidence_buckets,
+        "averageConfidence": avg_confidence,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Main pipeline
+# ---------------------------------------------------------------------------
+
+def run_pipeline(
+    input_path: Path,
+    output_path: Path,
+    dry_run: bool = False,
+    skip_email: bool = False,
+) -> dict[str, Any]:
     config = _load_config()
     raw = json.loads(input_path.read_text(encoding="utf-8"))
     wrapped_events = raw.get("events", [])
     now_iso = dt.datetime.now(tz=dt.timezone.utc).isoformat()
 
-    log.info("Read %d raw events from %s", len(wrapped_events), input_path)
+    events_read = len(wrapped_events)
+    log.info("Read %d raw event entries from %s", events_read, input_path)
 
-    hub_posts = fetch_community_hub_posts()
+    # Merge recurring event instances
+    unique_events = _merge_recurring_events(wrapped_events)
+    log.info(
+        "%d unique events after merging %d recurring entries",
+        len(unique_events),
+        events_read - len(unique_events),
+    )
 
-    _init_firestore()
-    existing_fs_ids = _firestore_get_existing_review_ids()
+    # Fetch Community Hub posts for duplicate checking
+    hub_posts: list[dict] = []
+    if not dry_run:
+        hub_posts = fetch_community_hub_posts()
+    else:
+        log.info("Dry run — skipping Community Hub fetch")
 
+    # Initialize Firestore
+    existing_fs_ids: set[str] = set()
+    if not dry_run:
+        _init_firestore()
+        existing_fs_ids = _firestore_get_existing_review_ids()
+    else:
+        log.info("Dry run — skipping Firestore initialization")
+
+    # Normalize each event
     records: list[dict] = []
-    for item in wrapped_events:
-        event = item.get("event", {})
+    errors_count = 0
+    for event in unique_events:
         if not event.get("id"):
             log.warning("Skipping event with no id")
             continue
-        record = normalize_event(event, config, hub_posts, existing_fs_ids)
-        records.append(record)
+        try:
+            record = normalize_event(event, config, hub_posts, existing_fs_ids)
+            records.append(record)
+        except Exception as exc:
+            errors_count += 1
+            log.error("Error normalizing event %s: %s", event.get("id"), exc)
 
-    batch_dup_groups = detect_batch_duplicates(
-        [r for r in records if r["status"] == "pending_review"]
+    log.info(
+        "Normalized %d events, %d processing errors",
+        len(records),
+        errors_count,
     )
 
+    # Detect within-batch duplicates among pending_review records
+    pending_records = [r for r in records if r["status"] == "pending_review"]
+    batch_dup_groups = detect_batch_duplicates(pending_records)
+
+    # Build Community Hub duplicate groups
     ch_dup_groups: list[dict] = []
     ch_dup_idx = 1
     for rec in records:
@@ -808,13 +1110,19 @@ def run_pipeline(input_path: Path, output_path: Path) -> dict[str, Any]:
             group = {
                 "id": f"ch_dup_{ch_dup_idx}",
                 "status": "open",
-                "primaryCandidateId": rec["duplicateCheck"]["candidateIds"][0]
-                if rec["duplicateCheck"]["candidateIds"]
-                else "",
-                "likelyDuplicateIds": [f"oberlin_localist_{rec['sourceEventId']}"],
+                "primaryCandidateId": (
+                    rec["duplicateCheck"]["candidateIds"][0]
+                    if rec["duplicateCheck"]["candidateIds"]
+                    else ""
+                ),
+                "likelyDuplicateIds": [
+                    f"oberlin_localist_{rec['sourceEventId']}"
+                ],
                 "similarityScore": rec["duplicateCheck"]["score"],
                 "matchedFields": rec["duplicateCheck"]["matchedFields"],
-                "conflictingFields": rec["duplicateCheck"]["conflictingFields"],
+                "conflictingFields": rec["duplicateCheck"][
+                    "conflictingFields"
+                ],
                 "recommendation": "This event likely already exists in Community Hub. Review before approving.",
                 "createdAt": now_iso,
                 "updatedAt": now_iso,
@@ -826,47 +1134,73 @@ def run_pipeline(input_path: Path, output_path: Path) -> dict[str, Any]:
 
     all_dup_groups = batch_dup_groups + ch_dup_groups
 
+    # Write to Firestore
     firestore_writes = 0
     firestore_failures = 0
-    for rec in records:
-        if rec["status"] == "pending_review":
-            if _firestore_write_review_post(rec):
-                firestore_writes += 1
-            elif _firestore_available:
-                firestore_failures += 1
-        elif rec["status"] == "duplicate_in_community_hub":
-            rec_copy = dict(rec)
-            rec_copy["status"] = "pending_duplicate_review"
-            if _firestore_write_review_post(rec_copy):
-                firestore_writes += 1
-            elif _firestore_available:
-                firestore_failures += 1
+    if not dry_run:
+        for rec in records:
+            if rec["status"] == "pending_review":
+                if _firestore_write_review_post(rec):
+                    firestore_writes += 1
+                elif _firestore_available:
+                    firestore_failures += 1
+            elif rec["status"] in (
+                "duplicate_in_community_hub",
+                "pending_duplicate_review",
+            ):
+                rec_copy = dict(rec)
+                rec_copy["status"] = "pending_duplicate_review"
+                if _firestore_write_review_post(rec_copy):
+                    firestore_writes += 1
+                elif _firestore_available:
+                    firestore_failures += 1
 
-    for group in all_dup_groups:
-        _firestore_write_duplicate_group(group)
+        for group in all_dup_groups:
+            _firestore_write_duplicate_group(group)
+    else:
+        log.info("Dry run — skipping Firestore writes")
 
+    # Compute counts
     counts = {
-        "pending_review": sum(1 for r in records if r["status"] == "pending_review"),
-        "already_seen": sum(1 for r in records if r["status"] == "already_seen"),
-        "duplicate_in_community_hub": sum(
-            1 for r in records if r["status"] == "duplicate_in_community_hub"
+        "pending_review": sum(
+            1
+            for r in records
+            if r["status"] in ("pending_review", "pending_duplicate_review")
+        ),
+        "already_seen": sum(
+            1 for r in records if r["status"] == "already_seen"
+        ),
+        "ch_duplicates": sum(
+            1
+            for r in records
+            if r["status"] == "duplicate_in_community_hub"
         ),
         "with_errors": sum(1 for r in records if r["validationErrors"]),
     }
 
+    # Compute metrics
+    metrics = _compute_metrics(records, config)
+
     summary = {
-        "events_read": len(wrapped_events),
+        "events_read": events_read,
+        "unique_events": len(unique_events),
         "events_normalized": len(records),
         "events_queued_for_review": counts["pending_review"],
         "events_already_seen": counts["already_seen"],
-        "duplicates_community_hub": counts["duplicate_in_community_hub"],
+        "duplicates_community_hub": counts["ch_duplicates"],
+        "duplicates_batch": len(batch_dup_groups),
         "duplicates_firestore": counts["already_seen"],
-        "duplicates_detected": counts["duplicate_in_community_hub"] + len(batch_dup_groups),
+        "duplicates_detected": (
+            counts["ch_duplicates"] + len(batch_dup_groups)
+        ),
         "events_with_errors": counts["with_errors"],
-        "records_ready_for_firestore": counts["pending_review"] + counts["duplicate_in_community_hub"],
+        "records_ready_for_firestore": (
+            counts["pending_review"] + counts["ch_duplicates"]
+        ),
         "firestore_writes_succeeded": firestore_writes,
         "firestore_writes_failed": firestore_failures,
-        "firestore_available": _firestore_available,
+        "firestore_available": _firestore_available if not dry_run else False,
+        "average_confidence": metrics["averageConfidence"],
     }
 
     output = {
@@ -876,31 +1210,32 @@ def run_pipeline(input_path: Path, output_path: Path) -> dict[str, Any]:
         "summary": summary,
         "records": records,
         "duplicateGroups": all_dup_groups,
-        "metrics": {
-            "eventsRead": summary["events_read"],
-            "eventsNormalized": summary["events_normalized"],
-            "eventsQueuedForReview": summary["events_queued_for_review"],
-            "duplicatesCommunityHub": summary["duplicates_community_hub"],
-            "duplicatesFirestore": summary["duplicates_firestore"],
-            "validationErrors": summary["events_with_errors"],
-            "firestoreWrites": firestore_writes,
-        },
+        "metrics": metrics,
     }
 
     output_path.write_text(
-        json.dumps(output, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(output, indent=2, ensure_ascii=False, default=str) + "\n",
+        encoding="utf-8",
     )
     log.info("Wrote normalized output to %s", output_path)
 
-    source_run = {
-        "normalized_at": now_iso,
-        "source": str(input_path),
-        "summary": summary,
-        "metrics": output["metrics"],
-    }
-    _firestore_write_source_run(source_run)
+    # Write source run log
+    if not dry_run:
+        source_run = {
+            "normalized_at": now_iso,
+            "source": str(input_path),
+            "summary": summary,
+            "metrics": metrics,
+        }
+        _firestore_write_source_run(source_run)
 
-    send_admin_email(summary, now_iso)
+    # Send admin email
+    if not dry_run and not skip_email:
+        send_admin_email(summary, now_iso)
+    elif skip_email:
+        log.info("Skipping admin email (--skip-email)")
+    else:
+        log.info("Dry run — skipping admin email")
 
     return summary
 
@@ -924,6 +1259,16 @@ def main() -> None:
         help="Path for normalized output JSON",
     )
     parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Skip Firestore writes, Community Hub fetch, and email",
+    )
+    parser.add_argument(
+        "--skip-email",
+        action="store_true",
+        help="Skip admin email notification only",
+    )
+    parser.add_argument(
         "--clear-input",
         action="store_true",
         help="Clear the events array in the input file after processing",
@@ -937,7 +1282,12 @@ def main() -> None:
         log.error("Input file not found: %s", input_path)
         sys.exit(1)
 
-    summary = run_pipeline(input_path, output_path)
+    summary = run_pipeline(
+        input_path,
+        output_path,
+        dry_run=args.dry_run,
+        skip_email=args.skip_email,
+    )
 
     if args.clear_input:
         raw = json.loads(input_path.read_text(encoding="utf-8"))
@@ -952,7 +1302,8 @@ def main() -> None:
             "_events_processed": summary["events_normalized"],
         }
         input_path.write_text(
-            json.dumps(cleared, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+            json.dumps(cleared, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
         )
         log.info("Cleared events from %s", input_path)
 

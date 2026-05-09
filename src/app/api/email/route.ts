@@ -18,12 +18,15 @@ type EmailRequest =
       to: string;
       summary: {
         events_read: number;
+        unique_events: number;
         events_normalized: number;
         events_queued_for_review: number;
         duplicates_community_hub: number;
+        duplicates_batch: number;
         duplicates_firestore: number;
         events_with_errors: number;
         firestore_writes_succeeded: number;
+        average_confidence: number;
       };
       runTimestamp: string;
     };
@@ -39,15 +42,18 @@ function getEmailContent(body: EmailRequest) {
 
   if (body.type === "normalization-report") {
     const s = body.summary;
-    const subject = `Oberlin Normalizer: ${s.events_normalized} events processed (${s.duplicates_community_hub} CH duplicates)`;
+    const subject = `Oberlin Normalizer: ${s.events_normalized} events (${s.duplicates_community_hub} CH, ${s.duplicates_batch} batch dupes)`;
     const rows = [
-      ["Events read", s.events_read],
+      ["Events read (raw)", s.events_read],
+      ["Unique events", s.unique_events],
       ["Events normalized", s.events_normalized],
       ["Queued for review", s.events_queued_for_review],
       ["Community Hub duplicates", s.duplicates_community_hub],
+      ["Batch duplicates", s.duplicates_batch],
       ["Already queued (Firestore)", s.duplicates_firestore],
       ["Validation errors", s.events_with_errors],
       ["Firestore writes", s.firestore_writes_succeeded],
+      ["Average confidence", s.average_confidence],
     ]
       .map(
         ([label, val]) =>

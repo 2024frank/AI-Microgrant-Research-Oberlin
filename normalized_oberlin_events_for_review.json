@@ -1,20 +1,23 @@
 {
   "source": "obelrlin_college_events.json",
-  "normalized_at": "2026-05-09T10:33:28.152344+00:00",
+  "normalized_at": "2026-05-09T11:16:03.143673+00:00",
   "target": "Civic Calendar review queue",
   "summary": {
     "events_read": 63,
-    "events_normalized": 63,
-    "events_queued_for_review": 56,
+    "unique_events": 49,
+    "events_normalized": 49,
+    "events_queued_for_review": 49,
     "events_already_seen": 0,
-    "duplicates_community_hub": 7,
+    "duplicates_community_hub": 0,
+    "duplicates_batch": 3,
     "duplicates_firestore": 0,
-    "duplicates_detected": 7,
+    "duplicates_detected": 3,
     "events_with_errors": 1,
-    "records_ready_for_firestore": 63,
+    "records_ready_for_firestore": 49,
     "firestore_writes_succeeded": 0,
     "firestore_writes_failed": 0,
-    "firestore_available": false
+    "firestore_available": false,
+    "average_confidence": 0.955
   },
   "records": [
     {
@@ -22,10 +25,9 @@
       "sourceEventId": "52709032256559",
       "sourceUrl": "https://calendar.oberlin.edu/event/musical-potluck",
       "rawEventRef": "oberlin_localist:52709032256559",
-      "status": "duplicate_in_community_hub",
+      "status": "pending_review",
       "reviewFlags": [
-        "description_truncated",
-        "community_hub_duplicate"
+        "description_truncated"
       ],
       "validationErrors": [],
       "confidence": {
@@ -35,23 +37,19 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Musical Potluck\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "duplicate_in_community_hub",
-        "groupId": "ch_dup_1",
-        "candidateIds": [
-          "4258"
-        ],
-        "score": 1.0,
-        "matchedFields": [
-          "title",
-          "session_date",
-          "location"
-        ],
+        "status": "not_duplicate",
+        "groupId": null,
+        "candidateIds": [],
+        "score": 0,
+        "matchedFields": [],
         "conflictingFields": []
       },
       "civicCalendarPayload": {
@@ -70,7 +68,8 @@
         "postTypeId": [
           2,
           3,
-          8
+          8,
+          89
         ],
         "sessions": [
           {
@@ -113,7 +112,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"OCTaiko Final Show/Study Break\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -177,7 +176,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"That's What She Sang: Barbershop Quartet Recital\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -242,13 +241,17 @@
       "confidence": {
         "overall": 0.9,
         "fieldNotes": {
-          "description": "Description was modified"
+          "description": "Description was modified",
+          "sessions": "End time was missing; set equal to start time"
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"OFS Presents \"The Fog of War\" (2003)\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "description_truncated",
+          "missing_end_time"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -293,7 +296,7 @@
         "image_cdn_url": "https://localist-images.azureedge.net/photos/52354015680991/huge/66073070d36654dc8b72acd25026c6be91ac3d3a.jpg",
         "buttons": [
           {
-            "title": "Learn More",
+            "title": "Buy Tickets",
             "link": "https://www.clevelandcinemas.com/our-locations/x03gq-apollo-theatre/"
           }
         ],
@@ -316,12 +319,16 @@
       "validationErrors": [],
       "confidence": {
         "overall": 0.95,
-        "fieldNotes": {}
+        "fieldNotes": {
+          "sessions": "End time was missing; set equal to start time"
+        }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Nothing But Treble Final Concert\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "missing_end_time"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -383,7 +390,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Tiny Ref Desk Concert: Abby & Rosalie\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -443,21 +450,21 @@
       "rawEventRef": "oberlin_localist:52797193540195",
       "status": "pending_review",
       "reviewFlags": [
-        "description_truncated",
-        "no_confident_post_type_mapping_defaulted_to_other"
+        "description_truncated"
       ],
       "validationErrors": [],
       "confidence": {
-        "overall": 0.9,
+        "overall": 0.95,
         "fieldNotes": {
-          "description": "Description was modified",
-          "postTypeId": "Post type mapping uncertain"
+          "description": "Description was modified"
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
-        "qualityScore": 94,
-        "issues": [],
+        "summary": "Event \"The Big Swap\" with 7 session(s)",
+        "qualityScore": 97,
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -482,12 +489,37 @@
           "Office of Energy and Sustainability"
         ],
         "postTypeId": [
+          6,
           89
         ],
         "sessions": [
           {
             "startTime": 1778601600,
             "endTime": 1778634000
+          },
+          {
+            "startTime": 1778688000,
+            "endTime": 1778720400
+          },
+          {
+            "startTime": 1778774400,
+            "endTime": 1778806800
+          },
+          {
+            "startTime": 1778860800,
+            "endTime": 1778893200
+          },
+          {
+            "startTime": 1778947200,
+            "endTime": 1778979600
+          },
+          {
+            "startTime": 1779033600,
+            "endTime": 1779066000
+          },
+          {
+            "startTime": 1779120000,
+            "endTime": 1779152400
           }
         ],
         "description": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for...",
@@ -519,12 +551,16 @@
       "validationErrors": [],
       "confidence": {
         "overall": 0.95,
-        "fieldNotes": {}
+        "fieldNotes": {
+          "sessions": "End time was missing; set equal to start time"
+        }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Senior Recital: Max Lang, Musical Studies\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "missing_end_time"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -550,6 +586,7 @@
         ],
         "postTypeId": [
           2,
+          3,
           8
         ],
         "sessions": [
@@ -594,9 +631,12 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"Tuesday Tea / Bad Art? Engaging Students with the...\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "title_rewritten_or_truncated",
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -650,219 +690,6 @@
     },
     {
       "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52797193540195",
-      "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-      "rawEventRef": "oberlin_localist:52797193540195",
-      "status": "pending_review",
-      "reviewFlags": [
-        "description_truncated",
-        "no_confident_post_type_mapping_defaulted_to_other"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.9,
-        "fieldNotes": {
-          "description": "Description was modified",
-          "postTypeId": "Post type mapping uncertain"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
-        "qualityScore": 94,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "hadelman@oberlin.edu",
-        "phone": "440-775-6354",
-        "website": "https://calendar.oberlin.edu/event/the-big-swap",
-        "title": "The Big Swap",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Office of Energy and Sustainability"
-        ],
-        "postTypeId": [
-          89
-        ],
-        "sessions": [
-          {
-            "startTime": 1778688000,
-            "endTime": 1778720400
-          }
-        ],
-        "description": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for...",
-        "extendedDescription": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for students to drop unwanted clothes, school supplies, room essentials, etc. Everything can be taken for free by anyone in the campus or wider community.",
-        "locationType": "ph2",
-        "location": "135 West Lorain Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Wilder Hall",
-        "roomNum": "Wilder Main",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/31308003967351/huge/9b1155907c349af9ee70cb4dab43cb28aa684745.jpg",
-        "buttons": [],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52797193540195",
-      "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-      "rawEventRef": "oberlin_localist:52797193540195",
-      "status": "pending_review",
-      "reviewFlags": [
-        "description_truncated",
-        "no_confident_post_type_mapping_defaulted_to_other"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.9,
-        "fieldNotes": {
-          "description": "Description was modified",
-          "postTypeId": "Post type mapping uncertain"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
-        "qualityScore": 94,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "hadelman@oberlin.edu",
-        "phone": "440-775-6354",
-        "website": "https://calendar.oberlin.edu/event/the-big-swap",
-        "title": "The Big Swap",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Office of Energy and Sustainability"
-        ],
-        "postTypeId": [
-          89
-        ],
-        "sessions": [
-          {
-            "startTime": 1778774400,
-            "endTime": 1778806800
-          }
-        ],
-        "description": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for...",
-        "extendedDescription": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for students to drop unwanted clothes, school supplies, room essentials, etc. Everything can be taken for free by anyone in the campus or wider community.",
-        "locationType": "ph2",
-        "location": "135 West Lorain Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Wilder Hall",
-        "roomNum": "Wilder Main",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/31308003967351/huge/9b1155907c349af9ee70cb4dab43cb28aa684745.jpg",
-        "buttons": [],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52797193540195",
-      "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-      "rawEventRef": "oberlin_localist:52797193540195",
-      "status": "pending_review",
-      "reviewFlags": [
-        "description_truncated",
-        "no_confident_post_type_mapping_defaulted_to_other"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.9,
-        "fieldNotes": {
-          "description": "Description was modified",
-          "postTypeId": "Post type mapping uncertain"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
-        "qualityScore": 94,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "hadelman@oberlin.edu",
-        "phone": "440-775-6354",
-        "website": "https://calendar.oberlin.edu/event/the-big-swap",
-        "title": "The Big Swap",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Office of Energy and Sustainability"
-        ],
-        "postTypeId": [
-          89
-        ],
-        "sessions": [
-          {
-            "startTime": 1778860800,
-            "endTime": 1778893200
-          }
-        ],
-        "description": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for...",
-        "extendedDescription": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for students to drop unwanted clothes, school supplies, room essentials, etc. Everything can be taken for free by anyone in the campus or wider community.",
-        "locationType": "ph2",
-        "location": "135 West Lorain Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Wilder Hall",
-        "roomNum": "Wilder Main",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/31308003967351/huge/9b1155907c349af9ee70cb4dab43cb28aa684745.jpg",
-        "buttons": [],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
       "sourceEventId": "51913428862458",
       "sourceUrl": "https://calendar.oberlin.edu/event/observe-the-night-sky-8138",
       "rawEventRef": "oberlin_localist:51913428862458",
@@ -878,9 +705,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Observe the Night Sky\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "no_confident_post_type_mapping_defaulted_to_other"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -932,148 +761,6 @@
     },
     {
       "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52797193540195",
-      "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-      "rawEventRef": "oberlin_localist:52797193540195",
-      "status": "pending_review",
-      "reviewFlags": [
-        "description_truncated",
-        "no_confident_post_type_mapping_defaulted_to_other"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.9,
-        "fieldNotes": {
-          "description": "Description was modified",
-          "postTypeId": "Post type mapping uncertain"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
-        "qualityScore": 94,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "hadelman@oberlin.edu",
-        "phone": "440-775-6354",
-        "website": "https://calendar.oberlin.edu/event/the-big-swap",
-        "title": "The Big Swap",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Office of Energy and Sustainability"
-        ],
-        "postTypeId": [
-          89
-        ],
-        "sessions": [
-          {
-            "startTime": 1778947200,
-            "endTime": 1778979600
-          }
-        ],
-        "description": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for...",
-        "extendedDescription": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for students to drop unwanted clothes, school supplies, room essentials, etc. Everything can be taken for free by anyone in the campus or wider community.",
-        "locationType": "ph2",
-        "location": "135 West Lorain Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Wilder Hall",
-        "roomNum": "Wilder Main",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/31308003967351/huge/9b1155907c349af9ee70cb4dab43cb28aa684745.jpg",
-        "buttons": [],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52797193540195",
-      "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-      "rawEventRef": "oberlin_localist:52797193540195",
-      "status": "pending_review",
-      "reviewFlags": [
-        "description_truncated",
-        "no_confident_post_type_mapping_defaulted_to_other"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.9,
-        "fieldNotes": {
-          "description": "Description was modified",
-          "postTypeId": "Post type mapping uncertain"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
-        "qualityScore": 94,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "hadelman@oberlin.edu",
-        "phone": "440-775-6354",
-        "website": "https://calendar.oberlin.edu/event/the-big-swap",
-        "title": "The Big Swap",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Office of Energy and Sustainability"
-        ],
-        "postTypeId": [
-          89
-        ],
-        "sessions": [
-          {
-            "startTime": 1779033600,
-            "endTime": 1779066000
-          }
-        ],
-        "description": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for...",
-        "extendedDescription": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for students to drop unwanted clothes, school supplies, room essentials, etc. Everything can be taken for free by anyone in the campus or wider community.",
-        "locationType": "ph2",
-        "location": "135 West Lorain Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Wilder Hall",
-        "roomNum": "Wilder Main",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/31308003967351/huge/9b1155907c349af9ee70cb4dab43cb28aa684745.jpg",
-        "buttons": [],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
       "sourceEventId": "52354028255267",
       "sourceUrl": "https://calendar.oberlin.edu/event/ofs-presents-the-graduate-1967",
       "rawEventRef": "oberlin_localist:52354028255267",
@@ -1086,13 +773,17 @@
       "confidence": {
         "overall": 0.9,
         "fieldNotes": {
-          "description": "Description was modified"
+          "description": "Description was modified",
+          "sessions": "End time was missing; set equal to start time"
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"OFS Presents \"The Graduate\" (1967)\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "description_truncated",
+          "missing_end_time"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1137,7 +828,7 @@
         "image_cdn_url": "https://localist-images.azureedge.net/photos/52354028285996/huge/d9da87d8a6f70fa434947fd50a813d7a3f74c693.jpg",
         "buttons": [
           {
-            "title": "Learn More",
+            "title": "Buy Tickets",
             "link": "https://www.clevelandcinemas.com/our-locations/x03gq-apollo-theatre/"
           }
         ],
@@ -1145,77 +836,6 @@
         "screensIds": [],
         "calendarSourceName": "Oberlin College Calendar",
         "calendarSourceUrl": "https://calendar.oberlin.edu/event/ofs-presents-the-graduate-1967",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52797193540195",
-      "sourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
-      "rawEventRef": "oberlin_localist:52797193540195",
-      "status": "pending_review",
-      "reviewFlags": [
-        "description_truncated",
-        "no_confident_post_type_mapping_defaulted_to_other"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.9,
-        "fieldNotes": {
-          "description": "Description was modified",
-          "postTypeId": "Post type mapping uncertain"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
-        "qualityScore": 94,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "hadelman@oberlin.edu",
-        "phone": "440-775-6354",
-        "website": "https://calendar.oberlin.edu/event/the-big-swap",
-        "title": "The Big Swap",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Office of Energy and Sustainability"
-        ],
-        "postTypeId": [
-          89
-        ],
-        "sessions": [
-          {
-            "startTime": 1779120000,
-            "endTime": 1779152400
-          }
-        ],
-        "description": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for...",
-        "extendedDescription": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for students to drop unwanted clothes, school supplies, room essentials, etc. Everything can be taken for free by anyone in the campus or wider community.",
-        "locationType": "ph2",
-        "location": "135 West Lorain Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Wilder Hall",
-        "roomNum": "Wilder Main",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/31308003967351/huge/9b1155907c349af9ee70cb4dab43cb28aa684745.jpg",
-        "buttons": [],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/the-big-swap",
         "public": "1"
       }
     },
@@ -1236,9 +856,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Self-Guided Tour: Oberlin Origins\" with 3 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1264,12 +886,21 @@
         ],
         "postTypeId": [
           4,
-          6
+          6,
+          89
         ],
         "sessions": [
           {
             "startTime": 1779458400,
             "endTime": 1779480000
+          },
+          {
+            "startTime": 1779544800,
+            "endTime": 1779566400
+          },
+          {
+            "startTime": 1779631200,
+            "endTime": 1779652800
           }
         ],
         "description": "Move at your own pace through the Oberlin Heritage Center's 1866 Monroe House, exploring stories that outline Oberlin's founding, the college's promise of co-education, the community's commitment...",
@@ -1283,7 +914,7 @@
         "image_cdn_url": "https://localist-images.azureedge.net/photos/42924296034940/huge/ac14a76eb903e823058d9504053b816940295794.jpg",
         "buttons": [
           {
-            "title": "Learn More",
+            "title": "Register",
             "link": "https://oberlinheritagecenter.org/"
           }
         ],
@@ -1311,9 +942,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Guided Tour of the Jewett House by Fanny Jewett\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1339,7 +972,8 @@
         ],
         "postTypeId": [
           4,
-          6
+          6,
+          89
         ],
         "sessions": [
           {
@@ -1377,7 +1011,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"ENCORE!\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -1410,7 +1044,8 @@
         "postTypeId": [
           2,
           6,
-          8
+          8,
+          89
         ],
         "sessions": [
           {
@@ -1452,9 +1087,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"The Grand Piano Extravaganza\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1484,6 +1121,7 @@
           "Conservatory of Music"
         ],
         "postTypeId": [
+          1,
           2,
           6,
           8
@@ -1518,81 +1156,6 @@
     },
     {
       "sourceSystem": "oberlin_localist",
-      "sourceEventId": "42924343951285",
-      "sourceUrl": "https://calendar.oberlin.edu/event/self-guided_tour_oberlin_origins",
-      "rawEventRef": "oberlin_localist:42924343951285",
-      "status": "pending_review",
-      "reviewFlags": [
-        "description_truncated"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.95,
-        "fieldNotes": {
-          "description": "Description was modified"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
-        "qualityScore": 97,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "mailto:tourinfo@oberlinheritage.org",
-        "phone": "440-774-1700",
-        "website": "https://calendar.oberlin.edu/event/self-guided_tour_oberlin_origins",
-        "title": "Self-Guided Tour: Oberlin Origins",
-        "sponsors": [
-          "Oberlin College",
-          "Community Partners",
-          "Oberlin Heritage Center"
-        ],
-        "postTypeId": [
-          4,
-          6
-        ],
-        "sessions": [
-          {
-            "startTime": 1779544800,
-            "endTime": 1779566400
-          }
-        ],
-        "description": "Move at your own pace through the Oberlin Heritage Center's 1866 Monroe House, exploring stories that outline Oberlin's founding, the college's promise of co-education, the community's commitment...",
-        "extendedDescription": "Move at your own pace through the Oberlin Heritage Center's 1866 Monroe House, exploring stories that outline Oberlin's founding, the college's promise of co-education, the community's commitment to abolition, and more. Tours are accessed through a provided tablet or your personal smart phone. Cost: $3/adult; free for college students and children under 18. Walk-ins are welcome. Last entry at 3:30 p.m. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
-        "locationType": "ph2",
-        "location": "20 W Vine St, Oberlin OH, 44074",
-        "placeId": "",
-        "placeName": "Oberlin Heritage Center",
-        "roomNum": "Monroe House",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/42924296034940/huge/ac14a76eb903e823058d9504053b816940295794.jpg",
-        "buttons": [
-          {
-            "title": "Learn More",
-            "link": "https://oberlinheritagecenter.org/"
-          }
-        ],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/self-guided_tour_oberlin_origins",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
       "sourceEventId": "52606956662777",
       "sourceUrl": "https://calendar.oberlin.edu/event/tour-freedoms-friends-abolition-the-underground-railroad-history-walk",
       "rawEventRef": "oberlin_localist:52606956662777",
@@ -1610,9 +1173,12 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"Tour: Freedom’s Friends: Abolition & the Underground...\" with 2 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "title_rewritten_or_truncated",
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1644,6 +1210,10 @@
           {
             "startTime": 1779544800,
             "endTime": 1779550200
+          },
+          {
+            "startTime": 1779645600,
+            "endTime": 1779651000
           }
         ],
         "description": "Prior to the Civil War, as many has 3,000 African Americans passed through or lived in Oberlin after escaping from slavery. The town was said to be second only to Canada as an asylum for freedom...",
@@ -1680,9 +1250,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"CATSS Open Hours at the First Church Kitten Room\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1705,8 +1277,10 @@
           "Oberlin College"
         ],
         "postTypeId": [
+          1,
           3,
-          4
+          4,
+          89
         ],
         "sessions": [
           {
@@ -1745,13 +1319,17 @@
       "confidence": {
         "overall": 0.9,
         "fieldNotes": {
-          "description": "Description was modified"
+          "description": "Description was modified",
+          "sessions": "End time was missing; set equal to start time"
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"Multifaith End-of-Year Ceremony\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "description_truncated",
+          "missing_end_time"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1776,7 +1354,11 @@
           "Multifaith Chaplaincy & Sustained Dialogue"
         ],
         "postTypeId": [
-          6
+          3,
+          6,
+          7,
+          8,
+          89
         ],
         "sessions": [
           {
@@ -1818,9 +1400,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Tour: Architecture History Walk\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1846,7 +1430,8 @@
         ],
         "postTypeId": [
           4,
-          6
+          6,
+          7
         ],
         "sessions": [
           {
@@ -1888,9 +1473,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Tour: Civil War to Civil Rights History Walk\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -1943,81 +1530,6 @@
     },
     {
       "sourceSystem": "oberlin_localist",
-      "sourceEventId": "42924343951285",
-      "sourceUrl": "https://calendar.oberlin.edu/event/self-guided_tour_oberlin_origins",
-      "rawEventRef": "oberlin_localist:42924343951285",
-      "status": "pending_review",
-      "reviewFlags": [
-        "description_truncated"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.95,
-        "fieldNotes": {
-          "description": "Description was modified"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
-        "qualityScore": 97,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "mailto:tourinfo@oberlinheritage.org",
-        "phone": "440-774-1700",
-        "website": "https://calendar.oberlin.edu/event/self-guided_tour_oberlin_origins",
-        "title": "Self-Guided Tour: Oberlin Origins",
-        "sponsors": [
-          "Oberlin College",
-          "Community Partners",
-          "Oberlin Heritage Center"
-        ],
-        "postTypeId": [
-          4,
-          6
-        ],
-        "sessions": [
-          {
-            "startTime": 1779631200,
-            "endTime": 1779652800
-          }
-        ],
-        "description": "Move at your own pace through the Oberlin Heritage Center's 1866 Monroe House, exploring stories that outline Oberlin's founding, the college's promise of co-education, the community's commitment...",
-        "extendedDescription": "Move at your own pace through the Oberlin Heritage Center's 1866 Monroe House, exploring stories that outline Oberlin's founding, the college's promise of co-education, the community's commitment to abolition, and more. Tours are accessed through a provided tablet or your personal smart phone. Cost: $3/adult; free for college students and children under 18. Walk-ins are welcome. Last entry at 3:30 p.m. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
-        "locationType": "ph2",
-        "location": "20 W Vine St, Oberlin OH, 44074",
-        "placeId": "",
-        "placeName": "Oberlin Heritage Center",
-        "roomNum": "Monroe House",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/42924296034940/huge/ac14a76eb903e823058d9504053b816940295794.jpg",
-        "buttons": [
-          {
-            "title": "Learn More",
-            "link": "https://oberlinheritagecenter.org/"
-          }
-        ],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/self-guided_tour_oberlin_origins",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
       "sourceEventId": "52606960949403",
       "sourceUrl": "https://calendar.oberlin.edu/event/tour-one-step-more-oberlin-womens-history-walk",
       "rawEventRef": "oberlin_localist:52606960949403",
@@ -2033,9 +1545,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Tour: One Step More: Oberlin Women’s History Walk\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2098,12 +1612,16 @@
       "validationErrors": [],
       "confidence": {
         "overall": 0.95,
-        "fieldNotes": {}
+        "fieldNotes": {
+          "sessions": "End time was missing; set equal to start time"
+        }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Biology Greenhouse Tour\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "missing_end_time"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2173,9 +1691,12 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"CATSS Open Hours at 48 W. Lincoln Street\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "description_truncated",
+          "missing_full_address"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2198,8 +1719,10 @@
           "Oberlin College"
         ],
         "postTypeId": [
+          1,
           3,
-          4
+          4,
+          89
         ],
         "sessions": [
           {
@@ -2241,9 +1764,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Cinema and Media Department Open House\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2271,6 +1796,7 @@
           3,
           4,
           6,
+          7,
           89
         ],
         "sessions": [
@@ -2315,9 +1841,12 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"Frank Lloyd Wright Open House: Commencement and...\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "title_rewritten_or_truncated",
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2392,9 +1921,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Dance Department Open House\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2422,6 +1953,7 @@
           3,
           4,
           6,
+          7,
           89
         ],
         "sessions": [
@@ -2449,78 +1981,6 @@
     },
     {
       "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52606956662777",
-      "sourceUrl": "https://calendar.oberlin.edu/event/tour-freedoms-friends-abolition-the-underground-railroad-history-walk",
-      "rawEventRef": "oberlin_localist:52606956662777",
-      "status": "pending_review",
-      "reviewFlags": [
-        "title_rewritten_or_truncated",
-        "description_truncated"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.9,
-        "fieldNotes": {
-          "title": "Title was modified",
-          "description": "Description was modified"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
-        "qualityScore": 94,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "tourinfo@oberlinheritage.org",
-        "phone": "440-774-1700",
-        "website": "https://calendar.oberlin.edu/event/tour-freedoms-friends-abolition-the-underground-railroad-history-walk",
-        "title": "Tour: Freedom’s Friends: Abolition & the Underground...",
-        "sponsors": [
-          "Oberlin College",
-          "Community Partners",
-          "Oberlin Heritage Center"
-        ],
-        "postTypeId": [
-          4,
-          6
-        ],
-        "sessions": [
-          {
-            "startTime": 1779645600,
-            "endTime": 1779651000
-          }
-        ],
-        "description": "Prior to the Civil War, as many has 3,000 African Americans passed through or lived in Oberlin after escaping from slavery. The town was said to be second only to Canada as an asylum for freedom...",
-        "extendedDescription": "Prior to the Civil War, as many has 3,000 African Americans passed through or lived in Oberlin after escaping from slavery. The town was said to be second only to Canada as an asylum for freedom seekers. Guests on this guided history walk offered by the Oberlin Heritage Center will hear about the historic decision that shaped Oberlin’s growth as a station on the Underground Railroad and stories of the individuals and events that marked Oberlin as one of the most active abolitionist communities in Ohio. Cost: $10/adult; $5/college student; free for children under 18. Advance registration is required, and space is limited to 50 participants. Tour is weather dependent and may be cancelled by the Oberlin Heritage Center. Registrants may request a refund or transfer to another history walk offering if the tour is canceled. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
-        "locationType": "ph2",
-        "location": "106 N. Main St., Oberlin, OH",
-        "placeId": "",
-        "placeName": "First Church in Oberlin",
-        "roomNum": "Front Steps",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/33183034658775/huge/09291a56505eaece0be025cdd3ef02c0e97ade6a.jpg",
-        "buttons": [],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/tour-freedoms-friends-abolition-the-underground-railroad-history-walk",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
       "sourceEventId": "52764344811513",
       "sourceUrl": "https://calendar.oberlin.edu/event/a-conversation-with-carla-hayden-librarian-of-congress",
       "rawEventRef": "oberlin_localist:52764344811513",
@@ -2536,9 +1996,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"A Conversation with Carla Hayden - Librarian of Congress\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2606,7 +2068,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Comparative Literature, French & Italian Open House\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -2634,6 +2096,7 @@
           "French and Italian"
         ],
         "postTypeId": [
+          3,
           4,
           6,
           89
@@ -2674,7 +2137,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Hispanic Studies & LATS Open House\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -2745,9 +2208,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Black Families Appreciation Ceremony\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2772,7 +2237,8 @@
           "Africana Studies"
         ],
         "postTypeId": [
-          6
+          6,
+          89
         ],
         "sessions": [
           {
@@ -2814,9 +2280,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Campus Illumination and Social on the Square\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2842,6 +2310,7 @@
         ],
         "postTypeId": [
           6,
+          8,
           89
         ],
         "sessions": [
@@ -2884,9 +2353,11 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Oberlin College Commencement\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -2912,7 +2383,8 @@
           "Dean of the College of Arts and Sciences"
         ],
         "postTypeId": [
-          6
+          6,
+          7
         ],
         "sessions": [
           {
@@ -2942,10 +2414,9 @@
       "sourceEventId": "52692734504543",
       "sourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
       "rawEventRef": "oberlin_localist:52692734504543",
-      "status": "duplicate_in_community_hub",
+      "status": "pending_review",
       "reviewFlags": [
-        "description_truncated",
-        "community_hub_duplicate"
+        "description_truncated"
       ],
       "validationErrors": [],
       "confidence": {
@@ -2955,22 +2426,19 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Frank Lloyd Wright Open House / June-November 2026\" with 6 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "duplicate_in_community_hub",
-        "groupId": "ch_dup_2",
-        "candidateIds": [
-          "4066"
-        ],
-        "score": 0.9,
-        "matchedFields": [
-          "title",
-          "session_date"
-        ],
+        "status": "not_duplicate",
+        "groupId": null,
+        "candidateIds": [],
+        "score": 0,
+        "matchedFields": [],
         "conflictingFields": []
       },
       "civicCalendarPayload": {
@@ -2989,12 +2457,33 @@
         "postTypeId": [
           2,
           3,
-          4
+          4,
+          6
         ],
         "sessions": [
           {
             "startTime": 1780848000,
             "endTime": 1780866000
+          },
+          {
+            "startTime": 1783267200,
+            "endTime": 1783285200
+          },
+          {
+            "startTime": 1785686400,
+            "endTime": 1785704400
+          },
+          {
+            "startTime": 1788710400,
+            "endTime": 1788728400
+          },
+          {
+            "startTime": 1791129600,
+            "endTime": 1791147600
+          },
+          {
+            "startTime": 1793552400,
+            "endTime": 1793570400
           }
         ],
         "description": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art...",
@@ -3008,7 +2497,7 @@
         "image_cdn_url": "https://localist-images.azureedge.net/photos/52692734554739/huge/7201bf8e228bf4528a08be14b6be385ba2bfdd58.jpg",
         "buttons": [
           {
-            "title": "Learn More",
+            "title": "Register",
             "link": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026"
           }
         ],
@@ -3032,7 +2521,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"\"Sprezzatura and the Italian Baroque\"\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -3058,6 +2547,7 @@
         ],
         "postTypeId": [
           2,
+          6,
           8
         ],
         "sessions": [
@@ -3096,7 +2586,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Baroque Performance Institute Faculty Recital\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -3152,26 +2642,36 @@
       "sourceEventId": "51800568912081",
       "sourceUrl": "https://calendar.oberlin.edu/event/baroque-performance-institute-chamber-music-concert-43",
       "rawEventRef": "oberlin_localist:51800568912081",
-      "status": "pending_review",
-      "reviewFlags": [],
+      "status": "pending_duplicate_review",
+      "reviewFlags": [
+        "batch_duplicate_candidate"
+      ],
       "validationErrors": [],
       "confidence": {
         "overall": 1.0,
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Baroque Performance Institute Chamber Music Concert\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
+        "status": "batch_duplicate",
+        "groupId": "batch_dup_1",
+        "candidateIds": [
+          "oberlin_localist_51800698270525"
+        ],
+        "score": 86,
+        "matchedFields": [
+          "placeName",
+          "title"
+        ],
+        "conflictingFields": [
+          "description",
+          "sessions"
+        ]
       },
       "civicCalendarPayload": {
         "eventType": "ot",
@@ -3226,7 +2726,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Oberlin Trumpet Workshop Participant Recital\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -3285,9 +2785,10 @@
       "sourceEventId": "51800698270525",
       "sourceUrl": "https://calendar.oberlin.edu/event/baroque-performance-institute-participant-chamber-music-concert-1790",
       "rawEventRef": "oberlin_localist:51800698270525",
-      "status": "pending_review",
+      "status": "pending_duplicate_review",
       "reviewFlags": [
-        "title_rewritten_or_truncated"
+        "title_rewritten_or_truncated",
+        "batch_duplicate_candidate"
       ],
       "validationErrors": [],
       "confidence": {
@@ -3297,18 +2798,28 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
+        "summary": "Event \"Baroque Performance Institute Participant Chamber Music...\" with 1 session(s)",
         "qualityScore": 97,
-        "issues": [],
+        "issues": [
+          "title_rewritten_or_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
+        "status": "batch_duplicate",
+        "groupId": "batch_dup_1",
+        "candidateIds": [
+          "oberlin_localist_51800568912081"
+        ],
+        "score": 86,
+        "matchedFields": [
+          "title",
+          "placeName"
+        ],
+        "conflictingFields": [
+          "description",
+          "sessions"
+        ]
       },
       "civicCalendarPayload": {
         "eventType": "ot",
@@ -3363,7 +2874,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Oberlin Flute Boot Camp Participant Recital\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -3418,88 +2929,6 @@
     },
     {
       "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52692734504543",
-      "sourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-      "rawEventRef": "oberlin_localist:52692734504543",
-      "status": "duplicate_in_community_hub",
-      "reviewFlags": [
-        "description_truncated",
-        "community_hub_duplicate"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.95,
-        "fieldNotes": {
-          "description": "Description was modified"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
-        "qualityScore": 97,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "duplicate_in_community_hub",
-        "groupId": "ch_dup_3",
-        "candidateIds": [
-          "4066"
-        ],
-        "score": 0.9,
-        "matchedFields": [
-          "title",
-          "session_date"
-        ],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "education.amam@oberlin.edu",
-        "phone": "440-775-8665",
-        "website": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "title": "Frank Lloyd Wright Open House / June-November 2026",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Allen Memorial Art Museum"
-        ],
-        "postTypeId": [
-          2,
-          3,
-          4
-        ],
-        "sessions": [
-          {
-            "startTime": 1783267200,
-            "endTime": 1783285200
-          }
-        ],
-        "description": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art...",
-        "extendedDescription": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art museum at 534 Morgan Street in Oberlin, the house is open to the public the first Sunday of the month (with the exception of holiday weekends) from April to November with a docent presentation offered on the hour at noon, 1, 2, 3, and 4 p.m. Advance registration is required. Admission to the house is $10 per adult, free for OC college students with ID and anyone under 18. For tickets, parking information, and other details, see amam.oberlin.edu/flw. Make a day of it! The Allen Memorial Art Museum is open 1–5 on Sundays, and is always free. Plus, enjoy 10% off regular-priced menu items and merchandise at participating Oberlin businesses on the day of this event by showing your registration confirmation email. Get more details. Access Statement: Limited accessible parking is available near the back entrance to the home. Download a map to the accessibility parking at the house. This historic home is partially accessible to wheelchairs and fully accessible to most rolling walkers. The presentation space is wheelchair accessible and limited seating is available. The restroom is not wheelchair accessible, nor gender specific. Listening devices and ASL are currently not scheduled for this event, nor will it be recorded. If you are interested in touring the home outside of scheduled open houses, groups of 10 or more may make arrangements by contacting the Education Department at education.amam@oberlin.edu .",
-        "locationType": "ph2",
-        "location": "534 Morgan Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Weltzheimer-Johnson House",
-        "roomNum": "",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/52692734554739/huge/7201bf8e228bf4528a08be14b6be385ba2bfdd58.jpg",
-        "buttons": [
-          {
-            "title": "Learn More",
-            "link": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026"
-          }
-        ],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
       "sourceEventId": "51800755580642",
       "sourceUrl": "https://calendar.oberlin.edu/event/organ-academy-faculty-recital-jonathan-moyer",
       "rawEventRef": "oberlin_localist:51800755580642",
@@ -3513,7 +2942,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Organ Academy Faculty Recital, Jonathan Moyer\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -3579,7 +3008,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Organ Academy Faculty Recital - Mark Edwards, harpsichord\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -3645,7 +3074,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Sonic Arts Workshop Participant Recital\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -3712,7 +3141,7 @@
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Young Composers Workshop\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
@@ -3771,26 +3200,37 @@
       "sourceEventId": "51815210388404",
       "sourceUrl": "https://calendar.oberlin.edu/event/adult-amateur-piano-festival-guest-concert-jon-shih",
       "rawEventRef": "oberlin_localist:51815210388404",
-      "status": "pending_review",
-      "reviewFlags": [],
+      "status": "pending_duplicate_review",
+      "reviewFlags": [
+        "batch_duplicate_candidate"
+      ],
       "validationErrors": [],
       "confidence": {
         "overall": 1.0,
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Adult Amateur Piano Festival Guest Concert: Jon Shih\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
+        "status": "batch_duplicate",
+        "groupId": "batch_dup_2",
+        "candidateIds": [
+          "oberlin_localist_51815586487392",
+          "oberlin_localist_51815547574650"
+        ],
+        "score": 90,
+        "matchedFields": [
+          "placeName",
+          "title"
+        ],
+        "conflictingFields": [
+          "description",
+          "sessions"
+        ]
       },
       "civicCalendarPayload": {
         "eventType": "ot",
@@ -3838,26 +3278,36 @@
       "sourceEventId": "51815586487392",
       "sourceUrl": "https://calendar.oberlin.edu/event/adult-amateur-piano-festival-concert-i-9459",
       "rawEventRef": "oberlin_localist:51815586487392",
-      "status": "pending_review",
-      "reviewFlags": [],
+      "status": "pending_duplicate_review",
+      "reviewFlags": [
+        "batch_duplicate_candidate"
+      ],
       "validationErrors": [],
       "confidence": {
         "overall": 1.0,
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Adult Amateur Piano Festival Concert I\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
+        "status": "batch_duplicate",
+        "groupId": "batch_dup_2",
+        "candidateIds": [
+          "oberlin_localist_51815210388404"
+        ],
+        "score": 90,
+        "matchedFields": [
+          "title",
+          "placeName"
+        ],
+        "conflictingFields": [
+          "description",
+          "sessions"
+        ]
       },
       "civicCalendarPayload": {
         "eventType": "ot",
@@ -3905,26 +3355,36 @@
       "sourceEventId": "51815547574650",
       "sourceUrl": "https://calendar.oberlin.edu/event/adult-amateur-piano-festival-concert-ii",
       "rawEventRef": "oberlin_localist:51815547574650",
-      "status": "pending_review",
-      "reviewFlags": [],
+      "status": "pending_duplicate_review",
+      "reviewFlags": [
+        "batch_duplicate_candidate"
+      ],
       "validationErrors": [],
       "confidence": {
         "overall": 1.0,
         "fieldNotes": {}
       },
       "aiAnalysis": {
-        "summary": "Quality score 100/100 with 0 issues",
+        "summary": "Event \"Adult Amateur Piano Festival Concert II\" with 1 session(s)",
         "qualityScore": 100,
         "issues": [],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
+        "status": "batch_duplicate",
+        "groupId": "batch_dup_2",
+        "candidateIds": [
+          "oberlin_localist_51815210388404"
+        ],
+        "score": 89,
+        "matchedFields": [
+          "title",
+          "placeName"
+        ],
+        "conflictingFields": [
+          "description",
+          "sessions"
+        ]
       },
       "civicCalendarPayload": {
         "eventType": "ot",
@@ -3968,95 +3428,14 @@
     },
     {
       "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52692734504543",
-      "sourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-      "rawEventRef": "oberlin_localist:52692734504543",
-      "status": "duplicate_in_community_hub",
-      "reviewFlags": [
-        "description_truncated",
-        "community_hub_duplicate"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.95,
-        "fieldNotes": {
-          "description": "Description was modified"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
-        "qualityScore": 97,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "duplicate_in_community_hub",
-        "groupId": "ch_dup_4",
-        "candidateIds": [
-          "4066"
-        ],
-        "score": 0.9,
-        "matchedFields": [
-          "title",
-          "session_date"
-        ],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "education.amam@oberlin.edu",
-        "phone": "440-775-8665",
-        "website": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "title": "Frank Lloyd Wright Open House / June-November 2026",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Allen Memorial Art Museum"
-        ],
-        "postTypeId": [
-          2,
-          3,
-          4
-        ],
-        "sessions": [
-          {
-            "startTime": 1785686400,
-            "endTime": 1785704400
-          }
-        ],
-        "description": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art...",
-        "extendedDescription": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art museum at 534 Morgan Street in Oberlin, the house is open to the public the first Sunday of the month (with the exception of holiday weekends) from April to November with a docent presentation offered on the hour at noon, 1, 2, 3, and 4 p.m. Advance registration is required. Admission to the house is $10 per adult, free for OC college students with ID and anyone under 18. For tickets, parking information, and other details, see amam.oberlin.edu/flw. Make a day of it! The Allen Memorial Art Museum is open 1–5 on Sundays, and is always free. Plus, enjoy 10% off regular-priced menu items and merchandise at participating Oberlin businesses on the day of this event by showing your registration confirmation email. Get more details. Access Statement: Limited accessible parking is available near the back entrance to the home. Download a map to the accessibility parking at the house. This historic home is partially accessible to wheelchairs and fully accessible to most rolling walkers. The presentation space is wheelchair accessible and limited seating is available. The restroom is not wheelchair accessible, nor gender specific. Listening devices and ASL are currently not scheduled for this event, nor will it be recorded. If you are interested in touring the home outside of scheduled open houses, groups of 10 or more may make arrangements by contacting the Education Department at education.amam@oberlin.edu .",
-        "locationType": "ph2",
-        "location": "534 Morgan Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Weltzheimer-Johnson House",
-        "roomNum": "",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/52692734554739/huge/7201bf8e228bf4528a08be14b6be385ba2bfdd58.jpg",
-        "buttons": [
-          {
-            "title": "Learn More",
-            "link": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026"
-          }
-        ],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
       "sourceEventId": "51814152694188",
       "sourceUrl": "https://calendar.oberlin.edu/event/thomas-evon-cooper-competition-2026-violin-round-1-day-1-session-1",
       "rawEventRef": "oberlin_localist:51814152694188",
-      "status": "pending_review",
+      "status": "pending_duplicate_review",
       "reviewFlags": [
         "title_rewritten_or_truncated",
-        "description_truncated"
+        "description_truncated",
+        "batch_duplicate_candidate"
       ],
       "validationErrors": [],
       "confidence": {
@@ -4067,18 +3446,28 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"Thomas & Evon Cooper Competition 2026 - Violin: Round 1...\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "title_rewritten_or_truncated",
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
+        "status": "batch_duplicate",
+        "groupId": "batch_dup_3",
+        "candidateIds": [
+          "oberlin_localist_51814262645056"
+        ],
+        "score": 100,
+        "matchedFields": [
+          "placeName",
+          "title"
+        ],
+        "conflictingFields": [
+          "sessions"
+        ]
       },
       "civicCalendarPayload": {
         "eventType": "ot",
@@ -4125,10 +3514,11 @@
       "sourceEventId": "51814262645056",
       "sourceUrl": "https://calendar.oberlin.edu/event/thomas-evon-cooper-competition-2026-violin-round-1-day-2-session-1",
       "rawEventRef": "oberlin_localist:51814262645056",
-      "status": "pending_review",
+      "status": "pending_duplicate_review",
       "reviewFlags": [
         "title_rewritten_or_truncated",
-        "description_truncated"
+        "description_truncated",
+        "batch_duplicate_candidate"
       ],
       "validationErrors": [],
       "confidence": {
@@ -4139,18 +3529,28 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"Thomas & Evon Cooper Competition 2026 - Violin Round 1...\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "title_rewritten_or_truncated",
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
-        "status": "not_duplicate",
-        "groupId": null,
-        "candidateIds": [],
-        "score": 0,
-        "matchedFields": [],
-        "conflictingFields": []
+        "status": "batch_duplicate",
+        "groupId": "batch_dup_3",
+        "candidateIds": [
+          "oberlin_localist_51814152694188"
+        ],
+        "score": 100,
+        "matchedFields": [
+          "title",
+          "placeName"
+        ],
+        "conflictingFields": [
+          "sessions"
+        ]
       },
       "civicCalendarPayload": {
         "eventType": "ot",
@@ -4211,9 +3611,12 @@
         }
       },
       "aiAnalysis": {
-        "summary": "Quality score 94/100 with 0 issues",
+        "summary": "Event \"Thomas & Evon Cooper Competition 2026 - Concerto Finals...\" with 1 session(s)",
         "qualityScore": 94,
-        "issues": [],
+        "issues": [
+          "title_rewritten_or_truncated",
+          "description_truncated"
+        ],
         "recommendedReviewerAction": "auto_approve_candidate"
       },
       "duplicateCheck": {
@@ -4263,390 +3666,101 @@
         "calendarSourceUrl": "https://calendar.oberlin.edu/event/thomas-evon-cooper-competition-2026-concerto-finals-with-the-promusica-chamber-orchestra-david-danzmayr-conductor",
         "public": "1"
       }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52692734504543",
-      "sourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-      "rawEventRef": "oberlin_localist:52692734504543",
-      "status": "duplicate_in_community_hub",
-      "reviewFlags": [
-        "description_truncated",
-        "community_hub_duplicate"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.95,
-        "fieldNotes": {
-          "description": "Description was modified"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
-        "qualityScore": 97,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "duplicate_in_community_hub",
-        "groupId": "ch_dup_5",
-        "candidateIds": [
-          "4066"
-        ],
-        "score": 0.9,
-        "matchedFields": [
-          "title",
-          "session_date"
-        ],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "education.amam@oberlin.edu",
-        "phone": "440-775-8665",
-        "website": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "title": "Frank Lloyd Wright Open House / June-November 2026",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Allen Memorial Art Museum"
-        ],
-        "postTypeId": [
-          2,
-          3,
-          4
-        ],
-        "sessions": [
-          {
-            "startTime": 1788710400,
-            "endTime": 1788728400
-          }
-        ],
-        "description": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art...",
-        "extendedDescription": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art museum at 534 Morgan Street in Oberlin, the house is open to the public the first Sunday of the month (with the exception of holiday weekends) from April to November with a docent presentation offered on the hour at noon, 1, 2, 3, and 4 p.m. Advance registration is required. Admission to the house is $10 per adult, free for OC college students with ID and anyone under 18. For tickets, parking information, and other details, see amam.oberlin.edu/flw. Make a day of it! The Allen Memorial Art Museum is open 1–5 on Sundays, and is always free. Plus, enjoy 10% off regular-priced menu items and merchandise at participating Oberlin businesses on the day of this event by showing your registration confirmation email. Get more details. Access Statement: Limited accessible parking is available near the back entrance to the home. Download a map to the accessibility parking at the house. This historic home is partially accessible to wheelchairs and fully accessible to most rolling walkers. The presentation space is wheelchair accessible and limited seating is available. The restroom is not wheelchair accessible, nor gender specific. Listening devices and ASL are currently not scheduled for this event, nor will it be recorded. If you are interested in touring the home outside of scheduled open houses, groups of 10 or more may make arrangements by contacting the Education Department at education.amam@oberlin.edu .",
-        "locationType": "ph2",
-        "location": "534 Morgan Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Weltzheimer-Johnson House",
-        "roomNum": "",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/52692734554739/huge/7201bf8e228bf4528a08be14b6be385ba2bfdd58.jpg",
-        "buttons": [
-          {
-            "title": "Learn More",
-            "link": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026"
-          }
-        ],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52692734504543",
-      "sourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-      "rawEventRef": "oberlin_localist:52692734504543",
-      "status": "duplicate_in_community_hub",
-      "reviewFlags": [
-        "description_truncated",
-        "community_hub_duplicate"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.95,
-        "fieldNotes": {
-          "description": "Description was modified"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
-        "qualityScore": 97,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "duplicate_in_community_hub",
-        "groupId": "ch_dup_6",
-        "candidateIds": [
-          "4066"
-        ],
-        "score": 0.9,
-        "matchedFields": [
-          "title",
-          "session_date"
-        ],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "education.amam@oberlin.edu",
-        "phone": "440-775-8665",
-        "website": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "title": "Frank Lloyd Wright Open House / June-November 2026",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Allen Memorial Art Museum"
-        ],
-        "postTypeId": [
-          2,
-          3,
-          4
-        ],
-        "sessions": [
-          {
-            "startTime": 1791129600,
-            "endTime": 1791147600
-          }
-        ],
-        "description": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art...",
-        "extendedDescription": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art museum at 534 Morgan Street in Oberlin, the house is open to the public the first Sunday of the month (with the exception of holiday weekends) from April to November with a docent presentation offered on the hour at noon, 1, 2, 3, and 4 p.m. Advance registration is required. Admission to the house is $10 per adult, free for OC college students with ID and anyone under 18. For tickets, parking information, and other details, see amam.oberlin.edu/flw. Make a day of it! The Allen Memorial Art Museum is open 1–5 on Sundays, and is always free. Plus, enjoy 10% off regular-priced menu items and merchandise at participating Oberlin businesses on the day of this event by showing your registration confirmation email. Get more details. Access Statement: Limited accessible parking is available near the back entrance to the home. Download a map to the accessibility parking at the house. This historic home is partially accessible to wheelchairs and fully accessible to most rolling walkers. The presentation space is wheelchair accessible and limited seating is available. The restroom is not wheelchair accessible, nor gender specific. Listening devices and ASL are currently not scheduled for this event, nor will it be recorded. If you are interested in touring the home outside of scheduled open houses, groups of 10 or more may make arrangements by contacting the Education Department at education.amam@oberlin.edu .",
-        "locationType": "ph2",
-        "location": "534 Morgan Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Weltzheimer-Johnson House",
-        "roomNum": "",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/52692734554739/huge/7201bf8e228bf4528a08be14b6be385ba2bfdd58.jpg",
-        "buttons": [
-          {
-            "title": "Learn More",
-            "link": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026"
-          }
-        ],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "public": "1"
-      }
-    },
-    {
-      "sourceSystem": "oberlin_localist",
-      "sourceEventId": "52692734504543",
-      "sourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-      "rawEventRef": "oberlin_localist:52692734504543",
-      "status": "duplicate_in_community_hub",
-      "reviewFlags": [
-        "description_truncated",
-        "community_hub_duplicate"
-      ],
-      "validationErrors": [],
-      "confidence": {
-        "overall": 0.95,
-        "fieldNotes": {
-          "description": "Description was modified"
-        }
-      },
-      "aiAnalysis": {
-        "summary": "Quality score 97/100 with 0 issues",
-        "qualityScore": 97,
-        "issues": [],
-        "recommendedReviewerAction": "auto_approve_candidate"
-      },
-      "duplicateCheck": {
-        "status": "duplicate_in_community_hub",
-        "groupId": "ch_dup_7",
-        "candidateIds": [
-          "4066"
-        ],
-        "score": 0.9,
-        "matchedFields": [
-          "title",
-          "session_date"
-        ],
-        "conflictingFields": []
-      },
-      "civicCalendarPayload": {
-        "eventType": "ot",
-        "email": "frankkusiap@gmail.com",
-        "subscribe": true,
-        "contactEmail": "education.amam@oberlin.edu",
-        "phone": "440-775-8665",
-        "website": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "title": "Frank Lloyd Wright Open House / June-November 2026",
-        "sponsors": [
-          "Oberlin College",
-          "Administrative",
-          "Allen Memorial Art Museum"
-        ],
-        "postTypeId": [
-          2,
-          3,
-          4
-        ],
-        "sessions": [
-          {
-            "startTime": 1793552400,
-            "endTime": 1793570400
-          }
-        ],
-        "description": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art...",
-        "extendedDescription": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art museum at 534 Morgan Street in Oberlin, the house is open to the public the first Sunday of the month (with the exception of holiday weekends) from April to November with a docent presentation offered on the hour at noon, 1, 2, 3, and 4 p.m. Advance registration is required. Admission to the house is $10 per adult, free for OC college students with ID and anyone under 18. For tickets, parking information, and other details, see amam.oberlin.edu/flw. Make a day of it! The Allen Memorial Art Museum is open 1–5 on Sundays, and is always free. Plus, enjoy 10% off regular-priced menu items and merchandise at participating Oberlin businesses on the day of this event by showing your registration confirmation email. Get more details. Access Statement: Limited accessible parking is available near the back entrance to the home. Download a map to the accessibility parking at the house. This historic home is partially accessible to wheelchairs and fully accessible to most rolling walkers. The presentation space is wheelchair accessible and limited seating is available. The restroom is not wheelchair accessible, nor gender specific. Listening devices and ASL are currently not scheduled for this event, nor will it be recorded. If you are interested in touring the home outside of scheduled open houses, groups of 10 or more may make arrangements by contacting the Education Department at education.amam@oberlin.edu .",
-        "locationType": "ph2",
-        "location": "534 Morgan Street, Oberlin, OH 44074",
-        "placeId": "",
-        "placeName": "Weltzheimer-Johnson House",
-        "roomNum": "",
-        "urlLink": "",
-        "image_cdn_url": "https://localist-images.azureedge.net/photos/52692734554739/huge/7201bf8e228bf4528a08be14b6be385ba2bfdd58.jpg",
-        "buttons": [
-          {
-            "title": "Learn More",
-            "link": "https://amam.oberlin.edu/exhibitions-events/events/2026/06/07/frank-lloyd-wright-open-house-june-2026"
-          }
-        ],
-        "display": "all",
-        "screensIds": [],
-        "calendarSourceName": "Oberlin College Calendar",
-        "calendarSourceUrl": "https://calendar.oberlin.edu/event/frank-lloyd-wright-open-house-june-november-2026",
-        "public": "1"
-      }
     }
   ],
   "duplicateGroups": [
     {
-      "id": "ch_dup_1",
+      "id": "batch_dup_1",
       "status": "open",
-      "primaryCandidateId": "4258",
+      "primaryCandidateId": "oberlin_localist_51800568912081",
       "likelyDuplicateIds": [
-        "oberlin_localist_52709032256559"
+        "oberlin_localist_51800698270525"
       ],
-      "similarityScore": 1.0,
+      "similarityScore": 86,
       "matchedFields": [
-        "title",
-        "session_date",
-        "location"
+        "placeName",
+        "title"
       ],
-      "conflictingFields": [],
-      "recommendation": "This event likely already exists in Community Hub. Review before approving.",
-      "createdAt": "2026-05-09T10:33:28.152344+00:00",
-      "updatedAt": "2026-05-09T10:33:28.152344+00:00",
+      "conflictingFields": [
+        "description",
+        "sessions"
+      ],
+      "recommendation": "Review side-by-side and merge or reject duplicate.",
+      "createdAt": "2026-05-09T11:16:03.200406+00:00",
+      "updatedAt": "2026-05-09T11:16:03.200406+00:00",
       "sourceSystem": "oberlin_localist"
     },
     {
-      "id": "ch_dup_2",
+      "id": "batch_dup_2",
       "status": "open",
-      "primaryCandidateId": "4066",
+      "primaryCandidateId": "oberlin_localist_51815210388404",
       "likelyDuplicateIds": [
-        "oberlin_localist_52692734504543"
+        "oberlin_localist_51815586487392",
+        "oberlin_localist_51815547574650"
       ],
-      "similarityScore": 0.9,
+      "similarityScore": 90,
       "matchedFields": [
-        "title",
-        "session_date"
+        "placeName",
+        "title"
       ],
-      "conflictingFields": [],
-      "recommendation": "This event likely already exists in Community Hub. Review before approving.",
-      "createdAt": "2026-05-09T10:33:28.152344+00:00",
-      "updatedAt": "2026-05-09T10:33:28.152344+00:00",
+      "conflictingFields": [
+        "description",
+        "sessions"
+      ],
+      "recommendation": "Review side-by-side and merge or reject duplicate.",
+      "createdAt": "2026-05-09T11:16:03.203221+00:00",
+      "updatedAt": "2026-05-09T11:16:03.203221+00:00",
       "sourceSystem": "oberlin_localist"
     },
     {
-      "id": "ch_dup_3",
+      "id": "batch_dup_3",
       "status": "open",
-      "primaryCandidateId": "4066",
+      "primaryCandidateId": "oberlin_localist_51814152694188",
       "likelyDuplicateIds": [
-        "oberlin_localist_52692734504543"
+        "oberlin_localist_51814262645056"
       ],
-      "similarityScore": 0.9,
+      "similarityScore": 100,
       "matchedFields": [
-        "title",
-        "session_date"
+        "placeName",
+        "title"
       ],
-      "conflictingFields": [],
-      "recommendation": "This event likely already exists in Community Hub. Review before approving.",
-      "createdAt": "2026-05-09T10:33:28.152344+00:00",
-      "updatedAt": "2026-05-09T10:33:28.152344+00:00",
-      "sourceSystem": "oberlin_localist"
-    },
-    {
-      "id": "ch_dup_4",
-      "status": "open",
-      "primaryCandidateId": "4066",
-      "likelyDuplicateIds": [
-        "oberlin_localist_52692734504543"
+      "conflictingFields": [
+        "sessions"
       ],
-      "similarityScore": 0.9,
-      "matchedFields": [
-        "title",
-        "session_date"
-      ],
-      "conflictingFields": [],
-      "recommendation": "This event likely already exists in Community Hub. Review before approving.",
-      "createdAt": "2026-05-09T10:33:28.152344+00:00",
-      "updatedAt": "2026-05-09T10:33:28.152344+00:00",
-      "sourceSystem": "oberlin_localist"
-    },
-    {
-      "id": "ch_dup_5",
-      "status": "open",
-      "primaryCandidateId": "4066",
-      "likelyDuplicateIds": [
-        "oberlin_localist_52692734504543"
-      ],
-      "similarityScore": 0.9,
-      "matchedFields": [
-        "title",
-        "session_date"
-      ],
-      "conflictingFields": [],
-      "recommendation": "This event likely already exists in Community Hub. Review before approving.",
-      "createdAt": "2026-05-09T10:33:28.152344+00:00",
-      "updatedAt": "2026-05-09T10:33:28.152344+00:00",
-      "sourceSystem": "oberlin_localist"
-    },
-    {
-      "id": "ch_dup_6",
-      "status": "open",
-      "primaryCandidateId": "4066",
-      "likelyDuplicateIds": [
-        "oberlin_localist_52692734504543"
-      ],
-      "similarityScore": 0.9,
-      "matchedFields": [
-        "title",
-        "session_date"
-      ],
-      "conflictingFields": [],
-      "recommendation": "This event likely already exists in Community Hub. Review before approving.",
-      "createdAt": "2026-05-09T10:33:28.152344+00:00",
-      "updatedAt": "2026-05-09T10:33:28.152344+00:00",
-      "sourceSystem": "oberlin_localist"
-    },
-    {
-      "id": "ch_dup_7",
-      "status": "open",
-      "primaryCandidateId": "4066",
-      "likelyDuplicateIds": [
-        "oberlin_localist_52692734504543"
-      ],
-      "similarityScore": 0.9,
-      "matchedFields": [
-        "title",
-        "session_date"
-      ],
-      "conflictingFields": [],
-      "recommendation": "This event likely already exists in Community Hub. Review before approving.",
-      "createdAt": "2026-05-09T10:33:28.152344+00:00",
-      "updatedAt": "2026-05-09T10:33:28.152344+00:00",
+      "recommendation": "Review side-by-side and merge or reject duplicate.",
+      "createdAt": "2026-05-09T11:16:03.203316+00:00",
+      "updatedAt": "2026-05-09T11:16:03.203316+00:00",
       "sourceSystem": "oberlin_localist"
     }
   ],
   "metrics": {
-    "eventsRead": 63,
-    "eventsNormalized": 63,
-    "eventsQueuedForReview": 56,
-    "duplicatesCommunityHub": 7,
-    "duplicatesFirestore": 0,
-    "validationErrors": 1,
-    "firestoreWrites": 0
+    "postTypeDistribution": {
+      "Exhibit": 28,
+      "Music Performance": 26,
+      "Presentation or Lecture": 22,
+      "Other": 16,
+      "Tour, Walking Tours or Open House": 15,
+      "Fair, Festival, or Public Celebration": 14,
+      "Workshop or Class": 9,
+      "Volunteer Opportunity": 3
+    },
+    "locationTypeDistribution": {
+      "ph2": 49
+    },
+    "reviewFlagDistribution": {
+      "description_truncated": 26,
+      "title_rewritten_or_truncated": 7,
+      "batch_duplicate_candidate": 7,
+      "missing_end_time": 6,
+      "no_confident_post_type_mapping_defaulted_to_other": 1,
+      "missing_full_address": 1
+    },
+    "confidenceDistribution": {
+      "high_0.9_1.0": 48,
+      "good_0.7_0.89": 1,
+      "medium_0.5_0.69": 0,
+      "low_0_0.49": 0
+    },
+    "averageConfidence": 0.955
   }
 }
