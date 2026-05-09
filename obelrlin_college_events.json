@@ -1,5 +1,6 @@
 {
   "source": "https://calendar.oberlin.edu/api/2/events",
+  "fetched_at": "2026-05-09T10:03:34Z",
   "filters": {
     "audience": "Open to all members of the public",
     "excluded": [
@@ -13,7 +14,9 @@
   "summary": {
     "pages_checked": 3,
     "events_checked": 203,
-    "events_saved": 63
+    "events_saved": 63,
+    "events_excluded_not_public": 133,
+    "events_excluded_sports": 7
   },
   "events": [
     {

@@ -12,6 +12,7 @@ import json
 import time
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -61,15 +62,20 @@ def main() -> None:
   parser = argparse.ArgumentParser()
   parser.add_argument("--days", type=int, default=365)
   parser.add_argument("--per-page", type=int, default=100)
-  parser.add_argument("--max-pages", type=int, default=5)
+  parser.add_argument("--max-pages", type=int, default=20)
   parser.add_argument("--output", default="obelrlin_college_events.json")
   args = parser.parse_args()
+
+  fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
   raw_matches: list[dict[str, Any]] = []
   pages_checked = 0
   events_checked = 0
+  events_excluded_not_public = 0
+  events_excluded_sports = 0
 
   for page in range(1, args.max_pages + 1):
+    print(f"Fetching page {page}...")
     payload = fetch_page(page, args.days, args.per_page)
     wrapped_events = payload.get("events", [])
     pages_checked += 1
@@ -77,7 +83,11 @@ def main() -> None:
 
     for wrapped_event in wrapped_events:
       event = wrapped_event.get("event", {})
-      if is_open_to_general_public(event) and not is_athletics(event):
+      if not is_open_to_general_public(event):
+        events_excluded_not_public += 1
+      elif is_athletics(event):
+        events_excluded_sports += 1
+      else:
         raw_matches.append(wrapped_event)
 
     if len(wrapped_events) < args.per_page:
@@ -87,6 +97,7 @@ def main() -> None:
 
   output = {
     "source": API_URL,
+    "fetched_at": fetched_at,
     "filters": {
       "audience": PUBLIC_AUDIENCE,
       "excluded": list(ATHLETICS_TERMS),
@@ -96,6 +107,8 @@ def main() -> None:
       "pages_checked": pages_checked,
       "events_checked": events_checked,
       "events_saved": len(raw_matches),
+      "events_excluded_not_public": events_excluded_not_public,
+      "events_excluded_sports": events_excluded_sports,
     },
     "events": raw_matches,
   }
@@ -105,7 +118,12 @@ def main() -> None:
     output_file.write("\n")
 
   print(
-    f"Saved {len(raw_matches)} raw events from {events_checked} checked events to {args.output}"
+    f"Pages checked: {pages_checked}\n"
+    f"Events checked: {events_checked}\n"
+    f"Events saved: {len(raw_matches)}\n"
+    f"Excluded (not public): {events_excluded_not_public}\n"
+    f"Excluded (sports): {events_excluded_sports}\n"
+    f"Output: {args.output}"
   )
 
 
