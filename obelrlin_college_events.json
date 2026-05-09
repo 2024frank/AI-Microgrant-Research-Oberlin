@@ -1,6 +1,6 @@
 {
   "source": "https://calendar.oberlin.edu/api/2/events",
-  "fetched_at": "2026-05-09T10:20:33Z",
+  "fetched_at": "2026-05-09T11:03:28Z",
   "filters": {
     "audience": "Open to all members of the public",
     "excluded": [
@@ -65,7 +65,7 @@
         "tags": [],
         "description_text": "Join us for an afternoon of music, followed by a potluck supper. Musicians of all ages and skill levels are invited to participate, with opportunities to play in both small and large groups. Our goal is to bring together Oberlin’s vibrant musical community for a fun and welcoming experience.\n\nIf you don’t play an instrument, you’re still eagerly invited—come relax and enjoy a wide variety of live music across genres. Please RSVP.",
         "photo_id": null,
-        "detail_views": 59,
+        "detail_views": 60,
         "event_instances": [
           {
             "event_instance": {
@@ -282,7 +282,7 @@
         "tags": [],
         "description_text": "Come enjoy the vintage sound of a female barbershop quartet!",
         "photo_id": null,
-        "detail_views": 39,
+        "detail_views": 40,
         "event_instances": [
           {
             "event_instance": {
