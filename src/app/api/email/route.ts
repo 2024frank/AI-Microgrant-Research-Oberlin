@@ -12,6 +12,20 @@ type EmailRequest =
       to: string;
       role: string;
       displayName?: string | null;
+    }
+  | {
+      type: "normalization-report";
+      to: string;
+      summary: {
+        events_read: number;
+        events_normalized: number;
+        events_queued_for_review: number;
+        duplicates_community_hub: number;
+        duplicates_firestore: number;
+        events_with_errors: number;
+        firestore_writes_succeeded: number;
+      };
+      runTimestamp: string;
     };
 
 const fromAddress = "Civic Calendar <noreply@uhurued.com>";
@@ -22,6 +36,29 @@ function getBaseUrl() {
 
 function getEmailContent(body: EmailRequest) {
   const loginUrl = `${getBaseUrl().replace(/\/$/, "")}/login`;
+
+  if (body.type === "normalization-report") {
+    const s = body.summary;
+    const subject = `Oberlin Normalizer: ${s.events_normalized} events processed (${s.duplicates_community_hub} CH duplicates)`;
+    const rows = [
+      ["Events read", s.events_read],
+      ["Events normalized", s.events_normalized],
+      ["Queued for review", s.events_queued_for_review],
+      ["Community Hub duplicates", s.duplicates_community_hub],
+      ["Already queued (Firestore)", s.duplicates_firestore],
+      ["Validation errors", s.events_with_errors],
+      ["Firestore writes", s.firestore_writes_succeeded],
+    ]
+      .map(
+        ([label, val]) =>
+          `<tr><td style="padding:4px 12px">${label}</td><td><strong>${val}</strong></td></tr>`,
+      )
+      .join("");
+    const html = `<h2>Oberlin Localist Normalization Report</h2><p><strong>Run at:</strong> ${body.runTimestamp}</p><table style="border-collapse:collapse">${rows}</table><p><a href="${loginUrl}">Open Civic Calendar</a></p>`;
+    const text = `Oberlin Normalization Report\nRun: ${body.runTimestamp}\nNormalized: ${s.events_normalized} | Review: ${s.events_queued_for_review} | CH Dups: ${s.duplicates_community_hub}`;
+    return { subject, html, text };
+  }
+
   const name = body.displayName || body.to;
 
   if (body.type === "access-approved") {
@@ -33,11 +70,13 @@ function getEmailContent(body: EmailRequest) {
   }
 
   return {
-    subject: "You’ve been invited to Civic Calendar",
+    subject: "You've been invited to Civic Calendar",
     text: `Hello ${name},\n\nYou have been invited to Civic Calendar as ${body.role}. Sign in with Google here: ${loginUrl}\n\nCivic Infrastructure Systems`,
     html: `<p>Hello ${name},</p><p>You have been invited to Civic Calendar as <strong>${body.role}</strong>.</p><p><a href="${loginUrl}">Log in to Civic Calendar</a></p><p>Civic Infrastructure Systems</p>`,
   };
 }
+
+const supportedTypes = new Set(["access-approved", "invite-user", "normalization-report"]);
 
 export async function POST(request: Request) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -52,7 +91,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email type and recipient are required." }, { status: 400 });
   }
 
-  if (body.type !== "access-approved" && body.type !== "invite-user") {
+  if (!supportedTypes.has(body.type)) {
     return NextResponse.json({ error: "Unsupported email type." }, { status: 400 });
   }
 
