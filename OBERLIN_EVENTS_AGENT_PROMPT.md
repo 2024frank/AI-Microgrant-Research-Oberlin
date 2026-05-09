@@ -2,6 +2,26 @@
 
 You are working in the `AI-Microgrant-Research-Oberlin` repository.
 
+## Branch
+
+Work on this branch:
+
+`obercolleg-events`
+
+If you are not already on that branch, run:
+
+```bash
+git switch obercolleg-events
+```
+
+After refreshing the JSON file and verifying it, commit the updated event JSON and push to:
+
+```bash
+git push origin obercolleg-events
+```
+
+Do not push this work to `main`.
+
 ## Goal
 
 Fetch raw upcoming event JSON from the Oberlin College Localist calendar API and save only events that are:
