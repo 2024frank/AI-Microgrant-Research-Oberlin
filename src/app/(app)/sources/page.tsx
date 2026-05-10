@@ -14,6 +14,7 @@ type JobStatus = "idle" | "running" | "completed" | "failed";
 export default function SourcesPage() {
   const [source, setSource] = useState<Source | null>(null);
   const [schedule, setSchedule] = useState<SourceSchedule>("off");
+  const [scheduleHour, setScheduleHour] = useState<number>(6);
   const [jobStatus, setJobStatus] = useState<JobStatus>("idle");
   const [currentJob, setCurrentJob] = useState<PipelineJob | null>(null);
   const [saving, setSaving] = useState(false);
@@ -37,6 +38,7 @@ export default function SourcesPage() {
       if (s) {
         setSource(s);
         setSchedule(s.schedule ?? "off");
+        setScheduleHour(s.scheduleHour ?? 6);
       }
 
       setAllJobs(jobs);
@@ -105,8 +107,8 @@ export default function SourcesPage() {
     setSaving(true);
     try {
       const { updateSource } = await import("@/lib/sourcesClient");
-      await updateSource("localist-oberlin", { schedule });
-      setSource((s) => (s ? { ...s, schedule } : s));
+      await updateSource("localist-oberlin", { schedule, scheduleHour });
+      setSource((s) => (s ? { ...s, schedule, scheduleHour } : s));
     } finally {
       setSaving(false);
     }
@@ -195,23 +197,55 @@ export default function SourcesPage() {
             <Clock className="w-4 h-4 text-[var(--muted)]" />
             <span className="text-sm font-medium text-[var(--text)]">Auto-run schedule</span>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {(["off", "daily", "weekly", "biweekly"] as SourceSchedule[]).map((opt) => (
-              <button key={opt} onClick={() => setSchedule(opt)}
-                className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${schedule === opt ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "text-[var(--muted)] border-[var(--border)] hover:text-[var(--text)]"}`}>
-                {opt === "off" ? "Off" : opt === "daily" ? "Daily" : opt === "weekly" ? "Weekly" : "Bi-weekly"}
+
+          {/* Frequency buttons */}
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            {([
+              { val: "off", label: "Off" },
+              { val: "2h", label: "Every 2h" },
+              { val: "6h", label: "Every 6h" },
+              { val: "12h", label: "Every 12h" },
+              { val: "daily", label: "Daily" },
+              { val: "weekly", label: "Weekly" },
+              { val: "biweekly", label: "Bi-weekly" },
+            ] as { val: SourceSchedule; label: string }[]).map(({ val, label }) => (
+              <button key={val} onClick={() => setSchedule(val)}
+                className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${schedule === val ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "text-[var(--muted)] border-[var(--border)] hover:text-[var(--text)]"}`}>
+                {label}
               </button>
             ))}
-            {schedule !== (source?.schedule ?? "off") && (
-              <button onClick={handleSaveSchedule} disabled={saving}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--primary)] border border-[var(--primary)] rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors disabled:opacity-50">
-                {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                Save
-              </button>
-            )}
           </div>
+
+          {/* Time-of-day picker for daily/weekly/biweekly */}
+          {(schedule === "daily" || schedule === "weekly" || schedule === "biweekly") && (
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-sm text-[var(--muted)]">Run at</span>
+              <select
+                value={scheduleHour}
+                onChange={(e) => setScheduleHour(Number(e.target.value))}
+                className="rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-sm text-[var(--text)] outline-none focus:border-[var(--primary)]"
+              >
+                {Array.from({ length: 24 }, (_, h) => (
+                  <option key={h} value={h}>
+                    {h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs text-[var(--muted)]">(UTC)</span>
+            </div>
+          )}
+
+          {/* Save button */}
+          {(schedule !== (source?.schedule ?? "off") || scheduleHour !== (source?.scheduleHour ?? 6)) && (
+            <button onClick={handleSaveSchedule} disabled={saving}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--primary)] border border-[var(--primary)] rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors disabled:opacity-50">
+              {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+              Save schedule
+            </button>
+          )}
+
           {source?.nextRun && schedule !== "off" && (
-            <p className="text-xs text-[var(--muted)] mt-2">Next run: {fmt(source.nextRun)}</p>
+            <p className="text-xs text-[var(--muted)] mt-3">Next run: {fmt(source.nextRun)}</p>
           )}
         </div>
 

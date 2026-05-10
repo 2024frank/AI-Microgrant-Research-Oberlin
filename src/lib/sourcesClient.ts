@@ -9,6 +9,8 @@ import {
 } from "firebase/firestore";
 import { firebaseDb } from "./firebase";
 import type { Source, SourceSchedule } from "./sources";
+// SourceSchedule is re-exported from sources.ts — client uses the same type
+export type { SourceSchedule };
 
 const COLLECTION = "sources";
 

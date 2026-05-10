@@ -1,6 +1,6 @@
 import { adminDb, serverTimestamp } from "./firebaseAdmin";
 
-export type SourceSchedule = "off" | "daily" | "weekly" | "biweekly";
+export type SourceSchedule = "off" | "2h" | "6h" | "12h" | "daily" | "weekly" | "biweekly";
 
 export type Source = {
   id: string;
@@ -8,6 +8,7 @@ export type Source = {
   type: "localist";
   baseUrl: string;
   schedule: SourceSchedule;
+  scheduleHour?: number; // 0-23, for daily: run at this hour (UTC)
   lastRun?: number;
   nextRun?: number;
   lastJobId?: string;
@@ -19,6 +20,9 @@ const COLLECTION = "sources";
 
 const SCHEDULE_INTERVALS: Record<SourceSchedule, number> = {
   off: 0,
+  "2h": 2 * 3600000,
+  "6h": 6 * 3600000,
+  "12h": 12 * 3600000,
   daily: 86400000,
   weekly: 604800000,
   biweekly: 1209600000,
@@ -60,13 +64,30 @@ export async function updateSource(
   await adminDb.collection(COLLECTION).doc(id).update({ ...updates, updatedAt: serverTimestamp() });
 }
 
+export function computeNextRun(schedule: SourceSchedule, scheduleHour?: number): number | undefined {
+  const interval = SCHEDULE_INTERVALS[schedule];
+  if (!interval) return undefined;
+  const now = Date.now();
+
+  // For daily/weekly/biweekly with a specific hour, snap to that hour
+  if ((schedule === "daily" || schedule === "weekly" || schedule === "biweekly") && scheduleHour != null) {
+    const next = new Date(now + interval);
+    next.setUTCHours(scheduleHour, 0, 0, 0);
+    // If snapping moved it before now+interval, add one interval
+    if (next.getTime() < now + interval - 3600000) {
+      next.setTime(next.getTime() + interval);
+    }
+    return next.getTime();
+  }
+
+  return now + interval;
+}
+
 export async function recordSourceRun(sourceId: string, jobId: string): Promise<void> {
   const source = await getSource(sourceId);
   if (!source) return;
-  const now = Date.now();
-  const interval = SCHEDULE_INTERVALS[source.schedule];
-  const nextRun = interval > 0 ? now + interval : undefined;
-  await updateSource(sourceId, { lastRun: now, lastJobId: jobId, nextRun });
+  const nextRun = computeNextRun(source.schedule, source.scheduleHour);
+  await updateSource(sourceId, { lastRun: Date.now(), lastJobId: jobId, nextRun });
 }
 
 export async function getSourcesDue(): Promise<Source[]> {
