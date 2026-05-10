@@ -47,14 +47,16 @@ export default function DashboardPage() {
   async function handleRunPipeline() {
     setRunning(true);
     try {
-      await fetch("/api/pipeline/trigger", {
+      const res = await fetch("/api/pipeline/trigger", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sourceId: "localist-oberlin",
-          sourceName: "Localist – Oberlin College Calendar",
-        }),
+        body: JSON.stringify({ sourceId: "localist-oberlin", sourceName: "Localist – Oberlin College Calendar" }),
       });
+      const data = await res.json();
+      if (data.jobId) {
+        const { setRunningJobId } = await import("@/components/PipelineStatusBar");
+        setRunningJobId(data.jobId);
+      }
     } finally {
       setRunning(false);
     }

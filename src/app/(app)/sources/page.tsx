@@ -91,6 +91,9 @@ export default function SourcesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to start pipeline");
+      // Write jobId to localStorage so global status bar picks it up on any page
+      const { setRunningJobId } = await import("@/components/PipelineStatusBar");
+      setRunningJobId(data.jobId);
       pollJob(data.jobId);
     } catch (err) {
       setJobStatus("failed");

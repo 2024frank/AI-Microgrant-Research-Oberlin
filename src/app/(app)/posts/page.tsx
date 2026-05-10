@@ -17,7 +17,7 @@ export default function PostsPage() {
   const { posts, removePosts, updatePostsStatus, loading } = useReviewStore();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<BulkAction | null>(null);
-  const canDeletePost = (post: ReviewPost) => post.status === "rejected" || post.status === "archived";
+  const canDeletePost = (_post: ReviewPost) => true;
   const selectedPosts = useMemo(
     () => posts.filter((post) => selectedIds.includes(post.id)),
     [posts, selectedIds],
@@ -39,7 +39,7 @@ export default function PostsPage() {
 
   function applyBulkAction(action: BulkAction) {
     if (action === "delete") {
-      removePosts(selectedDeletableIds);
+      removePosts(selectedIds);
     } else {
       updatePostsStatus(selectedIds, action);
     }
@@ -79,12 +79,9 @@ export default function PostsPage() {
         <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)] disabled:opacity-50" disabled={selectedIds.length === 0} onClick={() => setConfirmAction("rejected")} type="button">
           Reject Selected
         </button>
-        <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)] disabled:opacity-50" disabled={selectedIds.length === 0} onClick={() => setConfirmAction("archived")} type="button">
-          Archive Selected
-        </button>
         <button
           className="rounded border border-[#82303b] px-3 py-2 text-sm text-[#ffb3b3] hover:bg-[#82303b]/20 disabled:opacity-50"
-          disabled={selectedDeletableIds.length === 0}
+          disabled={selectedIds.length === 0}
           onClick={() => setConfirmAction("delete")}
           type="button"
         >
@@ -164,9 +161,9 @@ export default function PostsPage() {
                           </button>
                           <button
                             className="rounded border border-[#82303b] px-2 py-1 text-xs text-[#ffb3b3] hover:bg-[#82303b]/20 disabled:cursor-not-allowed disabled:opacity-50"
-                            disabled={!canDeletePost(post)}
+                            disabled={false}
                             onClick={() => removePosts([post.id])}
-                            title={canDeletePost(post) ? "Delete this post" : "Only rejected or archived posts can be deleted"}
+                            title="Delete this post"
                             type="button"
                           >
                             Delete
@@ -188,7 +185,7 @@ export default function PostsPage() {
             <h2 className="font-[var(--font-public-sans)] text-xl font-semibold">Confirm bulk action</h2>
             <p className="mt-2 text-sm text-[var(--muted)]">
               {confirmAction === "delete"
-                ? `Permanently delete ${selectedDeletableIds.length} rejected/archived selected posts from local queue data?`
+                ? `Permanently delete ${selectedIds.length} selected posts?`
                 : `Apply ${confirmAction.replace("_", " ")} to ${selectedPosts.length} selected posts?`}
             </p>
             <div className="mt-5 flex justify-end gap-2">

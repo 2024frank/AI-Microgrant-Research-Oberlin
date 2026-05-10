@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { AccessDeniedScreen, UnauthorizedScreen } from "@/components/AccessScreens";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopNav } from "@/components/TopNav";
+import { PipelineStatusBar } from "@/components/PipelineStatusBar";
 import { useAuth } from "@/context/AuthContext";
 import { canAccessAdminControl } from "@/lib/users";
 
@@ -44,9 +45,10 @@ export function ProtectedAppShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-[var(--background)]">
         <AppSidebar />
         <TopNav />
-        <main className="px-4 py-6 md:ml-[240px] md:px-6 lg:px-8">
+        <main className="px-4 py-6 pb-32 md:ml-[240px] md:px-6 lg:px-8">
           <AccessDeniedScreen />
         </main>
+        <PipelineStatusBar />
       </div>
     );
   }
@@ -55,7 +57,8 @@ export function ProtectedAppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-[var(--background)]">
       <AppSidebar />
       <TopNav />
-      <main className="px-4 py-6 md:ml-[240px] md:px-6 lg:px-8">{children}</main>
+      <main className="px-4 py-6 pb-32 md:ml-[240px] md:px-6 lg:px-8">{children}</main>
+      <PipelineStatusBar />
     </div>
   );
 }

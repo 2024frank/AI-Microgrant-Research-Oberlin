@@ -486,7 +486,7 @@ export function PostDetailClient({ id }: { id: string }) {
                 <button className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white" onClick={approve} type="button">Approve</button>
                 <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={reject} type="button">Reject</button>
                 <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => { updatePostsStatus([post.id], "needs_correction"); saveFeedbackToAPI("needs_correction", rejectionReason || undefined); }} type="button">Send Back / Needs Correction</button>
-                <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "archived")} type="button">Archive</button>
+                <button className="rounded border border-red-900/50 px-3 py-2 text-sm text-red-400 hover:bg-red-900/20" onClick={() => { updatePostsStatus([post.id], "archived"); saveFeedbackToAPI("rejected", "Deleted by reviewer"); }} type="button">Delete</button>
               </>
             )}
             {post.status === "published" && (
