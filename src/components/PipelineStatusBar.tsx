@@ -80,7 +80,7 @@ export function PipelineStatusBar() {
   const isFailed = job.status === "failed";
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 md:left-[240px] z-50 border-t border-[var(--border)] bg-[#0e0e0e] shadow-2xl">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border)] bg-[#0e0e0e] shadow-2xl md:left-[240px]">
       {/* Collapsed progress bar always visible */}
       {isRunning && (
         <div className="h-0.5 bg-[var(--surface)]">
@@ -158,7 +158,7 @@ export function PipelineStatusBar() {
 
       {/* Expanded detail panel */}
       {expanded && (
-        <div className="border-t border-[var(--border)] px-4 py-3 grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-3">
+        <div className="border-t border-[var(--border)] px-4 py-3 grid grid-cols-4 sm:grid-cols-4 xl:grid-cols-7 gap-2">
           {[
             { label: "Fetched from Localist", value: job.totalFetched, color: "text-[var(--text)]" },
             { label: "AI Processed", value: job.progress, color: "text-[var(--primary)]" },
