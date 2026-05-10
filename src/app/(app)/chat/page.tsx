@@ -264,7 +264,7 @@ export default function ChatPage() {
               ) : (
                 <div className="w-8 shrink-0" />
               )}
-              <div className={`max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
+              <div className={`max-w-[75%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                 {showAvatar && (
                   <div className={`flex items-baseline gap-2 mb-0.5 ${isMe ? "flex-row-reverse" : ""}`}>
                     <span className="text-xs font-medium text-[var(--text)]">{isMe ? "You" : msg.senderName}</span>
