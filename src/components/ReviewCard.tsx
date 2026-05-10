@@ -3,11 +3,13 @@ import { ArrowRight } from "lucide-react";
 
 import { PostTypeBadge } from "@/components/PostTypeBadge";
 import { StatusBadge } from "@/components/StatusBadge";
+import { getCommunityHubPostTypeLabel } from "@/lib/postTypes";
 
 type CivicPost = {
   id: string;
   title: string;
   type: "event" | "announcement";
+  postTypeId?: number[];
   status: "pending" | "approved" | "flagged" | "duplicate" | "archived";
   confidence: number;
   duplicateScore: number;
@@ -25,6 +27,11 @@ export function ReviewCard({ post }: ReviewCardProps) {
         <PostTypeBadge type={post.type} />
         <StatusBadge status={post.status} />
       </div>
+      {post.postTypeId && post.postTypeId.length > 0 && (
+        <p className="mt-1.5 text-xs text-[var(--muted)]">
+          {getCommunityHubPostTypeLabel(post.postTypeId)}
+        </p>
+      )}
       <h3 className="mt-3 font-[var(--font-public-sans)] text-lg font-semibold text-[var(--text)]">
         {post.title}
       </h3>

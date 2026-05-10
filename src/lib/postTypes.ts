@@ -6,7 +6,32 @@ export type ReviewStatus =
   | "approved"
   | "rejected"
   | "needs_correction"
-  | "archived";
+  | "archived"
+  | "published"
+  | "duplicate";
+
+export const COMMUNITY_HUB_POST_TYPES: Record<number, string> = {
+  0: "City Government",
+  1: "Ecolympics or Environmental",
+  2: "Exhibit",
+  3: "Fair, Festival, or Public Celebration",
+  4: "Film",
+  5: "Music Performance",
+  6: "Networking Event",
+  7: "Participatory Sport or Game",
+  8: "Presentation or Lecture",
+  9: "Spectator Sport",
+  10: "Theatre or Dance",
+  11: "Tour, Walking Tours or Open House",
+  12: "Volunteer Opportunity",
+  13: "Workshop or Class",
+  14: "Other",
+};
+
+export function getCommunityHubPostTypeLabel(ids: number[]): string {
+  if (!ids || ids.length === 0) return "Other";
+  return ids.map((id) => COMMUNITY_HUB_POST_TYPES[id] ?? "Other").join(", ");
+}
 
 export type Session = {
   startTime: number | null;
@@ -26,6 +51,7 @@ export type BasePost = {
   email: string;
   title: string;
   description: string;
+  extendedDescription?: string;
   sponsors: string[];
   postTypeId: number[];
   sessions: Session[];
@@ -34,12 +60,18 @@ export type BasePost = {
   status: ReviewStatus;
   sourceName: string;
   sourceUrl: string;
+  calendarSourceName?: string;
+  calendarSourceUrl?: string;
+  originalDescription?: string;
   imageUrl?: string;
+  image_cdn_url?: string;
   aiConfidence: number | null;
   extractedMetadata: ExtractedMetadata;
   duplicateGroupId?: string;
   duplicateWarning?: string;
   rejectionReason?: string;
+  communityHubPostId?: string;
+  createdAt?: number;
 };
 
 export type EventPost = BasePost & {
@@ -52,6 +84,7 @@ export type EventPost = BasePost & {
   roomNum?: string;
   website?: string;
   contactEmail?: string;
+  phone?: string;
 };
 
 export type AnnouncementPost = BasePost & {
@@ -59,6 +92,7 @@ export type AnnouncementPost = BasePost & {
   locationType: "ne";
   website?: string;
   contactEmail?: string;
+  phone?: string;
 };
 
 export type ReviewPost = EventPost | AnnouncementPost;
@@ -74,9 +108,6 @@ export type DuplicateGroup = {
 };
 
 export function getPostTypeLabel(eventType: EventType) {
-  if (eventType === "ot") {
-    return "Event";
-  }
-
+  if (eventType === "ot") return "Event";
   return "Announcement";
 }

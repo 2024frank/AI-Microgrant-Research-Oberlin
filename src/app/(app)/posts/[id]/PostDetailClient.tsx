@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 import { PostTypeBadge } from "@/components/PostTypeBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ValidationBadge } from "@/components/ValidationBadge";
 import { useReviewStore } from "@/context/ReviewStoreContext";
 import type { LocationType, ReviewPost } from "@/lib/postTypes";
-import { getPostTypeLabel } from "@/lib/postTypes";
+import { getCommunityHubPostTypeLabel } from "@/lib/postTypes";
 import { validatePost } from "@/lib/postValidation";
 
 function FieldEditor({
@@ -90,6 +91,8 @@ export function PostDetailClient({ id }: { id: string }) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
+  const [publishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState("");
 
   useEffect(() => {
     setDraftPost(storedPost ?? null);
@@ -155,6 +158,27 @@ export function PostDetailClient({ id }: { id: string }) {
     updatePostsStatus([post.id], "approved");
   }
 
+  async function publishToHub() {
+    if (!post) return;
+    setPublishing(true);
+    setPublishMessage("");
+    try {
+      const res = await fetch("/api/posts/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: post.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Publish failed");
+      setPublishMessage("Published to Community Hub.");
+      updatePostsStatus([post.id], "published");
+    } catch (err) {
+      setPublishMessage(err instanceof Error ? err.message : "Publish failed.");
+    } finally {
+      setPublishing(false);
+    }
+  }
+
   function reject() {
     if (!post) {
       return;
@@ -180,14 +204,58 @@ export function PostDetailClient({ id }: { id: string }) {
         <div>
           <div className="mb-3 flex flex-wrap gap-2">
             <PostTypeBadge type={post.eventType === "ot" ? "event" : "announcement"} />
-            <StatusBadge status={post.status === "needs_correction" ? "flagged" : post.status} />
+            <StatusBadge
+              status={
+                post.status === "needs_correction"
+                  ? "flagged"
+                  : (post.status as "pending" | "approved" | "rejected" | "archived" | "published" | "duplicate" | "flagged")
+              }
+            />
             <ValidationBadge result={validation} />
           </div>
           <h1 className="font-[var(--font-public-sans)] text-3xl font-bold tracking-[-0.02em] text-[var(--text)]">
             {post.title || "Untitled post"}
           </h1>
-          <p className="mt-2 text-[var(--muted)]">{getPostTypeLabel(post.eventType)}</p>
+          <p className="mt-2 text-[var(--muted)]">{getCommunityHubPostTypeLabel(post.postTypeId)}</p>
         </div>
+
+        {/* Side-by-side description comparison */}
+        {post.originalDescription && (
+          <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] overflow-hidden">
+            <div className="px-5 py-3 border-b border-[var(--border)] flex items-center gap-2">
+              <span className="text-sm font-semibold text-[var(--text)]">Description Comparison</span>
+              <span className="text-xs text-[var(--muted)]">— original from Localist vs. Editor Agent rewrite</span>
+            </div>
+            <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[var(--border)]">
+              <div className="p-5">
+                <p className="font-[var(--font-plex)] text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--muted)] mb-2">
+                  Original (Localist)
+                </p>
+                <p className="text-sm text-[var(--muted)] leading-relaxed whitespace-pre-wrap">
+                  {post.originalDescription}
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="font-[var(--font-plex)] text-[11px] font-semibold uppercase tracking-[0.05em] text-teal-400 mb-2">
+                  Editor Agent Rewrite ✦
+                </p>
+                <p className="text-sm text-[var(--text)] leading-relaxed mb-3">
+                  {post.description}
+                </p>
+                {post.extendedDescription && (
+                  <>
+                    <p className="font-[var(--font-plex)] text-[11px] font-semibold uppercase tracking-[0.05em] text-teal-400 mb-2 mt-4">
+                      Extended Description
+                    </p>
+                    <p className="text-sm text-[var(--text)] leading-relaxed">
+                      {post.extendedDescription}
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
           <h2 className="font-[var(--font-public-sans)] text-xl font-semibold">Community Hub Required Fields</h2>
@@ -196,7 +264,8 @@ export function PostDetailClient({ id }: { id: string }) {
           </p>
           <div className="mt-5 grid gap-4">
             <FieldEditor label="Title" required value={post.title} onChange={(title) => update({ title })} />
-            <FieldEditor label="Description" required multiline value={post.description} onChange={(description) => update({ description })} />
+            <FieldEditor label="Short Description" required multiline value={post.description} onChange={(description) => update({ description })} />
+            <FieldEditor label="Extended Description" multiline value={post.extendedDescription ?? ""} onChange={(extendedDescription) => update({ extendedDescription })} />
             <FieldEditor label="Email" required value={post.email} onChange={(email) => update({ email })} />
             <FieldEditor label="Sponsors" required value={post.sponsors.join(", ")} onChange={(value) => update({ sponsors: parseStringList(value) })} />
             <FieldEditor label="Image URL" required value={post.imageUrl || ""} onChange={(imageUrl) => update({ imageUrl })} />
@@ -212,11 +281,27 @@ export function PostDetailClient({ id }: { id: string }) {
               </p>
             )}
             <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
-              <button className="rounded bg-[#a6192e] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={!hasUnsavedChanges} onClick={saveChanges} type="button">
-                Save Changes
+              <button
+                className="rounded border border-[var(--border)] px-4 py-2 text-sm font-medium hover:bg-[var(--surface-high)] disabled:opacity-50"
+                disabled={!hasUnsavedChanges}
+                onClick={saveChanges}
+                type="button"
+              >
+                Save Draft
+              </button>
+              <button
+                className="rounded bg-[#a6192e] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={!validation?.isValid}
+                onClick={() => {
+                  if (hasUnsavedChanges) saveChanges();
+                  approve();
+                }}
+                type="button"
+              >
+                Save & Approve
               </button>
               <span className="text-sm text-[var(--muted)]">
-                {hasUnsavedChanges ? "You have unsaved edits." : saveMessage || "No unsaved edits."}
+                {hasUnsavedChanges ? "Unsaved edits." : saveMessage || ""}
               </span>
             </div>
           </div>
@@ -308,7 +393,7 @@ export function PostDetailClient({ id }: { id: string }) {
         <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
           <h2 className="font-[var(--font-public-sans)] text-lg font-semibold">AI Extraction Summary</h2>
           <p className="mt-3 text-sm text-[var(--muted)]">
-            Confidence: {post.aiConfidence === null ? "Needs analysis" : `${post.aiConfidence}%`}
+            Confidence: {post.aiConfidence === null ? "—" : `${Math.round(Number(post.aiConfidence) * 100)}%`}
           </p>
           <p className="mt-2 text-sm text-[var(--muted)]">{post.extractedMetadata.notes || "No extraction notes."}</p>
         </section>
@@ -358,10 +443,35 @@ export function PostDetailClient({ id }: { id: string }) {
             value={rejectionReason}
           />
           <div className="mt-3 grid gap-2">
-            <button className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white" onClick={approve} type="button">Approve</button>
-            <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={reject} type="button">Reject</button>
-            <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "needs_correction")} type="button">Send Back / Needs Correction</button>
-            <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "archived")} type="button">Archive</button>
+            {post.status === "approved" && (
+              <>
+                <button
+                  className="flex items-center justify-center gap-2 rounded bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-600 disabled:opacity-50"
+                  disabled={publishing}
+                  onClick={publishToHub}
+                  type="button"
+                >
+                  {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  Publish to Community Hub
+                </button>
+                {publishMessage && (
+                  <p className="text-xs text-teal-400">{publishMessage}</p>
+                )}
+              </>
+            )}
+            {post.status !== "published" && (
+              <>
+                <button className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white" onClick={approve} type="button">Approve</button>
+                <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={reject} type="button">Reject</button>
+                <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "needs_correction")} type="button">Send Back / Needs Correction</button>
+                <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "archived")} type="button">Archive</button>
+              </>
+            )}
+            {post.status === "published" && (
+              <p className="text-sm text-teal-400 text-center py-2">
+                ✓ Published to Community Hub{post.communityHubPostId ? ` (ID: ${post.communityHubPostId})` : ""}
+              </p>
+            )}
           </div>
         </section>
       </aside>

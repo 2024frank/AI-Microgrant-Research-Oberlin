@@ -8,6 +8,8 @@ const statusStyles = {
   flagged: "border-red-300/70 bg-red-300/10 text-red-100",
   duplicate: "border-orange-300/70 bg-orange-300/10 text-orange-100",
   archived: "border-slate-400/50 bg-slate-400/10 text-slate-200",
+  published: "border-teal-500/70 bg-teal-500/20 text-teal-200",
+  needs_correction: "border-amber-400/70 bg-amber-400/10 text-amber-100",
   healthy: "border-teal-300/70 bg-teal-300/10 text-teal-100",
   warning: "border-amber-300/70 bg-amber-300/10 text-amber-100",
   paused: "border-slate-400/50 bg-slate-400/10 text-slate-200",

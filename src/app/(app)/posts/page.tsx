@@ -8,13 +8,13 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ValidationBadge } from "@/components/ValidationBadge";
 import { useReviewStore } from "@/context/ReviewStoreContext";
 import type { ReviewPost, ReviewStatus } from "@/lib/postTypes";
-import { getPostTypeLabel } from "@/lib/postTypes";
+import { getCommunityHubPostTypeLabel } from "@/lib/postTypes";
 import { validatePost } from "@/lib/postValidation";
 
 type BulkAction = ReviewStatus | "delete";
 
 export default function PostsPage() {
-  const { posts, removePosts, updatePostsStatus } = useReviewStore();
+  const { posts, removePosts, updatePostsStatus, loading } = useReviewStore();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<BulkAction | null>(null);
   const canDeletePost = (post: ReviewPost) => post.status === "rejected" || post.status === "archived";
@@ -109,10 +109,16 @@ export default function PostsPage() {
               </tr>
             </thead>
             <tbody>
-              {posts.length === 0 ? (
+              {loading ? (
                 <tr>
                   <td className="px-4 py-8 text-center text-sm text-[var(--muted)]" colSpan={9}>
-                    No posts found. Connect sources or run an extraction to populate this queue.
+                    Loading posts…
+                  </td>
+                </tr>
+              ) : posts.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-8 text-center text-sm text-[var(--muted)]" colSpan={9}>
+                    No posts found. Go to Sources and run the pipeline to populate this queue.
                   </td>
                 </tr>
               ) : (
@@ -138,11 +144,11 @@ export default function PostsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <PostTypeBadge type={post.eventType === "ot" ? "event" : "announcement"} />
-                        <p className="mt-1 text-xs text-[var(--muted)]">{getPostTypeLabel(post.eventType)}</p>
+                        <p className="mt-1 text-xs text-[var(--muted)]">{getCommunityHubPostTypeLabel(post.postTypeId)}</p>
                       </td>
-                      <td className="px-4 py-3"><StatusBadge status={post.status === "needs_correction" ? "flagged" : post.status} /></td>
+                      <td className="px-4 py-3"><StatusBadge status={post.status === "needs_correction" ? "flagged" : post.status as "pending" | "approved" | "rejected" | "archived" | "published" | "duplicate" | "flagged"} /></td>
                       <td className="px-4 py-3">{post.sourceName}</td>
-                      <td className="px-4 py-3">{post.aiConfidence === null ? "Needs analysis" : `${post.aiConfidence}%`}</td>
+                      <td className="px-4 py-3">{post.aiConfidence === null ? "—" : `${Math.round(Number(post.aiConfidence) * 100)}%`}</td>
                       <td className="px-4 py-3">{firstSession?.startTime ? new Date(firstSession.startTime * 1000).toLocaleDateString() : "Not set"}</td>
                       <td className="px-4 py-3"><ValidationBadge result={validation} /></td>
                       <td className="px-4 py-3">

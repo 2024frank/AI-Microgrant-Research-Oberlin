@@ -1,31 +1,108 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type { PipelineJob } from "@/lib/pipelineJobs";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import type { ActivityItem } from "@/components/ActivityFeed";
 
 export default function LogsPage() {
-  const activity: ActivityItem[] = [];
+  const [jobs, setJobs] = useState<PipelineJob[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const columns: DataTableColumn<ActivityItem>[] = [
-    { key: "time", header: "Time", render: (item) => item.time },
-    { key: "actor", header: "Actor", render: (item) => item.actor },
-    { key: "action", header: "Action", render: (item) => item.action },
-    { key: "target", header: "Target", render: (item) => item.target },
-    { key: "severity", header: "Severity", render: (item) => item.severity },
+  useEffect(() => {
+    async function load() {
+      const { listPipelineJobs } = await import("@/lib/pipelineJobs");
+      const j = await listPipelineJobs(50);
+      setJobs(j);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  function formatDuration(job: PipelineJob) {
+    if (!job.completedAt) return "In progress";
+    const ms = job.completedAt - job.startedAt;
+    const s = Math.round(ms / 1000);
+    if (s < 60) return `${s}s`;
+    return `${Math.round(s / 60)}m ${s % 60}s`;
+  }
+
+  const columns: DataTableColumn<PipelineJob>[] = [
+    {
+      key: "startedAt",
+      header: "Run Date",
+      render: (job) => (
+        <span className="tabular-nums">{new Date(job.startedAt).toLocaleString()}</span>
+      ),
+    },
+    {
+      key: "sourceName",
+      header: "Source",
+      render: (job) => job.sourceName,
+    },
+    {
+      key: "totalFetched",
+      header: "Fetched",
+      render: (job) => job.totalFetched,
+    },
+    {
+      key: "totalQueued",
+      header: "Queued",
+      render: (job) => <span className="text-teal-400">{job.totalQueued}</span>,
+    },
+    {
+      key: "totalRejected",
+      header: "Rejected",
+      render: (job) => <span className="text-red-400">{job.totalRejected}</span>,
+    },
+    {
+      key: "totalDuplicates",
+      header: "Duplicates",
+      render: (job) => <span className="text-amber-400">{job.totalDuplicates}</span>,
+    },
+    {
+      key: "duration",
+      header: "Duration",
+      render: (job) => formatDuration(job),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (job) => (
+        <span
+          className={
+            job.status === "completed"
+              ? "text-teal-400"
+              : job.status === "failed"
+              ? "text-red-400"
+              : "text-amber-400"
+          }
+        >
+          {job.status}
+        </span>
+      ),
+    },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div>
         <h1 className="font-[var(--font-public-sans)] text-3xl font-bold tracking-[-0.02em] text-[var(--text)]">
-          Activity Logs
+          Pipeline Logs
         </h1>
-        <p className="mt-2 text-[var(--muted)]">Audit trail for source sync, AI review, and admin decisions.</p>
+        <p className="mt-2 text-[var(--muted)]">
+          Audit trail for all pipeline runs — fetched, queued, rejected, duplicates.
+        </p>
       </div>
-      <DataTable
-        columns={columns}
-        emptyText="No activity logs yet."
-        rows={activity}
-        getRowKey={(item) => item.id}
-      />
+      {loading ? (
+        <p className="text-sm text-[var(--muted)]">Loading logs…</p>
+      ) : (
+        <DataTable
+          columns={columns}
+          emptyText="No pipeline runs yet. Go to Sources and click Run Now."
+          rows={jobs}
+          getRowKey={(job) => job.id}
+        />
+      )}
     </div>
   );
 }

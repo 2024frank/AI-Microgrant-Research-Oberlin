@@ -1,0 +1,17 @@
+name: Pipeline Cron
+
+on:
+  schedule:
+    # Runs daily at 6:00am EST (11:00 UTC)
+    - cron: "0 11 * * *"
+  workflow_dispatch: # Also allows manual trigger from GitHub UI
+
+jobs:
+  trigger-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger pipeline cron endpoint
+        run: |
+          curl -f -X GET "${{ secrets.APP_URL }}/api/pipeline/cron" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            --max-time 30
