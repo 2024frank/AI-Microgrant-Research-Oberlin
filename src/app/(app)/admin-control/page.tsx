@@ -167,7 +167,7 @@ export default function AdminControlPage() {
           Admin Control Center
         </h1>
         <p className="mt-2 text-[var(--muted)]">
-          Manage user access, roles, and permissions.
+          Firebase-backed user access, role management, and access control.
         </p>
       </div>
       {message ? (

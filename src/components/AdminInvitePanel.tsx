@@ -40,6 +40,7 @@ export function AdminInvitePanel({ onCreateUser, isSaving }: AdminInvitePanelPro
           <h2 className="font-[var(--font-public-sans)] text-lg font-semibold text-[var(--text)]">
             Add Authorized User
           </h2>
+          <p className="text-sm text-[var(--muted)]">Firebase-backed user access.</p>
         </div>
       </div>
       <form className="mt-4 space-y-3" onSubmit={(event) => void handleSubmit(event)}>
