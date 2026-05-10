@@ -23,9 +23,24 @@ function generatePostId(localistEventId: string | number): string {
   return `oberlin-${String(localistEventId)}`;
 }
 
+const TIME_LIMIT_MS = 240_000; // 240s — leave 60s buffer before Vercel's 300s limit
+
+async function triggerContinuation(jobId: string, sourceId: string) {
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ai-microgrant-research-oberlin.vercel.app").replace(/\/$/, "");
+  try {
+    await fetch(`${baseUrl}/api/pipeline/continue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId, sourceId }),
+    });
+  } catch { /* best effort */ }
+}
+
 export async function runPipeline(jobId: string, sourceId: string): Promise<void> {
+  const startTime = Date.now();
   const job = await getPipelineJob(jobId);
   if (!job) return;
+  if (job.status !== "running") return;
 
   try {
     // Step 1: Fetch Localist events
@@ -39,15 +54,32 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
     // Step 2 & 3: Filter already-processed + fetch CH posts for dedup
     const [chPosts] = await Promise.all([fetchExistingCHPosts()]);
 
-    let queued = 0;
-    let rejected = 0;
-    let duplicates = 0;
-    let skipped = 0;
+    let queued = job.totalQueued || 0;
+    let rejected = job.totalRejected || 0;
+    let duplicates = job.totalDuplicates || 0;
+    let skipped = job.totalSkipped || 0;
     const duplicateGroups: Map<string, DuplicateGroup> = new Map();
 
     // Step 4-9: Process each event
     for (let i = 0; i < rawEvents.length; i++) {
       const rawEvent = rawEvents[i];
+
+      // Time limit check — auto-continue in a new function invocation
+      if (Date.now() - startTime > TIME_LIMIT_MS) {
+        await updatePipelineJob(jobId, {
+          progress: i,
+          totalQueued: queued,
+          totalRejected: rejected,
+          totalDuplicates: duplicates,
+          totalSkipped: skipped,
+        });
+        // Save duplicate groups before continuing
+        for (const group of duplicateGroups.values()) {
+          await saveDuplicateGroup(group);
+        }
+        await triggerContinuation(jobId, sourceId);
+        return;
+      }
 
       // Idempotency check
       const alreadyProcessed = await isEventProcessed(String(rawEvent.id));
