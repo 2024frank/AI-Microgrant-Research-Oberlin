@@ -289,6 +289,10 @@ export function PostDetailClient({ id }: { id: string }) {
             <FieldEditor label="Short Description" required multiline value={post.description} onChange={(description) => update({ description })} />
             <FieldEditor label="Extended Description" multiline value={post.extendedDescription ?? ""} onChange={(extendedDescription) => update({ extendedDescription })} />
             <FieldEditor label="Email" required value={post.email} onChange={(email) => update({ email })} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FieldEditor label="Contact Email" value={"contactEmail" in post ? (post.contactEmail || "") : ""} onChange={(contactEmail) => update({ contactEmail })} />
+              <FieldEditor label="Phone Number" value={"phone" in post ? ((post as {phone?: string}).phone || "") : ""} onChange={(phone) => update({ phone } as Partial<typeof post>)} />
+            </div>
             <FieldEditor label="Sponsors" required value={post.sponsors.join(", ")} onChange={(value) => update({ sponsors: parseStringList(value) })} />
             <FieldEditor label="Image URL" required value={post.imageUrl || ""} onChange={(imageUrl) => update({ imageUrl })} />
             {post.imageUrl ? (
