@@ -33,15 +33,16 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
 
   const refreshPosts = useCallback(async () => {
     try {
-      const { listAllReviewPosts, clientListDuplicateGroups } = await import("@/lib/reviewStoreClient");
-      const [fetchedPosts, fetchedGroups] = await Promise.all([
-        listAllReviewPosts(),
-        clientListDuplicateGroups(),
+      const [postsRes, { clientListDuplicateGroups }] = await Promise.all([
+        fetch("/api/posts/list"),
+        import("@/lib/reviewStoreClient"),
       ]);
-      setPosts(fetchedPosts);
+      const data = await postsRes.json();
+      const fetchedGroups = await clientListDuplicateGroups();
+      if (data.posts) setPosts(data.posts);
       setDuplicateGroups(fetchedGroups);
     } catch (err) {
-      console.error("Firestore read error:", err);
+      console.error("Posts load error:", err);
     } finally {
       setLoading(false);
     }

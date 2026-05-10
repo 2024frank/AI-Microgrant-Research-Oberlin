@@ -18,6 +18,7 @@ export default function PostsPage() {
   const { posts, removePosts, updatePostsStatus, loading, refreshPosts } = useReviewStore();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<BulkAction | null>(null);
+  const [inlineMessage, setInlineMessage] = useState<{ id: string; text: string } | null>(null);
   const canDeletePost = (_post: ReviewPost) => true;
 
   // Auto-refresh every 5s while pipeline is running
@@ -57,13 +58,13 @@ export default function PostsPage() {
   }
 
   function approvePost(post: ReviewPost) {
+    // Allow approve even with warnings — only hard errors block it
     const validation = validatePost(post);
-
-    if (!validation.isValid) {
-      window.alert("Required fields are missing. Open details to resolve validation errors.");
+    if (validation.errors.length > 0) {
+      setInlineMessage({ id: post.id, text: "Missing required fields — open View Details to fix." });
+      setTimeout(() => setInlineMessage(null), 4000);
       return;
     }
-
     updatePostsStatus([post.id], "approved");
   }
 
@@ -173,12 +174,15 @@ export default function PostsPage() {
                           <Link className="rounded border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-high)]" href={`/posts/${post.id}`}>
                             View Details
                           </Link>
-                          <button className="rounded border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-high)]" onClick={() => approvePost(post)} type="button">
+                          <button className="rounded border border-teal-800 px-2 py-1 text-xs text-teal-400 hover:bg-teal-900/20" onClick={() => approvePost(post)} type="button">
                             Approve
                           </button>
                           <button className="rounded border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "rejected", "Rejected from queue.")} type="button">
                             Reject
                           </button>
+                          {inlineMessage?.id === post.id && (
+                            <span className="text-xs text-amber-400 self-center">{inlineMessage.text}</span>
+                          )}
                           <button
                             className="rounded border border-[#82303b] px-2 py-1 text-xs text-[#ffb3b3] hover:bg-[#82303b]/20 disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={false}
