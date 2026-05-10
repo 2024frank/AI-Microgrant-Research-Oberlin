@@ -27,15 +27,61 @@ function getEmailContent(body: EmailRequest) {
   if (body.type === "access-approved") {
     return {
       subject: "Your Civic Calendar access has been approved",
-      text: `Hello ${name},\n\nYour Civic Calendar access has been approved. Sign in here: ${loginUrl}\n\nKwaku`,
-      html: `<p>Hello ${name},</p><p>Your Civic Calendar access has been approved.</p><p><a href="${loginUrl}">Log in to Civic Calendar</a></p><p>Kwaku</p>`,
+      text: `Hello ${name},\n\nYour access to the Civic Calendar Admin Console has been approved. You can now sign in and start reviewing community events.\n\nSign in: ${loginUrl}\n\n— The Civic Calendar Team\nOberlin, Ohio`,
+      html: `
+<div style="font-family: ‘Helvetica Neue’, Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #e8e8e8; background: #111; border-radius: 8px; overflow: hidden;">
+  <div style="background: #a6192e; padding: 24px 32px;">
+    <h1 style="margin: 0; font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.02em;">Civic Calendar</h1>
+    <p style="margin: 4px 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.7);">Admin Console</p>
+  </div>
+  <div style="padding: 32px;">
+    <h2 style="margin: 0 0 16px; font-size: 20px; color: #5eead4;">Access Approved</h2>
+    <p style="font-size: 15px; color: #e8e8e8; line-height: 1.6; margin: 0 0 8px;">Hello ${name},</p>
+    <p style="font-size: 15px; color: #ccc; line-height: 1.6; margin: 0 0 24px;">Your access to the Civic Calendar Admin Console has been approved. You can now sign in to review, edit, and publish community events for Oberlin.</p>
+    <a href="${loginUrl}" style="display: inline-block; background: #a6192e; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 600;">Sign In to Get Started →</a>
+    <p style="margin: 32px 0 0; font-size: 12px; color: #555; line-height: 1.5;">
+      If you did not request access, you can safely ignore this email.
+    </p>
+  </div>
+  <div style="border-top: 1px solid #222; padding: 16px 32px; text-align: center;">
+    <p style="margin: 0; font-size: 11px; color: #444;">Civic Calendar · Oberlin, Ohio</p>
+  </div>
+</div>`,
     };
   }
 
+  const roleLabel = body.role.charAt(0).toUpperCase() + body.role.slice(1);
+
   return {
-    subject: "You’ve been invited to Civic Calendar",
-    text: `Hello ${name},\n\nYou have been invited to Civic Calendar as ${body.role}. Sign in with Google here: ${loginUrl}\n\nKwaku`,
-    html: `<p>Hello ${name},</p><p>You have been invited to Civic Calendar as <strong>${body.role}</strong>.</p><p><a href="${loginUrl}">Log in to Civic Calendar</a></p><p>Kwaku</p>`,
+    subject: "You’re invited to join Civic Calendar",
+    text: `Hello ${name},\n\nYou’ve been invited to join the Civic Calendar Admin Console as a ${roleLabel}.\n\nCivic Calendar is Oberlin’s AI-powered community event management platform. As a ${roleLabel}, you’ll help review and curate events before they’re published to Oberlin’s Community Hub.\n\nSign in with Google: ${loginUrl}\n\n— The Civic Calendar Team\nOberlin, Ohio`,
+    html: `
+<div style="font-family: ‘Helvetica Neue’, Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #e8e8e8; background: #111; border-radius: 8px; overflow: hidden;">
+  <div style="background: #a6192e; padding: 24px 32px;">
+    <h1 style="margin: 0; font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.02em;">Civic Calendar</h1>
+    <p style="margin: 4px 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.7);">Admin Console</p>
+  </div>
+  <div style="padding: 32px;">
+    <h2 style="margin: 0 0 16px; font-size: 20px; color: #fff;">You’re Invited</h2>
+    <p style="font-size: 15px; color: #e8e8e8; line-height: 1.6; margin: 0 0 8px;">Hello ${name},</p>
+    <p style="font-size: 15px; color: #ccc; line-height: 1.6; margin: 0 0 16px;">You’ve been invited to join the Civic Calendar Admin Console as a <strong style="color: #fff;">${roleLabel}</strong>.</p>
+    <p style="font-size: 14px; color: #999; line-height: 1.6; margin: 0 0 24px;">Civic Calendar is Oberlin’s AI-powered community event management platform. You’ll help review, curate, and publish events sourced from Oberlin’s calendar to the Community Hub.</p>
+
+    <div style="background: #1a1a1a; border: 1px solid #222; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;">
+      <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #666;">Your Role</p>
+      <p style="margin: 0; font-size: 16px; font-weight: 600; color: #5eead4;">${roleLabel}</p>
+    </div>
+
+    <a href="${loginUrl}" style="display: inline-block; background: #a6192e; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 600;">Accept Invitation →</a>
+    <p style="margin: 16px 0 0; font-size: 13px; color: #666;">Sign in with your Google account to get started.</p>
+    <p style="margin: 24px 0 0; font-size: 12px; color: #555; line-height: 1.5;">
+      If you did not expect this invitation, you can safely ignore this email.
+    </p>
+  </div>
+  <div style="border-top: 1px solid #222; padding: 16px 32px; text-align: center;">
+    <p style="margin: 0; font-size: 11px; color: #444;">Civic Calendar · Oberlin, Ohio</p>
+  </div>
+</div>`,
   };
 }
 

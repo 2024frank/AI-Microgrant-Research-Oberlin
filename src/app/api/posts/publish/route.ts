@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getReviewPost, updateReviewPost } from "@/lib/reviewStore";
 import { submitToCommunityHub } from "@/lib/communityHub";
-import { sendPublishConfirmationEmail } from "@/lib/emailServer";
 
 export const dynamic = "force-dynamic";
 
@@ -44,14 +43,6 @@ export async function POST(req: NextRequest) {
       status: "published",
       communityHubPostId: result.id,
     });
-
-    // Send confirmation email to account holder
-    sendPublishConfirmationEmail({
-      to: ADMIN_EMAIL,
-      eventTitle: post.title,
-      communityHubPostId: result.id ?? "",
-      sourceUrl: post.sourceUrl,
-    }).catch(() => {/* non-blocking */});
 
     return NextResponse.json({ success: true, communityHubPostId: result.id });
   } catch (err) {
