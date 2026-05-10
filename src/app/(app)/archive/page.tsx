@@ -14,14 +14,9 @@ export default function ArchivePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/posts/list")
-      .then((r) => r.json())
-      .then((data) => {
-        const archived = (data.posts ?? []).filter((p: ReviewPost) =>
-          ARCHIVE_STATUSES.includes(p.status)
-        );
-        setPosts(archived);
-      })
+    import("@/lib/reviewStoreClient")
+      .then(({ listReviewPosts }) => listReviewPosts({ maxResults: 500 }))
+      .then((all) => setPosts(all.filter((p) => ARCHIVE_STATUSES.includes(p.status))))
       .finally(() => setLoading(false));
   }, []);
 

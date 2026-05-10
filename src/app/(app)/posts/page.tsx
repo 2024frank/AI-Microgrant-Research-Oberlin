@@ -55,15 +55,35 @@ export default function PostsPage() {
     setConfirmAction(null);
   }
 
-  function approvePost(post: ReviewPost) {
-    // Allow approve even with warnings — only hard errors block it
+  async function approvePost(post: ReviewPost) {
     const validation = validatePost(post);
     if (validation.errors.length > 0) {
       setInlineMessage({ id: post.id, text: "Missing required fields — open View Details to fix." });
       setTimeout(() => setInlineMessage(null), 4000);
       return;
     }
+
+    // Mark approved first so the publish API accepts it
     updatePostsStatus([post.id], "approved");
+    setInlineMessage({ id: post.id, text: "Publishing to Community Hub…" });
+
+    try {
+      const res = await fetch("/api/posts/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: post.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        updatePostsStatus([post.id], "published");
+        setInlineMessage({ id: post.id, text: "✓ Published to Community Hub" });
+      } else {
+        setInlineMessage({ id: post.id, text: `Publish failed: ${data.error ?? "unknown error"}` });
+      }
+    } catch {
+      setInlineMessage({ id: post.id, text: "Publish failed — check your connection." });
+    }
+    setTimeout(() => setInlineMessage(null), 5000);
   }
 
   return (
