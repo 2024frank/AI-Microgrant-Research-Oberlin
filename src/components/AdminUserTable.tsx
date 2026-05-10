@@ -1,7 +1,10 @@
+import { useState } from "react";
+
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   allowedRoles,
   allowedStatuses,
+  bootstrapSuperAdminEmail,
   type AuthorizedUser,
   type UserRole,
   type UserStatus,
@@ -13,6 +16,7 @@ type AdminUserTableProps = {
     email: string,
     updates: Partial<Pick<AuthorizedUser, "role" | "status">>,
   ) => Promise<void>;
+  onDeleteUser?: (email: string) => Promise<void>;
   isSaving: boolean;
 };
 
@@ -27,7 +31,9 @@ function formatDate(value: AuthorizedUser["lastLoginAt"]) {
   });
 }
 
-export function AdminUserTable({ users, onUpdateUser, isSaving }: AdminUserTableProps) {
+export function AdminUserTable({ users, onUpdateUser, onDeleteUser, isSaving }: AdminUserTableProps) {
+  const [confirmDeleteEmail, setConfirmDeleteEmail] = useState<string | null>(null);
+
   if (!users.length) {
     return (
       <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-6 text-sm text-[var(--muted)]">
@@ -116,6 +122,16 @@ export function AdminUserTable({ users, onUpdateUser, isSaving }: AdminUserTable
                     >
                       Reactivate
                     </button>
+                    {onDeleteUser && user.email !== bootstrapSuperAdminEmail && (
+                      <button
+                        className="rounded border border-[#82303b] px-2 py-1 text-xs text-[#ffb3b3] hover:bg-[#82303b]/20 disabled:opacity-60"
+                        disabled={isSaving}
+                        onClick={() => setConfirmDeleteEmail(user.email)}
+                        type="button"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -123,6 +139,36 @@ export function AdminUserTable({ users, onUpdateUser, isSaving }: AdminUserTable
           </tbody>
         </table>
       </div>
+
+      {confirmDeleteEmail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <section className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
+            <h2 className="font-[var(--font-public-sans)] text-xl font-semibold text-[var(--text)]">Remove user</h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              Permanently remove <strong className="text-[var(--text)]">{confirmDeleteEmail}</strong> from the platform? They will lose all access and need to be re-invited.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                className="rounded border border-[var(--border)] px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-high)]"
+                onClick={() => setConfirmDeleteEmail(null)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white hover:bg-[#b42537]"
+                disabled={isSaving}
+                onClick={() => {
+                  void onDeleteUser?.(confirmDeleteEmail).then(() => setConfirmDeleteEmail(null));
+                }}
+                type="button"
+              >
+                Delete User
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

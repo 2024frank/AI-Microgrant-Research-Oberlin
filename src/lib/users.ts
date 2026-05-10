@@ -1,6 +1,7 @@
 import type { User } from "firebase/auth";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -182,5 +183,13 @@ export async function updateAuthorizedUser(
     displayName: updates.displayName?.trim() || updates.displayName || null,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function deleteAuthorizedUser(email: string) {
+  const normalized = normalizeEmail(email);
+  if (normalized === bootstrapSuperAdminEmail) {
+    throw new Error("Cannot delete the primary admin account.");
+  }
+  await deleteDoc(userDocRef(normalized));
 }
 

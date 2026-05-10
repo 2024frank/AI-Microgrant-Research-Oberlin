@@ -15,6 +15,7 @@ import { sendEmail } from "@/lib/emailClient";
 import { getSafeErrorMessage } from "@/lib/errors";
 import {
   createAuthorizedUser,
+  deleteAuthorizedUser,
   listAuthorizedUsers,
   updateAuthorizedUser,
   type AuthorizedUser,
@@ -160,6 +161,22 @@ export default function AdminControlPage() {
     }
   }
 
+  async function handleDeleteUser(email: string) {
+    setIsSaving(true);
+    setMessage(null);
+    setErrorMessage(null);
+
+    try {
+      await deleteAuthorizedUser(email);
+      await loadUsers();
+      setMessage(`User ${email} has been removed.`);
+    } catch (error) {
+      setErrorMessage(getSafeErrorMessage(error, "Unable to delete user."));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -220,6 +237,7 @@ export default function AdminControlPage() {
               <AdminUserTable
                 isSaving={isSaving}
                 onUpdateUser={handleUpdateUser}
+                onDeleteUser={handleDeleteUser}
                 users={users}
               />
             )}
@@ -234,6 +252,7 @@ export default function AdminControlPage() {
               <AdminUserTable
                 isSaving={isSaving}
                 onUpdateUser={handleUpdateUser}
+                onDeleteUser={handleDeleteUser}
                 users={invitedUsers}
               />
             )}
