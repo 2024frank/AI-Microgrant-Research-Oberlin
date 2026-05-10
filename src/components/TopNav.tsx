@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import {
   Activity, Archive, BarChart3, CalendarDays, Copy,
   Gauge, HeartPulse, LayoutDashboard, MapPinned,
-  Settings, UserCog,
+  MessageCircle, Settings, UserCog,
 } from "lucide-react";
 
 const navItems = [
@@ -24,6 +24,7 @@ const navItems = [
   { href: "/geo-intel", label: "Geo Intel", icon: MapPinned },
   { href: "/logs", label: "Logs", icon: Activity },
   { href: "/system-health", label: "System Health", icon: HeartPulse },
+  { href: "/chat", label: "Team Chat", icon: MessageCircle },
   { href: "/admin-control", label: "Admin Control", icon: UserCog },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/archive", label: "Archive", icon: Archive },

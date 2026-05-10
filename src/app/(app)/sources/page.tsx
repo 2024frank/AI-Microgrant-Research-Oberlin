@@ -6,12 +6,15 @@ import {
   Loader2, RefreshCw, InboxIcon, AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import type { Source, SourceSchedule } from "@/lib/sources";
 import type { PipelineJob } from "@/lib/pipelineJobs";
 
 type JobStatus = "idle" | "running" | "completed" | "failed";
 
 export default function SourcesPage() {
+  const { role } = useAuth();
+  const isAdmin = role === "super_admin" || role === "admin";
   const [source, setSource] = useState<Source | null>(null);
   const [schedule, setSchedule] = useState<SourceSchedule>("off");
   const [scheduleHour, setScheduleHour] = useState<number>(6);
@@ -163,88 +166,97 @@ export default function SourcesPage() {
               {source?.lastRun && <span>Last: {fmt(source.lastRun)}</span>}
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {jobStatus === "running" && currentJob && (
+          {isAdmin && (
+            <div className="flex items-center gap-2 shrink-0">
+              {jobStatus === "running" && currentJob && (
+                <button
+                  onClick={async () => {
+                    await fetch("/api/pipeline/cancel", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ jobId: currentJob.id }),
+                    });
+                    setJobStatus("failed");
+                    setError("Cancelled by admin");
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-red-900/30 text-red-400 border border-red-800/50 text-sm font-medium hover:bg-red-900/50 transition-colors"
+                >
+                  ■ Stop
+                </button>
+              )}
               <button
-                onClick={async () => {
-                  await fetch("/api/pipeline/cancel", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ jobId: currentJob.id }),
-                  });
-                  setJobStatus("failed");
-                  setError("Cancelled by admin");
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-red-900/30 text-red-400 border border-red-800/50 text-sm font-medium hover:bg-red-900/50 transition-colors"
+                onClick={handleRunNow}
+                disabled={jobStatus === "running"}
+                className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
-                ■ Stop
+                {jobStatus === "running" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                {jobStatus === "running" ? "Running…" : "Run Now"}
               </button>
-            )}
-            <button
-              onClick={handleRunNow}
-              disabled={jobStatus === "running"}
-              className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-            >
-              {jobStatus === "running" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              {jobStatus === "running" ? "Running…" : "Run Now"}
-            </button>
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Schedule */}
+        {/* Schedule — admin only */}
         <div className="p-5 border-b border-[var(--border)]">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-4 h-4 text-[var(--muted)]" />
             <span className="text-sm font-medium text-[var(--text)]">Auto-run schedule</span>
+            {!isAdmin && <span className="text-xs text-[var(--muted)]">(view only)</span>}
           </div>
 
-          {/* Frequency buttons */}
-          <div className="flex items-center gap-2 flex-wrap mb-3">
-            {([
-              { val: "off", label: "Off" },
-              { val: "2h", label: "Every 2h" },
-              { val: "6h", label: "Every 6h" },
-              { val: "12h", label: "Every 12h" },
-              { val: "daily", label: "Daily" },
-              { val: "weekly", label: "Weekly" },
-              { val: "biweekly", label: "Bi-weekly" },
-            ] as { val: SourceSchedule; label: string }[]).map(({ val, label }) => (
-              <button key={val} onClick={() => setSchedule(val)}
-                className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${schedule === val ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "text-[var(--muted)] border-[var(--border)] hover:text-[var(--text)]"}`}>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Time-of-day picker for daily/weekly/biweekly */}
-          {(schedule === "daily" || schedule === "weekly" || schedule === "biweekly") && (
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-sm text-[var(--muted)]">Run at</span>
-              <select
-                value={scheduleHour}
-                onChange={(e) => setScheduleHour(Number(e.target.value))}
-                className="rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-sm text-[var(--text)] outline-none focus:border-[var(--primary)]"
-              >
-                {Array.from({ length: 24 }, (_, h) => (
-                  <option key={h} value={h}>
-                    {h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`}
-                  </option>
+          {isAdmin ? (
+            <>
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                {([
+                  { val: "off", label: "Off" },
+                  { val: "2h", label: "Every 2h" },
+                  { val: "6h", label: "Every 6h" },
+                  { val: "12h", label: "Every 12h" },
+                  { val: "daily", label: "Daily" },
+                  { val: "weekly", label: "Weekly" },
+                  { val: "biweekly", label: "Bi-weekly" },
+                ] as { val: SourceSchedule; label: string }[]).map(({ val, label }) => (
+                  <button key={val} onClick={() => setSchedule(val)}
+                    className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${schedule === val ? "bg-[var(--primary)] text-white border-[var(--primary)]" : "text-[var(--muted)] border-[var(--border)] hover:text-[var(--text)]"}`}>
+                    {label}
+                  </button>
                 ))}
-              </select>
-              <span className="text-xs text-[var(--muted)]">(UTC)</span>
-            </div>
+              </div>
+
+              {(schedule === "daily" || schedule === "weekly" || schedule === "biweekly") && (
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-sm text-[var(--muted)]">Run at</span>
+                  <select
+                    value={scheduleHour}
+                    onChange={(e) => setScheduleHour(Number(e.target.value))}
+                    className="rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-sm text-[var(--text)] outline-none focus:border-[var(--primary)]"
+                  >
+                    {Array.from({ length: 24 }, (_, h) => (
+                      <option key={h} value={h}>
+                        {h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-[var(--muted)]">(UTC)</span>
+                </div>
+              )}
+
+              {(schedule !== (source?.schedule ?? "off") || scheduleHour !== (source?.scheduleHour ?? 6)) && (
+                <button onClick={handleSaveSchedule} disabled={saving}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--primary)] border border-[var(--primary)] rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors disabled:opacity-50">
+                  {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                  Save schedule
+                </button>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-[var(--muted)]">
+              Schedule: <strong className="text-[var(--text)]">{schedule === "off" ? "Off" : schedule}</strong>
+              {source?.nextRun && schedule !== "off" && <span> · Next run: {fmt(source.nextRun)}</span>}
+            </p>
           )}
 
-          {/* Save button */}
-          {(schedule !== (source?.schedule ?? "off") || scheduleHour !== (source?.scheduleHour ?? 6)) && (
-            <button onClick={handleSaveSchedule} disabled={saving}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--primary)] border border-[var(--primary)] rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors disabled:opacity-50">
-              {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-              Save schedule
-            </button>
-          )}
-
-          {source?.nextRun && schedule !== "off" && (
+          {isAdmin && source?.nextRun && schedule !== "off" && (
             <p className="text-xs text-[var(--muted)] mt-3">Next run: {fmt(source.nextRun)}</p>
           )}
         </div>
