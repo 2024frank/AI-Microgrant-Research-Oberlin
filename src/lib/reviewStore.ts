@@ -5,11 +5,13 @@ const POSTS = "reviewPosts";
 const DUPES = "duplicateGroups";
 const PROCESSED = "processedEventIds";
 
+function stripUndefined(obj: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+}
+
 export async function saveReviewPost(post: ReviewPost): Promise<void> {
-  await adminDb
-    .collection(POSTS)
-    .doc(post.id)
-    .set({ ...post, updatedAt: serverTimestamp(), createdAt: post.createdAt ?? Date.now() }, { merge: true });
+  const data = stripUndefined({ ...post, updatedAt: serverTimestamp(), createdAt: post.createdAt ?? Date.now() });
+  await adminDb.collection(POSTS).doc(post.id).set(data, { merge: true });
 }
 
 export async function getReviewPost(id: string): Promise<ReviewPost | null> {
