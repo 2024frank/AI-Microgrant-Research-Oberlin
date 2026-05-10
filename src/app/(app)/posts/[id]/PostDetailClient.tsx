@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle } from "lucide-react";
 
 import { PostTypeBadge } from "@/components/PostTypeBadge";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -93,6 +93,12 @@ export function PostDetailClient({ id }: { id: string }) {
   const [rejectionReason, setRejectionReason] = useState("");
   const [publishing, setPublishing] = useState(false);
   const [publishMessage, setPublishMessage] = useState("");
+  const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
+
+  function showToast(message: string, type: "error" | "success" = "error") {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }
 
   useEffect(() => {
     setDraftPost(storedPost ?? null);
@@ -166,7 +172,8 @@ export function PostDetailClient({ id }: { id: string }) {
     }
 
     if (!validation.isValid) {
-      window.alert("Required fields are missing. Resolve validation errors before approval.");
+      showToast("Required fields are missing. Resolve validation errors before approving.");
+      return;
       return;
     }
 
@@ -192,9 +199,11 @@ export function PostDetailClient({ id }: { id: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Publish failed");
       setPublishMessage("Published to Community Hub.");
+      showToast("Published to Community Hub successfully.", "success");
       updatePostsStatus([post.id], "published");
     } catch (err) {
       setPublishMessage(err instanceof Error ? err.message : "Publish failed.");
+      showToast(err instanceof Error ? err.message : "Publish failed.");
     } finally {
       setPublishing(false);
     }
@@ -207,7 +216,8 @@ export function PostDetailClient({ id }: { id: string }) {
 
     const reason = rejectionReason.trim();
     if (!reason) {
-      window.alert("Enter a rejection reason before rejecting this post.");
+      showToast("Enter a rejection reason in the box below before rejecting.");
+      return;
       return;
     }
 
@@ -221,7 +231,20 @@ export function PostDetailClient({ id }: { id: string }) {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      {/* Toast notification */}
+      {toast && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-lg shadow-2xl border text-sm font-medium transition-all animate-in fade-in slide-in-from-top-2 duration-300 ${
+          toast.type === "error"
+            ? "bg-red-950 border-red-800 text-red-200"
+            : "bg-teal-950 border-teal-700 text-teal-200"
+        }`}>
+          {toast.type === "error"
+            ? <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+            : <CheckCircle className="w-4 h-4 shrink-0 text-teal-400" />}
+          {toast.message}
+        </div>
+      )}
       <main className="space-y-6">
         <div>
           <div className="mb-3 flex flex-wrap gap-2">
