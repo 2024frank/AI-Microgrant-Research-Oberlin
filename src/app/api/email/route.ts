@@ -21,7 +21,8 @@ function getBaseUrl() {
 }
 
 function getEmailContent(body: EmailRequest) {
-  const loginUrl = `${getBaseUrl().replace(/\/$/, "")}/login`;
+  const base = getBaseUrl().replace(/\/$/, "");
+  const loginUrl = `${base}/login?email=${encodeURIComponent(body.to)}`;
   const name = body.displayName || body.to;
 
   if (body.type === "access-approved") {

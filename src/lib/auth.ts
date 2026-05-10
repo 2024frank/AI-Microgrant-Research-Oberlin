@@ -2,11 +2,13 @@ import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
 import { firebaseAuth } from "@/lib/firebase";
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(loginHint?: string) {
   const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({
-    prompt: "select_account",
-  });
+  if (loginHint) {
+    provider.setCustomParameters({ login_hint: loginHint });
+  } else {
+    provider.setCustomParameters({ prompt: "select_account" });
+  }
 
   return signInWithPopup(firebaseAuth, provider);
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Landmark } from "lucide-react";
 
 import { signInWithGoogle } from "@/lib/auth";
@@ -30,8 +30,10 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const loginHint = searchParams.get("email") ?? undefined;
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -39,7 +41,7 @@ export default function LoginPage() {
     setIsSigningIn(true);
     setErrorMessage(null);
 
-    const result = await signInWithGoogle().catch((error: unknown) => {
+    const result = await signInWithGoogle(loginHint).catch((error: unknown) => {
       setErrorMessage(getSafeErrorMessage(error, "Google sign-in failed. Please try again."));
       return null;
     });
@@ -52,6 +54,41 @@ export default function LoginPage() {
     setIsSigningIn(false);
   }
 
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-6 sm:p-7">
+      <h2 className="font-[var(--font-public-sans)] text-xl font-semibold text-[var(--text)]">
+        Sign in
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+        Please authenticate to access the admin console.
+      </p>
+
+      {loginHint && (
+        <p className="mt-3 rounded border border-[var(--border)] bg-[var(--surface-high)] px-3 py-2 text-sm text-[var(--text)]">
+          Signing in as <strong>{loginHint}</strong>
+        </p>
+      )}
+
+      <button
+        className="mt-7 flex min-h-12 w-full items-center justify-center gap-3 rounded border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[#1f1f1f] transition hover:bg-[#f8fafd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffb3b3] disabled:cursor-not-allowed disabled:opacity-70"
+        disabled={isSigningIn}
+        onClick={() => void handleGoogleSignIn()}
+        type="button"
+      >
+        <GoogleIcon />
+        <span>{isSigningIn ? "Signing in..." : "Sign in with Google"}</span>
+      </button>
+
+      {errorMessage ? (
+        <p className="mt-4 rounded border border-red-300/50 bg-red-300/10 px-3 py-2 text-sm text-red-100">
+          {errorMessage}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export default function LoginPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-10">
       <section className="w-full max-w-[432px]">
@@ -67,31 +104,13 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-6 sm:p-7">
-          <h2 className="font-[var(--font-public-sans)] text-xl font-semibold text-[var(--text)]">
-            Sign in
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Please authenticate to access the admin console.
-          </p>
-
-          <button
-            className="mt-7 flex min-h-12 w-full items-center justify-center gap-3 rounded border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[#1f1f1f] transition hover:bg-[#f8fafd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffb3b3] disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={isSigningIn}
-            onClick={() => void handleGoogleSignIn()}
-            type="button"
-          >
-            <GoogleIcon />
-            <span>{isSigningIn ? "Signing in..." : "Sign in with Google"}</span>
-          </button>
-
-          {errorMessage ? (
-            <p className="mt-4 rounded border border-red-300/50 bg-red-300/10 px-3 py-2 text-sm text-red-100">
-              {errorMessage}
-            </p>
-          ) : null}
-
-        </div>
+        <Suspense fallback={
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-6 sm:p-7 text-center text-[var(--muted)]">
+            Loading...
+          </div>
+        }>
+          <LoginForm />
+        </Suspense>
       </section>
 
       <footer className="fixed bottom-0 w-full border-t border-[var(--border)] bg-[var(--background)] py-4 text-center">
