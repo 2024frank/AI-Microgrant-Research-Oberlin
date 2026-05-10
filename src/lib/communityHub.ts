@@ -116,16 +116,41 @@ export function buildCommunityHubPayload(
   else if (post.imageUrl) payload.image_cdn_url = post.imageUrl;
 
   if (isEvent && eventPost) {
-    payload.locationType = eventPost.locationType ?? "ne";
-    if (eventPost.location) payload.location = eventPost.location;
-    if (eventPost.urlLink) payload.urlLink = eventPost.urlLink;
-    // Only include placeName/placeId if they are valid non-empty strings
-    if (eventPost.placeName && eventPost.placeName.trim()) payload.placeName = eventPost.placeName.trim();
-    if (eventPost.placeId && eventPost.placeId.trim() && eventPost.placeId.startsWith("Ch")) payload.placeId = eventPost.placeId.trim();
+    const hasValidPlaceId = !!(eventPost.placeId?.trim()?.startsWith("Ch"));
+    const hasOnlineLink = !!eventPost.urlLink;
+    const hasPhysicalLocation = !!eventPost.location;
+
+    // Community Hub tries to auto-resolve Google Place ID when locationType is ph2/bo.
+    // If resolution fails it calls setGooglePlaceId(null) which throws a PHP type error.
+    // Only use ph2/bo if we have a real Google Place ID. Otherwise use ne/on.
+    let locationType: string;
+    if (hasValidPlaceId && hasPhysicalLocation && hasOnlineLink) locationType = "bo";
+    else if (hasValidPlaceId && hasPhysicalLocation) locationType = "ph2";
+    else if (hasOnlineLink) locationType = "on";
+    else locationType = "ne";
+
+    payload.locationType = locationType;
+
+    // For online/hybrid
+    if (hasOnlineLink) payload.urlLink = eventPost.urlLink;
+
+    // For physical with valid Place ID only
+    if (hasValidPlaceId && hasPhysicalLocation) {
+      payload.location = eventPost.location;
+      payload.placeId = eventPost.placeId!.trim();
+      if (eventPost.placeName?.trim()) payload.placeName = eventPost.placeName.trim();
+    }
+
     if (eventPost.roomNum) payload.roomNum = eventPost.roomNum;
     if (eventPost.website) payload.website = eventPost.website;
     if (eventPost.contactEmail) payload.contactEmail = eventPost.contactEmail;
     if (eventPost.phone) payload.phone = eventPost.phone;
+
+    // Add location to extendedDescription when we can't use ph2
+    if (!hasValidPlaceId && hasPhysicalLocation && eventPost.location) {
+      const locationNote = `\n\nLocation: ${eventPost.location}${eventPost.roomNum ? `, ${eventPost.roomNum}` : ""}`;
+      payload.extendedDescription = ((payload.extendedDescription as string) || "") + locationNote;
+    }
   } else {
     payload.locationType = "ne";
   }
