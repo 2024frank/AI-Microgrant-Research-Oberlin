@@ -91,9 +91,6 @@ export default function LoginPage() {
             </p>
           ) : null}
 
-          <p className="mt-4 text-center text-xs text-[var(--muted)]">
-            Access is granted through Firebase-backed user records.
-          </p>
         </div>
       </section>
 
