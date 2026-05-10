@@ -22,7 +22,7 @@ type Message = {
   content: string;
   config?: SourceConfig;
   testResult?: TestResult;
-  deployResult?: { success: boolean; id?: string; error?: string };
+  deployResult?: { success: boolean; id?: string; error?: string; github?: { committed: boolean; url?: string; error?: string } };
   probeResult?: { status: number; contentType: string; structure?: unknown; sample?: string; error?: string };
 };
 
@@ -533,7 +533,7 @@ function ProbeResultCard({ result }: { result: { status: number; contentType: st
   );
 }
 
-function DeployResultCard({ result }: { result: { success: boolean; id?: string; error?: string } }) {
+function DeployResultCard({ result }: { result: { success: boolean; id?: string; error?: string; github?: { committed: boolean; url?: string; error?: string } } }) {
   return (
     <div className={`ml-11 rounded-lg border p-4 my-2 ${result.success ? "border-teal-800/40 bg-teal-900/10" : "border-red-800/40 bg-red-900/10"}`}>
       <div className="flex items-center gap-2">
@@ -543,7 +543,27 @@ function DeployResultCard({ result }: { result: { success: boolean; id?: string;
         </span>
       </div>
       {result.success && (
-        <p className="text-xs text-[var(--muted)] mt-1">The source is now registered and will appear on the Sources page.</p>
+        <p className="text-xs text-[var(--muted)] mt-1">Registered in Firestore — will appear on the Sources page.</p>
+      )}
+      {result.github && (
+        <div className={`mt-2 flex items-center gap-2 text-xs rounded px-2 py-1.5 ${result.github.committed ? "bg-teal-900/20 text-teal-400" : "bg-yellow-900/20 text-yellow-400"}`}>
+          {result.github.committed ? (
+            <>
+              <CheckCircle className="w-3 h-3 shrink-0" />
+              <span>Committed to GitHub — </span>
+              {result.github.url && (
+                <a href={result.github.url} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 truncate">
+                  view file
+                </a>
+              )}
+            </>
+          ) : (
+            <>
+              <XCircle className="w-3 h-3 shrink-0" />
+              <span>GitHub commit skipped: {result.github.error}</span>
+            </>
+          )}
+        </div>
       )}
     </div>
   );
