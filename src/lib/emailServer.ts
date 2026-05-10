@@ -65,3 +65,52 @@ export async function sendPipelineCompleteEmail(opts: {
     text,
   });
 }
+
+export async function sendPublishConfirmationEmail(opts: {
+  to: string;
+  eventTitle: string;
+  communityHubPostId: string;
+  sourceUrl?: string;
+}) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return;
+
+  const resend = new Resend(apiKey);
+  const baseUrl = getBaseUrl();
+  const chUrl = `https://oberlin.communityhub.cloud`;
+
+  const subject = `Published: "${opts.eventTitle}" — Civic Calendar`;
+
+  const html = `
+<div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; color: #e8e8e8; background: #111; padding: 32px; border-radius: 8px;">
+  <h2 style="margin: 0 0 16px; font-size: 20px; color: #5eead4;">✓ Event Published to Community Hub</h2>
+  <p style="font-size: 16px; font-weight: 600; color: #fff; margin: 0 0 8px;">${opts.eventTitle}</p>
+  <p style="color: #999; font-size: 14px; margin: 0 0 24px;">This event has been approved and submitted to Oberlin Community Hub.</p>
+  <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
+    <tr style="border-bottom: 1px solid #222;">
+      <td style="padding: 10px 0; color: #999;">Community Hub Post ID</td>
+      <td style="padding: 10px 0; text-align: right; color: #fff; font-family: monospace;">${opts.communityHubPostId}</td>
+    </tr>
+    ${opts.sourceUrl ? `<tr>
+      <td style="padding: 10px 0; color: #999;">Original Source</td>
+      <td style="padding: 10px 0; text-align: right;"><a href="${opts.sourceUrl}" style="color: #5eead4;">${opts.sourceUrl}</a></td>
+    </tr>` : ""}
+  </table>
+  <a href="${chUrl}" style="display: inline-block; background: #5eead4; color: #111; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-right: 12px;">
+    View on Community Hub
+  </a>
+  <a href="${baseUrl}/archive" style="display: inline-block; background: #222; color: #e8e8e8; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; border: 1px solid #333;">
+    View in Archive
+  </a>
+</div>`;
+
+  const text = `Published: "${opts.eventTitle}"\n\nThis event has been submitted to Oberlin Community Hub.\nPost ID: ${opts.communityHubPostId}\n\nView on Community Hub: ${chUrl}\nView in Archive: ${baseUrl}/archive`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: [opts.to],
+    subject,
+    html,
+    text,
+  });
+}
