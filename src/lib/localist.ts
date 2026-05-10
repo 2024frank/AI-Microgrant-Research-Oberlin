@@ -42,10 +42,8 @@ export type LocalistEvent = {
 
 function isOpenToPublic(event: LocalistEvent): boolean {
   const audiences = event.filters?.event_public_events ?? [];
-  // Accept if no audience restriction OR if any audience label includes "open to all"
-  if (audiences.length === 0) return true;
-  return audiences.some((a) =>
-    a.name.toLowerCase().includes("open to all")
+  return audiences.some(
+    (a) => a.name === "Open to all members of the public"
   );
 }
 
