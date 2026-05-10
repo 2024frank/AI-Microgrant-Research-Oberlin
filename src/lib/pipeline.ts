@@ -12,7 +12,7 @@ import {
   markEventProcessed,
 } from "./reviewStore";
 import { recordSourceRun } from "./sources";
-import { listAuthorizedUsers } from "./users";
+import { listAuthorizedUsersAdmin } from "./users";
 import { getReviewPostStats } from "./reviewStore";
 import { sendPipelineCompleteEmail } from "./emailServer";
 import type { ReviewPost, EventPost, AnnouncementPost, DuplicateGroup } from "./postTypes";
@@ -161,7 +161,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
     if (queued > 0) {
       try {
         const [users, stats, source] = await Promise.all([
-          listAuthorizedUsers(),
+          listAuthorizedUsersAdmin(),
           getReviewPostStats(),
           import("./sources").then((m) => m.getSource(sourceId)),
         ]);

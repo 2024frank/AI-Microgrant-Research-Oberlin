@@ -33,11 +33,10 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
 
   const refreshPosts = useCallback(async () => {
     try {
-      const { listAllReviewPosts } = await import("@/lib/reviewStore");
-      const { listDuplicateGroups } = await import("@/lib/reviewStore");
+      const { listAllReviewPosts, clientListDuplicateGroups } = await import("@/lib/reviewStoreClient");
       const [fetchedPosts, fetchedGroups] = await Promise.all([
         listAllReviewPosts(),
-        listDuplicateGroups(),
+        clientListDuplicateGroups(),
       ]);
       setPosts(fetchedPosts);
       setDuplicateGroups(fetchedGroups);
@@ -62,8 +61,8 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
         setPosts((current) =>
           current.map((post) => (post.id === id ? ({ ...post, ...updates } as ReviewPost) : post))
         );
-        import("@/lib/reviewStore").then(({ updateReviewPost }) =>
-          updateReviewPost(id, updates)
+        import("@/lib/reviewStoreClient").then(({ clientUpdateReviewPost }) =>
+          clientUpdateReviewPost(id, updates)
         );
       },
       updatePostsStatus: (ids, status, rejectionReason) => {
@@ -78,9 +77,9 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
               : post
           )
         );
-        import("@/lib/reviewStore").then(({ updateReviewPost }) => {
+        import("@/lib/reviewStoreClient").then(({ clientUpdateReviewPost }) => {
           ids.forEach((id) =>
-            updateReviewPost(id, {
+            clientUpdateReviewPost(id, {
               status,
               ...(rejectionReason ? { rejectionReason } : {}),
             })
@@ -97,16 +96,16 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
             }))
             .filter((group) => group.postIds.length >= 2)
         );
-        import("@/lib/reviewStore").then(({ deleteReviewPost }) => {
-          ids.forEach((id) => deleteReviewPost(id));
+        import("@/lib/reviewStoreClient").then(({ clientDeleteReviewPost }) => {
+          ids.forEach((id) => clientDeleteReviewPost(id));
         });
       },
       updateDuplicateGroup: (id, updates) => {
         setDuplicateGroups((current) =>
           current.map((group) => (group.id === id ? { ...group, ...updates } : group))
         );
-        import("@/lib/reviewStore").then(({ updateDuplicateGroup }) =>
-          updateDuplicateGroup(id, updates)
+        import("@/lib/reviewStoreClient").then(({ clientUpdateDuplicateGroup }) =>
+          clientUpdateDuplicateGroup(id, updates)
         );
       },
       getPostById: (id) => posts.find((post) => post.id === id),

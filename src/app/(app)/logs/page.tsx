@@ -10,7 +10,7 @@ export default function LogsPage() {
 
   useEffect(() => {
     async function load() {
-      const { listPipelineJobs } = await import("@/lib/pipelineJobs");
+      const { clientListPipelineJobs: listPipelineJobs } = await import("@/lib/pipelineJobsClient");
       const j = await listPipelineJobs(50);
       setJobs(j);
       setLoading(false);

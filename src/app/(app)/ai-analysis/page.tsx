@@ -14,8 +14,8 @@ export default function AiAnalysisPage() {
 
   useEffect(() => {
     async function load() {
-      const { listAllReviewPosts } = await import("@/lib/reviewStore");
-      const { listPipelineJobs } = await import("@/lib/pipelineJobs");
+      const { listAllReviewPosts } = await import("@/lib/reviewStoreClient");
+      const { clientListPipelineJobs: listPipelineJobs } = await import("@/lib/pipelineJobsClient");
       const [p, j] = await Promise.all([listAllReviewPosts(), listPipelineJobs(10)]);
       setPosts(p);
       setJobs(j);

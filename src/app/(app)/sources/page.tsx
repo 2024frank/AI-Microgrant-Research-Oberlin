@@ -26,14 +26,14 @@ export default function SourcesPage() {
 
   useEffect(() => {
     async function load() {
-      const { ensureDefaultSources, getSource } = await import("@/lib/sources");
+      const { ensureDefaultSources, getSource } = await import("@/lib/sourcesClient");
       await ensureDefaultSources();
       const s = await getSource("localist-oberlin");
       if (s) {
         setSource(s);
         setSchedule(s.schedule ?? "off");
         if (s.lastJobId) {
-          const { getPipelineJob } = await import("@/lib/pipelineJobs");
+          const { clientGetPipelineJob: getPipelineJob } = await import("@/lib/pipelineJobsClient");
           const lastJob = await getPipelineJob(s.lastJobId);
           if (lastJob) setCurrentJob(lastJob);
         }
@@ -44,7 +44,7 @@ export default function SourcesPage() {
 
   const pollJob = useCallback(async (id: string) => {
     const interval = setInterval(async () => {
-      const { getPipelineJob } = await import("@/lib/pipelineJobs");
+      const { clientGetPipelineJob: getPipelineJob } = await import("@/lib/pipelineJobsClient");
       const job = await getPipelineJob(id);
       if (!job) return;
       setCurrentJob(job);
@@ -84,7 +84,7 @@ export default function SourcesPage() {
   async function handleSaveSchedule() {
     setSaving(true);
     try {
-      const { updateSource } = await import("@/lib/sources");
+      const { updateSource } = await import("@/lib/sourcesClient");
       await updateSource("localist-oberlin", { schedule });
       setSource((s) => (s ? { ...s, schedule } : s));
     } finally {

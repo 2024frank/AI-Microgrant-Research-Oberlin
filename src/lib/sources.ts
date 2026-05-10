@@ -1,13 +1,4 @@
-import {
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-import { firebaseDb } from "./firebase";
+import { adminDb, serverTimestamp } from "./firebaseAdmin";
 
 export type SourceSchedule = "off" | "daily" | "weekly" | "biweekly";
 
@@ -33,32 +24,32 @@ const SCHEDULE_INTERVALS: Record<SourceSchedule, number> = {
   biweekly: 1209600000,
 };
 
-const DEFAULT_LOCALIST_SOURCE: Omit<Source, "id"> = {
+const DEFAULT_SOURCE = {
+  id: "localist-oberlin",
   name: "Localist – Oberlin College Calendar",
-  type: "localist",
+  type: "localist" as const,
   baseUrl: "https://calendar.oberlin.edu",
-  schedule: "off",
+  schedule: "off" as SourceSchedule,
   enabled: true,
   createdAt: Date.now(),
 };
 
 export async function ensureDefaultSources(): Promise<void> {
-  const ref = doc(firebaseDb, COLLECTION, "localist-oberlin");
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, { ...DEFAULT_LOCALIST_SOURCE, id: "localist-oberlin" });
+  const ref = adminDb.collection(COLLECTION).doc("localist-oberlin");
+  const snap = await ref.get();
+  if (!snap.exists) {
+    await ref.set(DEFAULT_SOURCE);
   }
 }
 
 export async function listSources(): Promise<Source[]> {
-  const snap = await getDocs(collection(firebaseDb, COLLECTION));
+  const snap = await adminDb.collection(COLLECTION).get();
   return snap.docs.map((d) => d.data() as Source);
 }
 
 export async function getSource(id: string): Promise<Source | null> {
-  const ref = doc(firebaseDb, COLLECTION, id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
+  const snap = await adminDb.collection(COLLECTION).doc(id).get();
+  if (!snap.exists) return null;
   return snap.data() as Source;
 }
 
@@ -66,29 +57,16 @@ export async function updateSource(
   id: string,
   updates: Partial<Source>
 ): Promise<void> {
-  const ref = doc(firebaseDb, COLLECTION, id);
-  await updateDoc(ref, {
-    ...updates,
-    updatedAt: serverTimestamp(),
-  } as Record<string, unknown>);
+  await adminDb.collection(COLLECTION).doc(id).update({ ...updates, updatedAt: serverTimestamp() });
 }
 
-export async function recordSourceRun(
-  sourceId: string,
-  jobId: string
-): Promise<void> {
+export async function recordSourceRun(sourceId: string, jobId: string): Promise<void> {
   const source = await getSource(sourceId);
   if (!source) return;
-
   const now = Date.now();
   const interval = SCHEDULE_INTERVALS[source.schedule];
   const nextRun = interval > 0 ? now + interval : undefined;
-
-  await updateSource(sourceId, {
-    lastRun: now,
-    lastJobId: jobId,
-    nextRun,
-  });
+  await updateSource(sourceId, { lastRun: now, lastJobId: jobId, nextRun });
 }
 
 export async function getSourcesDue(): Promise<Source[]> {

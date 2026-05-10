@@ -28,8 +28,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      const { getReviewPostStats, listReviewPosts } = await import("@/lib/reviewStore");
-      const { listPipelineJobs } = await import("@/lib/pipelineJobs");
+      const { getReviewPostStats, listReviewPosts } = await import("@/lib/reviewStoreClient");
+      const { clientListPipelineJobs: listPipelineJobs } = await import("@/lib/pipelineJobsClient");
 
       const [s, recent, jobs] = await Promise.all([
         getReviewPostStats(),

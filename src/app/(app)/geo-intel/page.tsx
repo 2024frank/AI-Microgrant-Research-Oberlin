@@ -34,7 +34,7 @@ export default function GeoIntelPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    import("@/lib/reviewStore").then(({ listAllReviewPosts }) =>
+    import("@/lib/reviewStoreClient").then(({ listAllReviewPosts }) =>
       listAllReviewPosts().then((p) => { setPosts(p); setLoading(false); })
     );
   }, []);

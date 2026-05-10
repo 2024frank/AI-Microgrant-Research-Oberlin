@@ -1,37 +1,20 @@
-import {
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  serverTimestamp,
-} from "firebase/firestore";
-import { firebaseDb } from "./firebase";
+import { adminDb, serverTimestamp } from "./firebaseAdmin";
 import type { ReviewPost, DuplicateGroup, ReviewStatus } from "./postTypes";
 
-const POSTS_COLLECTION = "reviewPosts";
-const DUPES_COLLECTION = "duplicateGroups";
-const PROCESSED_COLLECTION = "processedEventIds";
+const POSTS = "reviewPosts";
+const DUPES = "duplicateGroups";
+const PROCESSED = "processedEventIds";
 
 export async function saveReviewPost(post: ReviewPost): Promise<void> {
-  const ref = doc(firebaseDb, POSTS_COLLECTION, post.id);
-  await setDoc(
-    ref,
-    { ...post, updatedAt: serverTimestamp(), createdAt: post.createdAt ?? Date.now() },
-    { merge: true }
-  );
+  await adminDb
+    .collection(POSTS)
+    .doc(post.id)
+    .set({ ...post, updatedAt: serverTimestamp(), createdAt: post.createdAt ?? Date.now() }, { merge: true });
 }
 
 export async function getReviewPost(id: string): Promise<ReviewPost | null> {
-  const ref = doc(firebaseDb, POSTS_COLLECTION, id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
+  const snap = await adminDb.collection(POSTS).doc(id).get();
+  if (!snap.exists) return null;
   return snap.data() as ReviewPost;
 }
 
@@ -39,39 +22,30 @@ export async function updateReviewPost(
   id: string,
   updates: Partial<ReviewPost>
 ): Promise<void> {
-  const ref = doc(firebaseDb, POSTS_COLLECTION, id);
-  await updateDoc(ref, { ...updates, updatedAt: serverTimestamp() } as Record<string, unknown>);
+  await adminDb.collection(POSTS).doc(id).update({ ...updates, updatedAt: serverTimestamp() });
 }
 
 export async function deleteReviewPost(id: string): Promise<void> {
-  await deleteDoc(doc(firebaseDb, POSTS_COLLECTION, id));
+  await adminDb.collection(POSTS).doc(id).delete();
 }
 
 export async function listReviewPosts(options?: {
   status?: ReviewStatus;
   maxResults?: number;
 }): Promise<ReviewPost[]> {
-  const constraints = [];
-  if (options?.status) {
-    constraints.push(where("status", "==", options.status));
-  }
-  constraints.push(orderBy("createdAt", "desc"));
-  if (options?.maxResults) {
-    constraints.push(limit(options.maxResults));
-  }
-
-  const q = query(collection(firebaseDb, POSTS_COLLECTION), ...constraints);
-  const snap = await getDocs(q);
+  let q = adminDb.collection(POSTS).orderBy("createdAt", "desc") as FirebaseFirestore.Query;
+  if (options?.status) q = q.where("status", "==", options.status);
+  if (options?.maxResults) q = q.limit(options.maxResults);
+  const snap = await q.get();
   return snap.docs.map((d) => d.data() as ReviewPost);
 }
 
 export async function listAllReviewPosts(): Promise<ReviewPost[]> {
-  const q = query(
-    collection(firebaseDb, POSTS_COLLECTION),
-    orderBy("createdAt", "desc"),
-    limit(500)
-  );
-  const snap = await getDocs(q);
+  const snap = await adminDb
+    .collection(POSTS)
+    .orderBy("createdAt", "desc")
+    .limit(500)
+    .get();
   return snap.docs.map((d) => d.data() as ReviewPost);
 }
 
@@ -83,15 +57,8 @@ export async function getReviewPostStats(): Promise<{
   published: number;
   total: number;
 }> {
-  const snap = await getDocs(collection(firebaseDb, POSTS_COLLECTION));
-  const counts = {
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-    duplicate: 0,
-    published: 0,
-    total: 0,
-  };
+  const snap = await adminDb.collection(POSTS).get();
+  const counts = { pending: 0, approved: 0, rejected: 0, duplicate: 0, published: 0, total: 0 };
   snap.docs.forEach((d) => {
     const status = d.data().status as ReviewStatus;
     counts.total++;
@@ -105,31 +72,29 @@ export async function getReviewPostStats(): Promise<{
 }
 
 export async function saveDuplicateGroup(group: DuplicateGroup): Promise<void> {
-  const ref = doc(firebaseDb, DUPES_COLLECTION, group.id);
-  await setDoc(ref, { ...group, updatedAt: serverTimestamp() }, { merge: true });
+  await adminDb
+    .collection(DUPES)
+    .doc(group.id)
+    .set({ ...group, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 export async function updateDuplicateGroup(
   id: string,
   updates: Partial<DuplicateGroup>
 ): Promise<void> {
-  const ref = doc(firebaseDb, DUPES_COLLECTION, id);
-  await updateDoc(ref, { ...updates, updatedAt: serverTimestamp() } as Record<string, unknown>);
+  await adminDb.collection(DUPES).doc(id).update({ ...updates, updatedAt: serverTimestamp() });
 }
 
 export async function listDuplicateGroups(): Promise<DuplicateGroup[]> {
-  const q = query(collection(firebaseDb, DUPES_COLLECTION), orderBy("id", "desc"), limit(200));
-  const snap = await getDocs(q);
+  const snap = await adminDb.collection(DUPES).limit(200).get();
   return snap.docs.map((d) => d.data() as DuplicateGroup);
 }
 
 export async function isEventProcessed(localistEventId: string): Promise<boolean> {
-  const ref = doc(firebaseDb, PROCESSED_COLLECTION, localistEventId);
-  const snap = await getDoc(ref);
-  return snap.exists();
+  const snap = await adminDb.collection(PROCESSED).doc(localistEventId).get();
+  return snap.exists;
 }
 
 export async function markEventProcessed(localistEventId: string): Promise<void> {
-  const ref = doc(firebaseDb, PROCESSED_COLLECTION, localistEventId);
-  await setDoc(ref, { processedAt: Date.now() });
+  await adminDb.collection(PROCESSED).doc(localistEventId).set({ processedAt: Date.now() });
 }

@@ -183,3 +183,10 @@ export async function updateAuthorizedUser(
     updatedAt: serverTimestamp(),
   });
 }
+
+// Server-side only — used by pipeline to fetch reviewer emails
+export async function listAuthorizedUsersAdmin(): Promise<AuthorizedUser[]> {
+  const { adminDb } = await import("./firebaseAdmin");
+  const snap = await adminDb.collection("users").orderBy("email", "asc").get();
+  return snap.docs.map((d) => serializeUser(d.data(), d.id));
+}
