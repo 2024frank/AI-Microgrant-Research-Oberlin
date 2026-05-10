@@ -10,8 +10,9 @@ jobs:
   trigger-pipeline:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger pipeline cron endpoint
+      - name: Trigger pipeline
         run: |
-          curl -f -X GET "${{ secrets.APP_URL }}/api/pipeline/cron" \
-            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+          curl -f -X POST "${{ secrets.APP_URL }}/api/pipeline/trigger" \
+            -H "Content-Type: application/json" \
+            -d '{"sourceId":"localist-oberlin","sourceName":"Localist – Oberlin College Calendar"}' \
             --max-time 30
