@@ -22,7 +22,7 @@ export type LocalistEventFilter = {
 };
 
 export type LocalistEvent = {
-  id: string;
+  id: string | number;
   title: string;
   url: string;
   urlname: string;

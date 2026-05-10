@@ -19,8 +19,8 @@ import type { ReviewPost, EventPost, AnnouncementPost, DuplicateGroup } from "./
 
 const ADMIN_EMAIL = "fkusiapp@oberlin.edu";
 
-function generatePostId(localistEventId: string): string {
-  return `oberlin-${localistEventId}`;
+function generatePostId(localistEventId: string | number): string {
+  return `oberlin-${String(localistEventId)}`;
 }
 
 export async function runPipeline(jobId: string, sourceId: string): Promise<void> {
@@ -50,7 +50,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
       const rawEvent = rawEvents[i];
 
       // Idempotency check
-      const alreadyProcessed = await isEventProcessed(rawEvent.id);
+      const alreadyProcessed = await isEventProcessed(String(rawEvent.id));
       if (alreadyProcessed) {
         skipped++;
         await updatePipelineJob(jobId, {
@@ -60,7 +60,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
         continue;
       }
 
-      const postId = generatePostId(rawEvent.id);
+      const postId = generatePostId(String(rawEvent.id));
 
       try {
         // Step 4: Extraction Agent
@@ -79,7 +79,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
           }, "rejected", rawDesc);
 
           await saveReviewPost(rejectedPost);
-          await markEventProcessed(rawEvent.id);
+          await markEventProcessed(String(rawEvent.id));
           rejected++;
           await updatePipelineJob(jobId, {
             progress: i + 1,
@@ -126,7 +126,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
         }
 
         await saveReviewPost(finalPost);
-        await markEventProcessed(rawEvent.id);
+        await markEventProcessed(String(rawEvent.id));
       } catch {
         // Don't fail the whole pipeline for a single event
       }
