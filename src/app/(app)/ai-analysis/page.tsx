@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Brain, ThumbsUp, ThumbsDown, AlertCircle, TrendingUp, Loader2 } from "lucide-react";
+import { Brain, ThumbsUp, ThumbsDown, AlertCircle, TrendingUp, Loader2, Bot, Sparkles, Search, PenLine } from "lucide-react";
 import { COMMUNITY_HUB_POST_TYPES } from "@/lib/postTypes";
 import type { ReviewPost } from "@/lib/postTypes";
 import type { PipelineJob } from "@/lib/pipelineJobs";
@@ -58,6 +58,61 @@ export default function AiAnalysisPage() {
 
   const calibrationGap = feedback ? feedback.avgConfidenceApproved - feedback.avgConfidenceRejected : null;
 
+  // Agent workload stats — each non-skipped event passes through 3 agents
+  const completedJobs = jobs.filter((j) => j.status === "completed");
+  const totalProcessedByPipeline = completedJobs.reduce((s, j) => s + (j.progress ?? 0), 0);
+  const totalSkippedByPipeline = completedJobs.reduce((s, j) => s + (j.totalSkipped ?? 0), 0);
+  const totalAiProcessed = totalProcessedByPipeline - totalSkippedByPipeline;
+  const totalDupsDetected = completedJobs.reduce((s, j) => s + (j.totalDuplicates ?? 0), 0);
+  const totalAutoRejected = completedJobs.reduce((s, j) => s + (j.totalRejected ?? 0), 0);
+
+  const agents = [
+    {
+      name: "Extraction Agent",
+      icon: <Sparkles className="w-5 h-5" />,
+      color: "text-violet-400",
+      bgColor: "bg-violet-900/20 border-violet-800/30",
+      barColor: "bg-violet-500",
+      tasks: totalAiProcessed,
+      description: "Classifies events, detects athletics, extracts location & sessions, assigns post type IDs",
+      metrics: [
+        { label: "Events classified", value: totalAiProcessed },
+        { label: "Athletics auto-rejected", value: totalAutoRejected },
+        { label: "Avg confidence", value: `${avgConfidence}%` },
+      ],
+    },
+    {
+      name: "Editor Agent",
+      icon: <PenLine className="w-5 h-5" />,
+      color: "text-teal-400",
+      bgColor: "bg-teal-900/20 border-teal-800/30",
+      barColor: "bg-teal-500",
+      tasks: totalAiProcessed - totalAutoRejected,
+      description: "Writes screen-ready descriptions — short hooks and extended context for community displays",
+      metrics: [
+        { label: "Descriptions written", value: (totalAiProcessed - totalAutoRejected) * 2 },
+        { label: "Events edited", value: totalAiProcessed - totalAutoRejected },
+        { label: "Skipped (auto-rejected)", value: totalAutoRejected },
+      ],
+    },
+    {
+      name: "Dedup Agent",
+      icon: <Search className="w-5 h-5" />,
+      color: "text-amber-400",
+      bgColor: "bg-amber-900/20 border-amber-800/30",
+      barColor: "bg-amber-500",
+      tasks: totalAiProcessed - totalAutoRejected,
+      description: "Compares each event against Community Hub using semantic AI matching to prevent duplicates",
+      metrics: [
+        { label: "Comparisons run", value: totalAiProcessed - totalAutoRejected },
+        { label: "Duplicates caught", value: totalDupsDetected },
+        { label: "Detection rate", value: totalAiProcessed > 0 ? `${Math.round((totalDupsDetected / Math.max(totalAiProcessed - totalAutoRejected, 1)) * 100)}%` : "—" },
+      ],
+    },
+  ];
+  const maxAgentTasks = Math.max(...agents.map((a) => a.tasks), 1);
+  const totalAgentCalls = agents.reduce((s, a) => s + a.tasks, 0);
+
   if (loading) return (
     <div className="p-6 flex items-center gap-2 text-sm text-[var(--muted)]">
       <Loader2 className="w-4 h-4 animate-spin" /> Loading analysis…
@@ -92,6 +147,47 @@ export default function AiAnalysisPage() {
                 <p className="text-xs text-[var(--muted)] mt-0.5">{sub}</p>
               </div>
             ))}
+          </div>
+
+          {/* Agent workload */}
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-[var(--primary)]" />
+                <h2 className="font-semibold text-[var(--text)]">AI Agent Workload</h2>
+              </div>
+              <span className="text-xs text-[var(--muted)] px-2.5 py-1 rounded-full border border-[var(--border)] bg-[var(--surface-high)]">
+                {totalAgentCalls} total Gemini calls across {completedJobs.length} pipeline run{completedJobs.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {agents.map((agent) => (
+                <div key={agent.name} className={`rounded-lg border p-4 ${agent.bgColor}`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={agent.color}>{agent.icon}</span>
+                    <h3 className={`font-semibold text-sm ${agent.color}`}>{agent.name}</h3>
+                  </div>
+                  <p className="text-xs text-[var(--muted)] mb-4 leading-relaxed">{agent.description}</p>
+                  <div className="mb-3">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-[var(--muted)]">Tasks completed</span>
+                      <span className={`font-bold ${agent.color}`}>{agent.tasks}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-black/30 overflow-hidden">
+                      <div className={`h-full ${agent.barColor} rounded-full transition-all duration-500`} style={{ width: `${Math.round((agent.tasks / maxAgentTasks) * 100)}%` }} />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    {agent.metrics.map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between text-xs">
+                        <span className="text-[var(--muted)]">{label}</span>
+                        <span className="font-medium text-[var(--text)] tabular-nums">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Reviewer feedback */}
