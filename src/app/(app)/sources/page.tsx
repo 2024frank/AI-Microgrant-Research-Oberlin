@@ -161,14 +161,32 @@ export default function SourcesPage() {
               {source?.lastRun && <span>Last: {fmt(source.lastRun)}</span>}
             </div>
           </div>
-          <button
-            onClick={handleRunNow}
-            disabled={jobStatus === "running"}
-            className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity shrink-0"
-          >
-            {jobStatus === "running" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {jobStatus === "running" ? "Running…" : "Run Now"}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {jobStatus === "running" && currentJob && (
+              <button
+                onClick={async () => {
+                  await fetch("/api/pipeline/cancel", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ jobId: currentJob.id }),
+                  });
+                  setJobStatus("failed");
+                  setError("Cancelled by admin");
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-red-900/30 text-red-400 border border-red-800/50 text-sm font-medium hover:bg-red-900/50 transition-colors"
+              >
+                ■ Stop
+              </button>
+            )}
+            <button
+              onClick={handleRunNow}
+              disabled={jobStatus === "running"}
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              {jobStatus === "running" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {jobStatus === "running" ? "Running…" : "Run Now"}
+            </button>
+          </div>
         </div>
 
         {/* Schedule */}

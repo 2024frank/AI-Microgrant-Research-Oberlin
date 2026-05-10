@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, ChevronDown, ChevronUp, CheckCircle, XCircle, X } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, CheckCircle, XCircle, X, Square } from "lucide-react";
 import Link from "next/link";
 import type { PipelineJob } from "@/lib/pipelineJobs";
 
@@ -23,6 +23,7 @@ export function PipelineStatusBar() {
   const [job, setJob] = useState<PipelineJob | null>(null);
   const [expanded, setExpanded] = useState(true);
   const [dismissed, setDismissed] = useState(false);
+  const [stopping, setStopping] = useState(false);
 
   const startPolling = useCallback((jobId: string) => {
     const interval = setInterval(async () => {
@@ -121,8 +122,29 @@ export function PipelineStatusBar() {
           )}
         </div>
 
-        {/* Expand / dismiss */}
+        {/* Controls */}
         <div className="flex items-center gap-2 shrink-0">
+          {isRunning && (
+            <button
+              onClick={async () => {
+                if (!job) return;
+                setStopping(true);
+                await fetch("/api/pipeline/cancel", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ jobId: job.id }),
+                });
+                clearRunningJobId();
+                setJob((j) => j ? { ...j, status: "failed", error: "Cancelled by admin" } : j);
+                setStopping(false);
+              }}
+              disabled={stopping}
+              className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium bg-red-900/30 text-red-400 border border-red-800/50 hover:bg-red-900/50 disabled:opacity-50 transition-colors"
+            >
+              {stopping ? <Loader2 className="w-3 h-3 animate-spin" /> : <Square className="w-3 h-3 fill-current" />}
+              Stop
+            </button>
+          )}
           <button onClick={() => setExpanded((v) => !v)} className="text-[var(--muted)] hover:text-[var(--text)] transition-colors">
             {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </button>
