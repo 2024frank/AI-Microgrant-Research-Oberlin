@@ -21,8 +21,9 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   config?: SourceConfig;
+  sourceCode?: string; // custom TypeScript fetcher code
   testResult?: TestResult;
-  deployResult?: { success: boolean; id?: string; error?: string; github?: { committed: boolean; url?: string; error?: string } };
+  deployResult?: { success: boolean; id?: string; error?: string; github?: { config?: { committed: boolean; url?: string; error?: string }; code?: { committed: boolean; url?: string; error?: string } } };
   probeResult?: { status: number; contentType: string; structure?: unknown; sample?: string; error?: string; _url?: string };
 };
 
@@ -42,6 +43,7 @@ export default function SourceBuilderPage() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [pendingConfig, setPendingConfig] = useState<SourceConfig | null>(null);
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [probing, setProbing] = useState(false);
@@ -66,6 +68,7 @@ export default function SourceBuilderPage() {
     setSessionId(id);
     setMessages([]);
     setPendingConfig(null);
+    setPendingCode(null);
     setShowHistory(false);
   }
 
@@ -132,6 +135,10 @@ export default function SourceBuilderPage() {
         assistantMsg.config = data.generatedConfig;
         setPendingConfig(data.generatedConfig);
       }
+      if (data.generatedCode) {
+        assistantMsg.sourceCode = data.generatedCode;
+        setPendingCode(data.generatedCode);
+      }
       newMsgBatch.push(assistantMsg);
 
       setMessages([...newMessages, ...newMsgBatch]);
@@ -191,13 +198,13 @@ export default function SourceBuilderPage() {
     setLoading(false);
   }
 
-  async function handleTest(config: SourceConfig) {
+  async function handleTest(config: SourceConfig, sourceCode?: string) {
     setTesting(true);
     try {
       const res = await fetch("/api/source-builder/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({ config, sourceCode: sourceCode ?? pendingCode }),
       });
       const data = await res.json();
       const testMsg: Message = { role: "assistant", content: "", testResult: data };
@@ -208,18 +215,18 @@ export default function SourceBuilderPage() {
     setTesting(false);
   }
 
-  async function handleDeploy(config: SourceConfig) {
+  async function handleDeploy(config: SourceConfig, sourceCode?: string) {
     setDeploying(true);
     try {
       const res = await fetch("/api/source-builder/deploy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config: { ...config, createdBy: user?.email ?? "" } }),
+        body: JSON.stringify({ config: { ...config, createdBy: user?.email ?? "" }, sourceCode: sourceCode ?? pendingCode }),
       });
       const data = await res.json();
       const deployMsg: Message = { role: "assistant", content: "", deployResult: data };
       setMessages((prev) => [...prev, deployMsg]);
-      if (data.success) setPendingConfig(null);
+      if (data.success) { setPendingConfig(null); setPendingCode(null); }
     } catch {
       setMessages((prev) => [...prev, { role: "assistant", content: "Deployment failed." }]);
     }
@@ -346,12 +353,18 @@ export default function SourceBuilderPage() {
               </div>
             )}
 
+            {/* Custom code block */}
+            {msg.sourceCode && (
+              <CodeBlock code={msg.sourceCode} />
+            )}
+
             {/* Config card with action buttons */}
             {msg.config && (
               <ConfigCard
                 config={msg.config}
-                onTest={() => handleTest(msg.config!)}
-                onDeploy={() => handleDeploy(msg.config!)}
+                sourceCode={msg.sourceCode}
+                onTest={() => handleTest(msg.config!, msg.sourceCode)}
+                onDeploy={() => handleDeploy(msg.config!, msg.sourceCode)}
                 testing={testing}
                 deploying={deploying}
               />
@@ -377,12 +390,14 @@ export default function SourceBuilderPage() {
       {pendingConfig && (
         <div className="border-t border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2.5 md:px-6 flex items-center gap-3 shrink-0">
           <Zap className="w-4 h-4 text-amber-400" />
-          <span className="text-sm text-[var(--text)] flex-1 truncate">Config ready: <strong>{pendingConfig.name}</strong></span>
-          <button onClick={() => handleTest(pendingConfig)} disabled={testing}
+          <span className="text-sm text-[var(--text)] flex-1 truncate min-w-0">
+            {pendingCode ? "🤖 Custom code" : "Config"} ready: <strong>{pendingConfig.name}</strong>
+          </span>
+          <button onClick={() => handleTest(pendingConfig, pendingCode ?? undefined)} disabled={testing}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-teal-900/30 text-teal-400 border border-teal-800/40 hover:bg-teal-900/50 disabled:opacity-50 transition-colors">
             {testing ? <Loader2 className="w-3 h-3 animate-spin" /> : <TestTube className="w-3 h-3" />} Test
           </button>
-          <button onClick={() => handleDeploy(pendingConfig)} disabled={deploying}
+          <button onClick={() => handleDeploy(pendingConfig, pendingCode ?? undefined)} disabled={deploying}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-violet-900/30 text-violet-400 border border-violet-800/40 hover:bg-violet-900/50 disabled:opacity-50 transition-colors">
             {deploying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Rocket className="w-3 h-3" />} Deploy
           </button>
@@ -444,8 +459,35 @@ function RenderContent({ text, onProbe, probing }: { text: string; onProbe: (url
   );
 }
 
-function ConfigCard({ config, onTest, onDeploy, testing, deploying }: {
+function CodeBlock({ code }: { code: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const lines = code.split("\n").length;
+  return (
+    <div className="ml-11 rounded-lg border border-emerald-800/40 bg-emerald-900/10 p-4 my-2">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Bot className="w-4 h-4 text-emerald-400" />
+          <span className="text-sm font-semibold text-emerald-400">Custom Fetcher Code</span>
+          <span className="text-xs text-[var(--muted)]">TypeScript · {lines} lines</span>
+        </div>
+        <button onClick={() => setExpanded(!expanded)} className="text-xs text-[var(--muted)] hover:text-[var(--text)] flex items-center gap-1">
+          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          {expanded ? "Collapse" : "View code"}
+        </button>
+      </div>
+      {expanded && (
+        <pre className="text-xs text-emerald-300/80 bg-black/40 rounded p-3 overflow-x-auto max-h-80 leading-relaxed">
+          {code}
+        </pre>
+      )}
+      <p className="text-[11px] text-[var(--muted)] mt-1">This code runs server-side when the pipeline fetches from this source.</p>
+    </div>
+  );
+}
+
+function ConfigCard({ config, sourceCode, onTest, onDeploy, testing, deploying }: {
   config: SourceConfig;
+  sourceCode?: string;
   onTest: () => void;
   onDeploy: () => void;
   testing: boolean;
@@ -559,7 +601,24 @@ function ProbeResultCard({ result }: { result: { status: number; contentType: st
   );
 }
 
-function DeployResultCard({ result }: { result: { success: boolean; id?: string; error?: string; github?: { committed: boolean; url?: string; error?: string } } }) {
+function GithubBadge({ label, result }: { label: string; result?: { committed: boolean; url?: string; error?: string } }) {
+  if (!result) return null;
+  return (
+    <div className={`mt-1.5 flex items-center gap-2 text-xs rounded px-2 py-1.5 ${result.committed ? "bg-teal-900/20 text-teal-400" : "bg-yellow-900/20 text-yellow-400"}`}>
+      {result.committed ? <CheckCircle className="w-3 h-3 shrink-0" /> : <XCircle className="w-3 h-3 shrink-0" />}
+      <span>{label}: </span>
+      {result.committed && result.url ? (
+        <a href={result.url} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 truncate">
+          view on GitHub
+        </a>
+      ) : (
+        <span>{result.error ?? (result.committed ? "committed" : "skipped")}</span>
+      )}
+    </div>
+  );
+}
+
+function DeployResultCard({ result }: { result: { success: boolean; id?: string; error?: string; github?: { config?: { committed: boolean; url?: string; error?: string }; code?: { committed: boolean; url?: string; error?: string } } } }) {
   return (
     <div className={`ml-11 rounded-lg border p-4 my-2 ${result.success ? "border-teal-800/40 bg-teal-900/10" : "border-red-800/40 bg-red-900/10"}`}>
       <div className="flex items-center gap-2">
@@ -569,28 +628,10 @@ function DeployResultCard({ result }: { result: { success: boolean; id?: string;
         </span>
       </div>
       {result.success && (
-        <p className="text-xs text-[var(--muted)] mt-1">Registered in Firestore — will appear on the Sources page.</p>
+        <p className="text-xs text-[var(--muted)] mt-1">Registered in Firestore — appears on the Sources page.</p>
       )}
-      {result.github && (
-        <div className={`mt-2 flex items-center gap-2 text-xs rounded px-2 py-1.5 ${result.github.committed ? "bg-teal-900/20 text-teal-400" : "bg-yellow-900/20 text-yellow-400"}`}>
-          {result.github.committed ? (
-            <>
-              <CheckCircle className="w-3 h-3 shrink-0" />
-              <span>Committed to GitHub — </span>
-              {result.github.url && (
-                <a href={result.github.url} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 truncate">
-                  view file
-                </a>
-              )}
-            </>
-          ) : (
-            <>
-              <XCircle className="w-3 h-3 shrink-0" />
-              <span>GitHub commit skipped: {result.github.error}</span>
-            </>
-          )}
-        </div>
-      )}
+      <GithubBadge label="Config JSON" result={result.github?.config} />
+      <GithubBadge label="Fetcher .ts" result={result.github?.code} />
     </div>
   );
 }

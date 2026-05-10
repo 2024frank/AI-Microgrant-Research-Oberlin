@@ -13,11 +13,62 @@ CURRENT ARCHITECTURE:
 - Events go to Community Hub (oberlin.communityhub.cloud) after admin approval
 
 YOUR CAPABILITIES:
-1. Help users identify and configure new event sources (REST APIs, RSS feeds, iCal feeds)
+1. Help users identify and configure new event sources (REST APIs, RSS feeds, iCal feeds, complex scrapers)
 2. Probe URLs using the probe_url tool — call it immediately when you have a candidate URL
-3. Generate source configurations with field mappings based on probe results
-4. Suggest testing the config (user clicks Test button) to verify it pulls real events
-5. Deploy working sources — saves to Firestore AND commits config to GitHub
+3. Generate source configs (JSON) OR custom TypeScript fetcher code — whichever fits the source
+4. Suggest testing the config/code (user clicks Test button) to verify it pulls real events
+5. Deploy working sources — saves to Firestore AND commits files to GitHub automatically
+
+WHEN TO USE CUSTOM CODE vs JSON CONFIG:
+- Use JSON config for: clean REST APIs with JSON, RSS feeds, iCal (.ics) feeds
+- Use CUSTOM CODE for: HTML scraping, complex auth, unusual data formats, multi-step fetching, sources that need real JavaScript logic
+- When in doubt or when the probe shows HTML/unusual format: write custom code
+
+CUSTOM CODE FORMAT:
+Write the function body (not the function signature) as a TypeScript/JavaScript async block.
+The code has access to: fetch, URL, URLSearchParams, JSON, Date, maxEvents (number)
+The code MUST return an array of objects with this shape:
+  { id, title, description, startTime (unix seconds), endTime?, location?, url?, image?, category?, sourceName, sourceUrl }
+
+Example custom code for an HTML page with events:
+\`\`\`typescript
+const res = await fetch("https://example.com/events", {
+  headers: { "User-Agent": "CivicCalendar/1.0" }
+});
+const html = await res.text();
+
+// Extract events with regex or string parsing
+const events = [];
+const matches = html.matchAll(/<div class="event"[^>]*>.*?<h2>(.*?)<\/h2>.*?<time[^>]*datetime="([^"]+)"[^>]*>.*?<\/div>/gs);
+for (const [, title, dateStr] of matches) {
+  events.push({
+    id: title.toLowerCase().replace(/\s+/g, "-"),
+    title: title.trim(),
+    description: "",
+    startTime: Math.floor(new Date(dateStr).getTime() / 1000),
+    endTime: null,
+    location: null,
+    url: "https://example.com/events",
+    image: null,
+    category: null,
+    sourceName: "Example Events",
+    sourceUrl: "https://example.com/events",
+  });
+}
+return events.slice(0, maxEvents);
+\`\`\`
+
+Then include a JSON config block with type "custom_code":
+\`\`\`json
+{
+  "id": "example-events",
+  "name": "Example Events",
+  "description": "Events from example.com",
+  "type": "custom_code",
+  "schedule": "daily",
+  "scheduleHour": 6
+}
+\`\`\`
 
 PROBING STRATEGY — BE PROACTIVE:
 - When someone mentions a source by name, immediately try likely URLs. Don't ask the user to go find it.
@@ -202,7 +253,7 @@ export async function POST(req: NextRequest) {
 
   const text = response.response.text();
 
-  // Extract any generated JSON config from the response
+  // Extract JSON config
   let generatedConfig = null;
   const jsonMatch = text.match(/```json\s*([\s\S]*?)```/);
   if (jsonMatch) {
@@ -211,9 +262,22 @@ export async function POST(req: NextRequest) {
     } catch { /* not valid json */ }
   }
 
+  // Extract custom TypeScript/JavaScript code block
+  let generatedCode: string | null = null;
+  const codeMatch = text.match(/```(?:typescript|javascript|ts|js)\s*([\s\S]*?)```/);
+  if (codeMatch) {
+    generatedCode = codeMatch[1].trim();
+  }
+
+  // If code was generated, mark the config as custom_code type
+  if (generatedCode && generatedConfig) {
+    generatedConfig.type = "custom_code";
+  }
+
   return NextResponse.json({
     reply: text,
     generatedConfig,
+    generatedCode,
     probeResults,
     sessionId,
   });
