@@ -401,6 +401,53 @@ export function PostDetailClient({ id }: { id: string }) {
           </dl>
         </section>
 
+        {/* Payload Preview */}
+        <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[var(--border)] flex items-center justify-between">
+            <h2 className="font-[var(--font-public-sans)] text-xl font-semibold">Community Hub Payload</h2>
+            <span className="text-xs text-[var(--muted)]">What will be submitted</span>
+          </div>
+          <div className="p-5 space-y-2 text-xs font-mono">
+            {[
+              { key: "eventType", value: post.eventType, required: true },
+              { key: "title", value: post.title, required: true },
+              { key: "email", value: post.email, required: true },
+              { key: "contactEmail", value: "contactEmail" in post ? post.contactEmail : undefined, required: false },
+              { key: "phone", value: "phone" in post ? (post as {phone?: string}).phone : undefined, required: false },
+              { key: "description", value: post.description, required: true },
+              { key: "extendedDescription", value: post.extendedDescription, required: false },
+              { key: "sponsors", value: post.sponsors?.join(", "), required: true },
+              { key: "postTypeId", value: `[${post.postTypeId?.join(", ")}]`, required: true },
+              { key: "sessions", value: post.sessions?.[0]?.startTime ? `[{startTime: ${post.sessions[0].startTime}, endTime: ${post.sessions[0].endTime}}]` : undefined, required: true },
+              { key: "locationType", value: "locationType" in post ? post.locationType : "ne", required: true },
+              { key: "location", value: "location" in post ? post.location : undefined, required: post.eventType === "ot" && "locationType" in post && (post.locationType === "ph2" || post.locationType === "bo") },
+              { key: "urlLink", value: "urlLink" in post ? post.urlLink : undefined, required: post.eventType === "ot" && "locationType" in post && (post.locationType === "on" || post.locationType === "bo") },
+              { key: "roomNum", value: "roomNum" in post ? (post as {roomNum?: string}).roomNum : undefined, required: false },
+              { key: "calendarSourceName", value: post.calendarSourceName, required: false },
+              { key: "calendarSourceUrl", value: post.calendarSourceUrl, required: false },
+              { key: "image_cdn_url", value: post.image_cdn_url || post.imageUrl, required: false },
+            ].map(({ key, value, required }) => {
+              const filled = value !== undefined && value !== "" && value !== "[]" && value !== null;
+              const missing = required && !filled;
+              return (
+                <div key={key} className={`flex gap-2 py-0.5 rounded px-1 ${missing ? "bg-red-900/20" : ""}`}>
+                  <span className={`shrink-0 w-40 ${missing ? "text-red-400" : "text-[var(--muted)]"}`}>
+                    {required ? "* " : "  "}{key}:
+                  </span>
+                  <span className={`truncate ${!filled ? "text-[var(--muted)] italic" : "text-teal-300"}`}>
+                    {filled ? String(value).slice(0, 60) + (String(value).length > 60 ? "…" : "") : "— missing —"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="px-5 py-2 border-t border-[var(--border)] text-xs text-[var(--muted)]">
+            <span className="text-red-400 mr-3">* required</span>
+            <span className="text-teal-300 mr-3">■ filled</span>
+            <span className="italic">— missing —</span>
+          </div>
+        </section>
+
         <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
           <h2 className="font-[var(--font-public-sans)] text-xl font-semibold">Validation Messages</h2>
           {validation.errors.length === 0 && validation.warnings.length === 0 ? (
