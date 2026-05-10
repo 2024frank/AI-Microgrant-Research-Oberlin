@@ -21,10 +21,8 @@ export default function PostsPage() {
   const [inlineMessage, setInlineMessage] = useState<{ id: string; text: string } | null>(null);
   const canDeletePost = (_post: ReviewPost) => true;
 
-  // Auto-refresh every 5s while pipeline is running
+  // Always auto-refresh every 5s so posts appear as pipeline adds them
   useEffect(() => {
-    const jobId = localStorage.getItem("civic_running_job_id");
-    if (!jobId) return;
     const interval = setInterval(() => refreshPosts(), 5000);
     return () => clearInterval(interval);
   }, [refreshPosts]);

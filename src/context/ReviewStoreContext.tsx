@@ -56,6 +56,9 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshPosts();
+    // Keep refreshing every 8s while running so new posts appear automatically
+    const interval = setInterval(() => refreshPosts(), 8000);
+    return () => clearInterval(interval);
   }, [refreshPosts]);
 
   const value = useMemo<ReviewStoreValue>(
