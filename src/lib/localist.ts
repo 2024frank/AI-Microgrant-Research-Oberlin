@@ -64,7 +64,7 @@ function isAthletic(event: LocalistEvent): boolean {
 }
 
 export async function fetchLocalistEvents(
-  days = 90,
+  days = 180,
   perPage = 100,
   maxPages = 5
 ): Promise<LocalistEvent[]> {

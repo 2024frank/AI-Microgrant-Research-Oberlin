@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { RefreshCw } from "lucide-react";
 
 import { PostTypeBadge } from "@/components/PostTypeBadge";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -14,10 +15,18 @@ import { validatePost } from "@/lib/postValidation";
 type BulkAction = ReviewStatus | "delete";
 
 export default function PostsPage() {
-  const { posts, removePosts, updatePostsStatus, loading } = useReviewStore();
+  const { posts, removePosts, updatePostsStatus, loading, refreshPosts } = useReviewStore();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<BulkAction | null>(null);
   const canDeletePost = (_post: ReviewPost) => true;
+
+  // Auto-refresh every 5s while pipeline is running
+  useEffect(() => {
+    const jobId = localStorage.getItem("civic_running_job_id");
+    if (!jobId) return;
+    const interval = setInterval(() => refreshPosts(), 5000);
+    return () => clearInterval(interval);
+  }, [refreshPosts]);
   const selectedPosts = useMemo(
     () => posts.filter((post) => selectedIds.includes(post.id)),
     [posts, selectedIds],
@@ -60,13 +69,24 @@ export default function PostsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-[var(--font-public-sans)] text-3xl font-bold tracking-[-0.02em] text-[var(--text)]">
-          Content Queue
-        </h1>
-        <p className="mt-2 text-[var(--muted)]">
-          Review events and announcements before publishing.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-[var(--font-public-sans)] text-3xl font-bold tracking-[-0.02em] text-[var(--text)]">
+            Content Queue
+          </h1>
+          <p className="mt-2 text-[var(--muted)]">
+            Review events and announcements before publishing.
+            {posts.length > 0 && <span className="ml-2 text-[var(--text)] font-medium">{posts.length} total</span>}
+          </p>
+        </div>
+        <button
+          onClick={() => refreshPosts()}
+          disabled={loading}
+          className="flex items-center gap-2 px-3 py-2 rounded-md border border-[var(--border)] text-sm text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-high)] disabled:opacity-50 transition-colors shrink-0"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </button>
       </div>
 
       <section className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-3">

@@ -29,7 +29,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
 
   try {
     // Step 1: Fetch Localist events
-    const rawEvents = await fetchLocalistEvents(90);
+    const rawEvents = await fetchLocalistEvents(180);
 
     await updatePipelineJob(jobId, {
       totalFetched: rawEvents.length,
