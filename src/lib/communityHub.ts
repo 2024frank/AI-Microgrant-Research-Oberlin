@@ -119,8 +119,9 @@ export function buildCommunityHubPayload(
     payload.locationType = eventPost.locationType ?? "ne";
     if (eventPost.location) payload.location = eventPost.location;
     if (eventPost.urlLink) payload.urlLink = eventPost.urlLink;
-    if (eventPost.placeName) payload.placeName = eventPost.placeName;
-    if (eventPost.placeId) payload.placeId = eventPost.placeId;
+    // Only include placeName/placeId if they are valid non-empty strings
+    if (eventPost.placeName && eventPost.placeName.trim()) payload.placeName = eventPost.placeName.trim();
+    if (eventPost.placeId && eventPost.placeId.trim() && eventPost.placeId.startsWith("Ch")) payload.placeId = eventPost.placeId.trim();
     if (eventPost.roomNum) payload.roomNum = eventPost.roomNum;
     if (eventPost.website) payload.website = eventPost.website;
     if (eventPost.contactEmail) payload.contactEmail = eventPost.contactEmail;

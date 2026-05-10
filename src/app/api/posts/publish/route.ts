@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
 import { getReviewPost, updateReviewPost } from "@/lib/reviewStore";
 import { submitToCommunityHub } from "@/lib/communityHub";
 
-const ADMIN_EMAIL = "frankkusiap@gmail.com";
+export const dynamic = "force-dynamic";
+
+const ADMIN_EMAIL = "fkusiapp@oberlin.edu";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,8 +30,11 @@ export async function POST(req: NextRequest) {
     const result = await submitToCommunityHub(post, ADMIN_EMAIL);
 
     if (!result.success) {
+      // Strip HTML from error pages returned by Community Hub
+      const raw = result.error ?? "Community Hub submission failed";
+      const clean = raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
       return NextResponse.json(
-        { error: result.error ?? "Community Hub submission failed" },
+        { error: clean || "Community Hub returned an error. Check required fields." },
         { status: 502 }
       );
     }
