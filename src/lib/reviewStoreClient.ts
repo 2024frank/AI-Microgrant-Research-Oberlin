@@ -36,16 +36,20 @@ export async function clientDeleteReviewPost(id: string): Promise<void> {
 }
 
 export async function listAllReviewPosts(): Promise<ReviewPost[]> {
-  const snap = await getDocs(query(collection(firebaseDb, POSTS), orderBy("createdAt", "desc"), limit(500)));
-  return snap.docs.map((d) => d.data() as ReviewPost);
+  // No orderBy — avoids needing a Firestore index on new collections
+  const snap = await getDocs(query(collection(firebaseDb, POSTS), limit(500)));
+  const posts = snap.docs.map((d) => d.data() as ReviewPost);
+  // Sort client-side by createdAt desc
+  return posts.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
 }
 
 export async function listReviewPosts(options?: { status?: ReviewStatus; maxResults?: number }): Promise<ReviewPost[]> {
-  const constraints: QueryConstraint[] = [orderBy("createdAt", "desc")];
+  const constraints: QueryConstraint[] = [];
   if (options?.status) constraints.push(where("status", "==", options.status));
   if (options?.maxResults) constraints.push(limit(options.maxResults));
   const snap = await getDocs(query(collection(firebaseDb, POSTS), ...constraints));
-  return snap.docs.map((d) => d.data() as ReviewPost);
+  const posts = snap.docs.map((d) => d.data() as ReviewPost);
+  return posts.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
 }
 
 export async function getReviewPostStats() {

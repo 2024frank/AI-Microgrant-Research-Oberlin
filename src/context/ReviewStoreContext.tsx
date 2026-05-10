@@ -40,8 +40,8 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
       ]);
       setPosts(fetchedPosts);
       setDuplicateGroups(fetchedGroups);
-    } catch {
-      // Firestore unavailable — leave empty
+    } catch (err) {
+      console.error("Firestore read error:", err);
     } finally {
       setLoading(false);
     }

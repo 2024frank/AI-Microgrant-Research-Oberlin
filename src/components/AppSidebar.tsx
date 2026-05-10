@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Activity,
   Archive,
@@ -23,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/posts", label: "Posts", icon: CalendarDays },
+  { href: "/posts", label: "Posts", icon: CalendarDays, badge: true },
   { href: "/sources", label: "Sources", icon: Gauge },
   { href: "/ai-analysis", label: "AI Analysis", icon: BarChart3 },
   { href: "/duplicate-detection", label: "Duplicate Detection", icon: Copy },
@@ -38,6 +39,21 @@ const navItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { role, user } = useAuth();
+  const [pendingCount, setPendingCount] = useState<number>(0);
+
+  useEffect(() => {
+    async function loadCount() {
+      try {
+        const { getReviewPostStats } = await import("@/lib/reviewStoreClient");
+        const stats = await getReviewPostStats();
+        setPendingCount(stats.pending);
+      } catch { /* silent */ }
+    }
+    loadCount();
+    const interval = setInterval(loadCount, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const visibleNavItems = navItems.filter(
     (item) => item.href !== "/admin-control" || canAccessAdminControl(role),
   );
@@ -65,6 +81,7 @@ export function AppSidebar() {
             const Icon = item.icon;
             const isActive =
               pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const showBadge = item.badge && pendingCount > 0;
 
             return (
               <li key={item.href}>
@@ -77,7 +94,12 @@ export function AppSidebar() {
                   href={item.href}
                 >
                   <Icon aria-hidden="true" size={18} />
-                  <span>{item.label}</span>
+                  <span className="flex-1">{item.label}</span>
+                  {showBadge && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#a6192e] px-1.5 text-[10px] font-bold text-white tabular-nums">
+                      {pendingCount > 99 ? "99+" : pendingCount}
+                    </span>
+                  )}
                 </Link>
               </li>
             );
