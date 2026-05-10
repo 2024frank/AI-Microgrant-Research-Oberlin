@@ -4,12 +4,16 @@ import { adminDb } from "@/lib/firebaseAdmin";
 export const dynamic = "force-dynamic";
 
 async function clearCollection(name: string) {
-  const snap = await adminDb.collection(name).limit(500).get();
-  if (snap.empty) return 0;
-  const batch = adminDb.batch();
-  snap.docs.forEach((d) => batch.delete(d.ref));
-  await batch.commit();
-  return snap.size;
+  let total = 0;
+  while (true) {
+    const snap = await adminDb.collection(name).limit(500).get();
+    if (snap.empty) break;
+    const batch = adminDb.batch();
+    snap.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    total += snap.size;
+  }
+  return total;
 }
 
 export async function POST() {

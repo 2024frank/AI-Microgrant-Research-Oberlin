@@ -112,9 +112,6 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
             status: "open",
           };
           duplicateGroups.set(groupId, group);
-          duplicates++;
-        } else {
-          queued++;
         }
 
         // Step 7: Write to Firestore
@@ -127,6 +124,13 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
 
         await saveReviewPost(finalPost);
         await markEventProcessed(String(rawEvent.id));
+
+        // Only count after a successful save
+        if (chDuplicate) {
+          duplicates++;
+        } else {
+          queued++;
+        }
       } catch {
         // Don't fail the whole pipeline for a single event
       }
