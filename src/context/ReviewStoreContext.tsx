@@ -39,7 +39,13 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
       ]);
       const data = await postsRes.json();
       const fetchedGroups = await clientListDuplicateGroups();
-      if (data.posts) setPosts(data.posts);
+      if (data.posts) {
+        // Queue only shows active posts — approved/rejected/published go to Archive
+        const active = data.posts.filter((p: {status: string}) =>
+          ["pending", "duplicate", "needs_correction"].includes(p.status)
+        );
+        setPosts(active);
+      }
       setDuplicateGroups(fetchedGroups);
     } catch (err) {
       console.error("Posts load error:", err);
