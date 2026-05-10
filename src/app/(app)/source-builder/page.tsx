@@ -23,7 +23,7 @@ type Message = {
   config?: SourceConfig;
   testResult?: TestResult;
   deployResult?: { success: boolean; id?: string; error?: string; github?: { committed: boolean; url?: string; error?: string } };
-  probeResult?: { status: number; contentType: string; structure?: unknown; sample?: string; error?: string };
+  probeResult?: { status: number; contentType: string; structure?: unknown; sample?: string; error?: string; _url?: string };
 };
 
 type TestResult = {
@@ -107,13 +107,34 @@ export default function SourceBuilderPage() {
       });
       const data = await res.json();
 
+      const newMsgBatch: Message[] = [];
+
+      // If the AI autonomously probed URLs, show those cards first
+      if (data.probeResults?.length) {
+        for (const pr of data.probeResults as { url: string; result: Record<string, unknown> }[]) {
+          newMsgBatch.push({
+            role: "assistant",
+            content: "",
+            probeResult: {
+              status: (pr.result.status as number) ?? 0,
+              contentType: (pr.result.contentType as string) ?? "unknown",
+              structure: pr.result.topLevelKeys ?? pr.result.sample,
+              sample: pr.result.sample as string | undefined,
+              error: pr.result.error as string | undefined,
+              _url: pr.url,
+            },
+          });
+        }
+      }
+
       const assistantMsg: Message = { role: "assistant", content: data.reply };
       if (data.generatedConfig) {
         assistantMsg.config = data.generatedConfig;
         setPendingConfig(data.generatedConfig);
       }
+      newMsgBatch.push(assistantMsg);
 
-      setMessages([...newMessages, assistantMsg]);
+      setMessages([...newMessages, ...newMsgBatch]);
 
       if (sessionId) {
         await appendChatMessage(sessionId, { role: "assistant", content: data.reply, timestamp: Date.now() });
@@ -504,16 +525,21 @@ function TestResultCard({ result }: { result: TestResult }) {
   );
 }
 
-function ProbeResultCard({ result }: { result: { status: number; contentType: string; structure?: unknown; sample?: string; error?: string } }) {
+function ProbeResultCard({ result }: { result: { status: number; contentType: string; structure?: unknown; sample?: string; error?: string; _url?: string } }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
     <div className="ml-11 rounded-lg border border-blue-800/40 bg-blue-900/10 p-4 my-2">
-      <div className="flex items-center gap-2 mb-2">
-        <Globe className="w-4 h-4 text-blue-400" />
-        <span className="text-sm font-semibold text-blue-400">
-          Probe result — {result.contentType} (HTTP {result.status})
-        </span>
+      <div className="flex items-start gap-2 mb-2">
+        <Globe className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+        <div className="min-w-0">
+          <span className="text-sm font-semibold text-blue-400">
+            Probed — {result.contentType}{result.status ? ` (HTTP ${result.status})` : ""}
+          </span>
+          {result._url && (
+            <p className="text-[10px] text-blue-400/60 truncate mt-0.5">{result._url}</p>
+          )}
+        </div>
       </div>
       {result.error && <p className="text-xs text-red-400 mb-2">{result.error}</p>}
       {result.structure != null && (
