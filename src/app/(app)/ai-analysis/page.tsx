@@ -58,13 +58,12 @@ export default function AiAnalysisPage() {
 
   const calibrationGap = feedback ? feedback.avgConfidenceApproved - feedback.avgConfidenceRejected : null;
 
-  // Agent workload stats — each non-skipped event passes through 3 agents
-  const completedJobs = jobs.filter((j) => j.status === "completed");
-  const totalProcessedByPipeline = completedJobs.reduce((s, j) => s + (j.progress ?? 0), 0);
-  const totalSkippedByPipeline = completedJobs.reduce((s, j) => s + (j.totalSkipped ?? 0), 0);
-  const totalAiProcessed = totalProcessedByPipeline - totalSkippedByPipeline;
-  const totalDupsDetected = completedJobs.reduce((s, j) => s + (j.totalDuplicates ?? 0), 0);
-  const totalAutoRejected = completedJobs.reduce((s, j) => s + (j.totalRejected ?? 0), 0);
+  // Agent workload — derive from actual posts + all jobs (not just completed)
+  const totalAiProcessed = totalPosts;
+  const totalAutoRejected = rejectedAuto;
+  const totalDupsDetected = posts.filter((p) => p.status === "duplicate").length;
+  const nonRejectedPosts = totalPosts - totalAutoRejected;
+  const pipelineRuns = jobs.length;
 
   const agents = [
     {
@@ -87,11 +86,11 @@ export default function AiAnalysisPage() {
       color: "text-teal-400",
       bgColor: "bg-teal-900/20 border-teal-800/30",
       barColor: "bg-teal-500",
-      tasks: totalAiProcessed - totalAutoRejected,
+      tasks: nonRejectedPosts,
       description: "Writes screen-ready descriptions — short hooks and extended context for community displays",
       metrics: [
-        { label: "Descriptions written", value: (totalAiProcessed - totalAutoRejected) * 2 },
-        { label: "Events edited", value: totalAiProcessed - totalAutoRejected },
+        { label: "Descriptions written", value: nonRejectedPosts * 2 },
+        { label: "Events edited", value: nonRejectedPosts },
         { label: "Skipped (auto-rejected)", value: totalAutoRejected },
       ],
     },
@@ -101,12 +100,12 @@ export default function AiAnalysisPage() {
       color: "text-amber-400",
       bgColor: "bg-amber-900/20 border-amber-800/30",
       barColor: "bg-amber-500",
-      tasks: totalAiProcessed - totalAutoRejected,
+      tasks: nonRejectedPosts,
       description: "Compares each event against Community Hub using semantic AI matching to prevent duplicates",
       metrics: [
-        { label: "Comparisons run", value: totalAiProcessed - totalAutoRejected },
+        { label: "Comparisons run", value: nonRejectedPosts },
         { label: "Duplicates caught", value: totalDupsDetected },
-        { label: "Detection rate", value: totalAiProcessed > 0 ? `${Math.round((totalDupsDetected / Math.max(totalAiProcessed - totalAutoRejected, 1)) * 100)}%` : "—" },
+        { label: "Detection rate", value: nonRejectedPosts > 0 ? `${Math.round((totalDupsDetected / nonRejectedPosts) * 100)}%` : "—" },
       ],
     },
   ];
@@ -136,7 +135,7 @@ export default function AiAnalysisPage() {
           {/* Top stats */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: "Events Processed", value: totalPosts, sub: `${jobs.length} pipeline runs` },
+              { label: "Events Processed", value: totalPosts, sub: `${pipelineRuns} pipeline run${pipelineRuns !== 1 ? "s" : ""}` },
               { label: "Avg AI Confidence", value: `${avgConfidence}%`, sub: "Gemini extraction score" },
               { label: "Auto-Rejection Rate", value: `${autoRejectionRate}%`, sub: "Athletics / ineligible" },
               { label: "Reviewer Approval Rate", value: feedback ? `${feedback.approvalRate}%` : "—", sub: feedback ? `${feedback.totalReviewed} manually reviewed` : "No reviews yet" },
@@ -157,7 +156,7 @@ export default function AiAnalysisPage() {
                 <h2 className="font-semibold text-[var(--text)]">AI Agent Workload</h2>
               </div>
               <span className="text-xs text-[var(--muted)] px-2.5 py-1 rounded-full border border-[var(--border)] bg-[var(--surface-high)]">
-                {totalAgentCalls} total Gemini calls across {completedJobs.length} pipeline run{completedJobs.length !== 1 ? "s" : ""}
+                {totalAgentCalls} total Gemini calls across {pipelineRuns} pipeline run{pipelineRuns !== 1 ? "s" : ""}
               </span>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
