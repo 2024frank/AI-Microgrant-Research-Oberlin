@@ -2,11 +2,73 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LocalistEvent } from "./localist";
 
 const MODEL = "gemini-2.5-flash";
+const ADMIN_EMAIL = "fkusiapp@oberlin.edu";
+
+let quotaAlertSent = false;
 
 function getClient() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
   return new GoogleGenerativeAI(apiKey);
+}
+
+function isQuotaError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
+  return msg.includes("quota") || msg.includes("rate limit") || msg.includes("resource exhausted")
+    || msg.includes("429") || msg.includes("too many requests");
+}
+
+async function sendQuotaAlertEmail(agentName: string, errorMessage: string) {
+  if (quotaAlertSent) return;
+  quotaAlertSent = true;
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return;
+
+  try {
+    const { Resend } = await import("resend");
+    const resend = new Resend(apiKey);
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ai-microgrant-research-oberlin.vercel.app").replace(/\/$/, "");
+
+    await resend.emails.send({
+      from: "Civic Calendar <noreply@uhurued.com>",
+      to: [ADMIN_EMAIL],
+      subject: "Gemini API quota exceeded — Pipeline paused",
+      html: `
+<div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #e8e8e8; background: #111; border-radius: 8px; overflow: hidden;">
+  <div style="background: #dc2626; padding: 20px 32px;">
+    <h1 style="margin: 0; font-size: 16px; color: #fff;">Civic Calendar — Alert</h1>
+  </div>
+  <div style="padding: 28px 32px;">
+    <h2 style="margin: 0 0 12px; font-size: 18px; color: #fca5a5;">Gemini API Quota Exceeded</h2>
+    <p style="font-size: 14px; color: #ccc; line-height: 1.6; margin: 0 0 16px;">
+      The <strong style="color: #fff;">${agentName}</strong> hit the Gemini API rate limit. The pipeline will skip AI processing for remaining events until the quota resets.
+    </p>
+    <div style="background: #1a1a1a; border-left: 3px solid #dc2626; padding: 12px 16px; border-radius: 4px; margin: 0 0 20px;">
+      <p style="font-size: 13px; color: #999; margin: 0; font-family: monospace; word-break: break-all;">${errorMessage.replace(/</g, "&lt;").slice(0, 300)}</p>
+    </div>
+    <p style="font-size: 14px; color: #999; line-height: 1.6; margin: 0 0 20px;">
+      <strong style="color: #e8e8e8;">What to do:</strong><br>
+      • Wait for the quota to reset (usually within an hour)<br>
+      • Check your Google AI Studio billing/quota page<br>
+      • Re-run the pipeline after the quota resets
+    </p>
+    <a href="${baseUrl}/sources" style="display: inline-block; background: #a6192e; color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600;">View Sources →</a>
+  </div>
+  <div style="border-top: 1px solid #222; padding: 16px 32px; text-align: center;">
+    <p style="margin: 0; font-size: 11px; color: #444;">Civic Calendar · Oberlin, Ohio</p>
+  </div>
+</div>`,
+      text: `Gemini API Quota Exceeded\n\nThe ${agentName} hit the rate limit.\nError: ${errorMessage.slice(0, 300)}\n\nWait for the quota to reset, then re-run the pipeline.\n\n${baseUrl}/sources`,
+    });
+  } catch { /* don't fail pipeline over email */ }
+}
+
+export class GeminiQuotaError extends Error {
+  constructor(agentName: string, originalError: string) {
+    super(`Gemini quota exceeded in ${agentName}: ${originalError}`);
+    this.name = "GeminiQuotaError";
+  }
 }
 
 export type ExtractionResult = {
@@ -136,8 +198,17 @@ export async function runExtractionAgent(
     JSON.stringify(event, null, 2)
   );
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  let text: string;
+  try {
+    const result = await model.generateContent(prompt);
+    text = result.response.text();
+  } catch (err) {
+    if (isQuotaError(err)) {
+      await sendQuotaAlertEmail("Extraction Agent", err instanceof Error ? err.message : String(err));
+      throw new GeminiQuotaError("Extraction Agent", err instanceof Error ? err.message : String(err));
+    }
+    throw err;
+  }
 
   try {
     const parsed = parseJson<ExtractionResult>(text);
@@ -195,8 +266,17 @@ export async function runEditorAgent(
     )
     .replace("{LOCATION}", extraction.location || "No physical location");
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  let text: string;
+  try {
+    const result = await model.generateContent(prompt);
+    text = result.response.text();
+  } catch (err) {
+    if (isQuotaError(err)) {
+      await sendQuotaAlertEmail("Editor Agent", err instanceof Error ? err.message : String(err));
+      throw new GeminiQuotaError("Editor Agent", err instanceof Error ? err.message : String(err));
+    }
+    throw err;
+  }
 
   try {
     const parsed = parseJson<EditorResult>(text);
@@ -285,8 +365,17 @@ export async function runDedupAgent(
     .replace("{NEW_EVENT}", newEventStr)
     .replace("{EXISTING_EVENTS}", existingStr);
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  let text: string;
+  try {
+    const result = await model.generateContent(prompt);
+    text = result.response.text();
+  } catch (err) {
+    if (isQuotaError(err)) {
+      await sendQuotaAlertEmail("Dedup Agent", err instanceof Error ? err.message : String(err));
+      throw new GeminiQuotaError("Dedup Agent", err instanceof Error ? err.message : String(err));
+    }
+    throw err;
+  }
 
   try {
     return parseJson<DedupCheckResult>(text);

@@ -1,5 +1,5 @@
 import { fetchLocalistEvents } from "./localist";
-import { runExtractionAgent, runEditorAgent, runDedupAgent } from "./gemini";
+import { runExtractionAgent, runEditorAgent, runDedupAgent, GeminiQuotaError } from "./gemini";
 import { fetchExistingCHPosts } from "./communityHub";
 import {
   updatePipelineJob,
@@ -143,8 +143,19 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
         } else {
           queued++;
         }
-      } catch {
-        // Don't fail the whole pipeline for a single event
+      } catch (eventErr) {
+        if (eventErr instanceof GeminiQuotaError) {
+          await updatePipelineJob(jobId, {
+            status: "failed",
+            completedAt: Date.now(),
+            error: "Gemini API quota exceeded. Email alert sent to admin.",
+            totalQueued: queued,
+            totalRejected: rejected,
+            totalDuplicates: duplicates,
+            totalSkipped: skipped,
+          });
+          return;
+        }
       }
 
       await updatePipelineJob(jobId, {
