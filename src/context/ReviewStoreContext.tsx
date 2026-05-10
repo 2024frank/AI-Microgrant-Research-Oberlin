@@ -33,19 +33,16 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
 
   const refreshPosts = useCallback(async () => {
     try {
-      const [postsRes, { clientListDuplicateGroups }] = await Promise.all([
-        fetch("/api/posts/list"),
-        import("@/lib/reviewStoreClient"),
+      const { listReviewPosts, clientListDuplicateGroups } = await import("@/lib/reviewStoreClient");
+      const [allPosts, fetchedGroups] = await Promise.all([
+        listReviewPosts({ maxResults: 500 }),
+        clientListDuplicateGroups(),
       ]);
-      const data = await postsRes.json();
-      const fetchedGroups = await clientListDuplicateGroups();
-      if (data.posts) {
-        // Queue only shows active posts — approved/rejected/published go to Archive
-        const active = data.posts.filter((p: {status: string}) =>
-          ["pending", "duplicate", "needs_correction"].includes(p.status)
-        );
-        setPosts(active);
-      }
+      // Queue shows active posts only — approved/rejected/published go to Archive
+      const active = allPosts.filter((p) =>
+        ["pending", "duplicate", "needs_correction"].includes(p.status)
+      );
+      setPosts(active);
       setDuplicateGroups(fetchedGroups);
     } catch (err) {
       console.error("Posts load error:", err);
