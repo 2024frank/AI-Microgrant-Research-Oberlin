@@ -1,8 +1,7 @@
 name: Pipeline Cron (Backup)
 
-# Primary scheduling is handled by Vercel cron in vercel.json.
-# This workflow is a backup that runs every 2 hours and does NOT
-# fail the action if the trigger returns an error — it just logs it.
+# Primary scheduling: Vercel cron in vercel.json (every 6h).
+# This is a best-effort backup. It never fails the workflow.
 
 on:
   schedule:
@@ -14,32 +13,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger pipeline
+        shell: bash
         run: |
-          if [ -z "${{ secrets.APP_URL }}" ]; then
-            echo "APP_URL secret not set — skipping trigger"
+          set +e  # never exit on error — this step is best-effort
+
+          if [ -z "$APP_URL" ]; then
+            echo "APP_URL secret not set — skipping"
             exit 0
           fi
 
-          echo "Triggering pipeline at ${{ secrets.APP_URL }}/api/pipeline/trigger ..."
+          echo "Triggering: $APP_URL/api/pipeline/trigger"
 
-          HTTP_CODE=$(curl -s -o /tmp/response.json \
-            -w "%{http_code}" \
-            -X POST "${{ secrets.APP_URL }}/api/pipeline/trigger" \
+          curl -s \
+            -X POST "$APP_URL/api/pipeline/trigger" \
             -H "Content-Type: application/json" \
             -d '{"sourceId":"localist-oberlin","sourceName":"Localist – Oberlin College Calendar"}' \
-            --max-time 60 \
-            --retry 2 \
-            --retry-delay 5)
+            --max-time 45 \
+            -o /tmp/response.json \
+            -w "HTTP %{http_code}\n"
 
-          echo "HTTP Status: $HTTP_CODE"
-          echo "Response:"
-          cat /tmp/response.json
+          echo "Response body:"
+          cat /tmp/response.json 2>/dev/null || echo "(no response body)"
 
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✓ Pipeline triggered successfully"
-          else
-            echo "⚠ Trigger returned $HTTP_CODE — pipeline may still run via Vercel cron"
-          fi
-
-          # Never fail — Vercel cron is the primary scheduler
           exit 0
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
