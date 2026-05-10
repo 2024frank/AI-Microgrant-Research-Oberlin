@@ -14,6 +14,7 @@ export type PipelineJob = {
   totalSkipped: number;
   progress: number;
   progressTotal: number;
+  continuationIndex: number;
   startedAt: number;
   completedAt?: number;
   error?: string;
@@ -37,6 +38,7 @@ export async function createPipelineJob(
     totalSkipped: 0,
     progress: 0,
     progressTotal: 0,
+    continuationIndex: 0,
     startedAt: Date.now(),
   };
   await ref.set({ ...job, createdAt: serverTimestamp() });

@@ -97,6 +97,20 @@ export async function isEventProcessed(localistEventId: string): Promise<boolean
   return snap.exists;
 }
 
+export async function bulkCheckProcessed(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  // Firestore getAll supports up to 500 docs at once
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += 500) chunks.push(ids.slice(i, i + 500));
+  const processed = new Set<string>();
+  for (const chunk of chunks) {
+    const refs = chunk.map((id) => adminDb.collection(PROCESSED).doc(id));
+    const snaps = await adminDb.getAll(...refs);
+    snaps.forEach((s, idx) => { if (s.exists) processed.add(chunk[idx]); });
+  }
+  return processed;
+}
+
 export async function markEventProcessed(localistEventId: string): Promise<void> {
   await adminDb.collection(PROCESSED).doc(localistEventId).set({ processedAt: Date.now() });
 }

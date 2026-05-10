@@ -160,8 +160,8 @@ export function PipelineStatusBar() {
       {expanded && (
         <div className="border-t border-[var(--border)] px-4 py-3 grid grid-cols-4 sm:grid-cols-4 xl:grid-cols-7 gap-2">
           {[
-            { label: "Fetched from Localist", value: job.totalFetched, color: "text-[var(--text)]" },
-            { label: "AI Processed", value: job.progress, color: "text-[var(--primary)]" },
+            { label: "From Localist", value: job.totalFetched, color: "text-[var(--text)]" },
+            { label: "New This Run", value: job.progressTotal, color: "text-[var(--primary)]" },
             { label: "Queued for Review", value: job.totalQueued, color: "text-teal-400" },
             { label: "Auto-Rejected", value: job.totalRejected, color: "text-red-400" },
             { label: "Duplicate Flags", value: job.totalDuplicates, color: "text-amber-400" },

@@ -8,7 +8,7 @@ import {
 import {
   saveReviewPost,
   saveDuplicateGroup,
-  isEventProcessed,
+  bulkCheckProcessed,
   markEventProcessed,
 } from "./reviewStore";
 import { recordSourceRun } from "./sources";
@@ -43,53 +43,59 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
   if (job.status !== "running") return;
 
   try {
-    // Step 1: Fetch Localist events
+    // Step 1: Fetch all Localist events
     const rawEvents = await fetchLocalistEvents(180);
 
-    await updatePipelineJob(jobId, {
-      totalFetched: rawEvents.length,
-      progressTotal: rawEvents.length,
-    });
+    // Step 2: Bulk-check which event IDs are already processed — one Firestore call
+    const allIds = rawEvents.map((e) => String(e.id));
+    const processedSet = await bulkCheckProcessed(allIds);
 
-    // Step 2 & 3: Filter already-processed + fetch CH posts for dedup
-    const [chPosts] = await Promise.all([fetchExistingCHPosts()]);
+    // Split into already-done vs new — counts set ONCE, accurately
+    const alreadyIngested = rawEvents.filter((e) => processedSet.has(String(e.id)));
+    const newEvents = rawEvents.filter((e) => !processedSet.has(String(e.id)));
 
+    // On first invocation (continuationIndex === 0) set the totals.
+    // On continuation, preserve existing totals so the UI doesn't jump.
+    const isFirstRun = (job.continuationIndex ?? 0) === 0;
+    if (isFirstRun) {
+      await updatePipelineJob(jobId, {
+        totalFetched: rawEvents.length,
+        totalSkipped: alreadyIngested.length,
+        progressTotal: newEvents.length,
+        progress: 0,
+      });
+    }
+
+    // Restore cumulative counters from job (continuation adds to these)
     let queued = job.totalQueued || 0;
     let rejected = job.totalRejected || 0;
     let duplicates = job.totalDuplicates || 0;
-    let skipped = job.totalSkipped || 0;
+
+    // continuationIndex = how many of newEvents were already processed in prior segments
+    const startIndex = job.continuationIndex || 0;
+
+    // Step 3: Fetch Community Hub posts for dedup (once per invocation)
+    const chPosts = await fetchExistingCHPosts();
     const duplicateGroups: Map<string, DuplicateGroup> = new Map();
 
-    // Step 4-9: Process each event
-    for (let i = 0; i < rawEvents.length; i++) {
-      const rawEvent = rawEvents[i];
+    // Step 4-9: Process only new events, resuming from startIndex
+    for (let i = startIndex; i < newEvents.length; i++) {
+      const rawEvent = newEvents[i];
 
       // Time limit check — auto-continue in a new function invocation
       if (Date.now() - startTime > TIME_LIMIT_MS) {
         await updatePipelineJob(jobId, {
           progress: i,
+          continuationIndex: i,
           totalQueued: queued,
           totalRejected: rejected,
           totalDuplicates: duplicates,
-          totalSkipped: skipped,
         });
-        // Save duplicate groups before continuing
         for (const group of duplicateGroups.values()) {
           await saveDuplicateGroup(group);
         }
         await triggerContinuation(jobId, sourceId);
         return;
-      }
-
-      // Idempotency check
-      const alreadyProcessed = await isEventProcessed(String(rawEvent.id));
-      if (alreadyProcessed) {
-        skipped++;
-        await updatePipelineJob(jobId, {
-          progress: i + 1,
-          totalSkipped: skipped,
-        });
-        continue;
       }
 
       const postId = generatePostId(String(rawEvent.id));
@@ -115,6 +121,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
           rejected++;
           await updatePipelineJob(jobId, {
             progress: i + 1,
+            continuationIndex: i + 1,
             totalRejected: rejected,
           });
           continue;
@@ -184,18 +191,18 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
             totalQueued: queued,
             totalRejected: rejected,
             totalDuplicates: duplicates,
-            totalSkipped: skipped,
           });
           return;
         }
+        // Non-quota errors: log and continue to next event
       }
 
       await updatePipelineJob(jobId, {
         progress: i + 1,
+        continuationIndex: i + 1,
         totalQueued: queued,
         totalRejected: rejected,
         totalDuplicates: duplicates,
-        totalSkipped: skipped,
       });
     }
 
@@ -208,10 +215,10 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
     await updatePipelineJob(jobId, {
       status: "completed",
       completedAt: Date.now(),
+      continuationIndex: 0,
       totalQueued: queued,
       totalRejected: rejected,
       totalDuplicates: duplicates,
-      totalSkipped: skipped,
     });
 
     await recordSourceRun(sourceId, jobId);
