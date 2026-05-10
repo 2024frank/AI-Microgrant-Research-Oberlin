@@ -1,7 +1,7 @@
 name: Pipeline Cron (Backup)
 
 # Primary scheduling: Vercel cron in vercel.json (every 6h).
-# This is a best-effort backup. It never fails the workflow.
+# This is a best-effort backup trigger — never blocks CI.
 
 on:
   schedule:
@@ -13,28 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger pipeline
-        shell: bash
+        continue-on-error: true
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
         run: |
-          set +e  # never exit on error — this step is best-effort
-
-          if [ -z "$APP_URL" ]; then
-            echo "APP_URL secret not set — skipping"
-            exit 0
-          fi
-
-          echo "Triggering: $APP_URL/api/pipeline/trigger"
-
+          [ -z "$APP_URL" ] && echo "APP_URL not set, skipping" && exit 0
           curl -s \
             -X POST "$APP_URL/api/pipeline/trigger" \
             -H "Content-Type: application/json" \
             -d '{"sourceId":"localist-oberlin","sourceName":"Localist – Oberlin College Calendar"}' \
             --max-time 45 \
-            -o /tmp/response.json \
-            -w "HTTP %{http_code}\n"
+            -w "\nHTTP %{http_code}\n"
 
-          echo "Response body:"
-          cat /tmp/response.json 2>/dev/null || echo "(no response body)"
-
-          exit 0
-        env:
-          APP_URL: ${{ secrets.APP_URL }}
+      - name: Done
+        run: echo "Cron step complete (pipeline runs via Vercel cron primarily)"
