@@ -5,15 +5,13 @@ export const dynamic = "force-dynamic";
 
 async function clearCollection(name: string) {
   let total = 0;
-  let hasMore = true;
-  while (hasMore) {
+  while (true) {
     const snap = await adminDb.collection(name).limit(500).get();
     if (snap.empty) break;
     const batch = adminDb.batch();
     snap.docs.forEach((d) => batch.delete(d.ref));
     await batch.commit();
     total += snap.size;
-    hasMore = snap.size === 500;
   }
   return total;
 }
