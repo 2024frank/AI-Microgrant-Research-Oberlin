@@ -7,6 +7,7 @@ import {
   Activity,
   Archive,
   BarChart3,
+  Bot,
   CalendarDays,
   Copy,
   Gauge,
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/posts", label: "Posts", icon: CalendarDays, badge: true },
   { href: "/sources", label: "Sources", icon: Gauge },
+  { href: "/source-builder", label: "Source Builder", icon: Bot, adminOnly: true },
   { href: "/ai-analysis", label: "AI Analysis", icon: BarChart3 },
   { href: "/duplicate-detection", label: "Duplicate Detection", icon: Copy },
   { href: "/geo-intel", label: "Geo Intel", icon: MapPinned },
@@ -56,8 +58,11 @@ export function AppSidebar() {
     return () => clearInterval(interval);
   }, []);
 
+  const isAdmin = role === "admin" || role === "super_admin";
   const visibleNavItems = navItems.filter(
-    (item) => item.href !== "/admin-control" || canAccessAdminControl(role),
+    (item) =>
+      (item.href !== "/admin-control" || canAccessAdminControl(role)) &&
+      (!item.adminOnly || isAdmin),
   );
 
   return (
