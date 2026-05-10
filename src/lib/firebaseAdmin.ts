@@ -17,5 +17,9 @@ function initAdmin() {
 initAdmin();
 
 export const adminDb = getFirestore();
-adminDb.settings({ ignoreUndefinedProperties: true });
+try {
+  adminDb.settings({ ignoreUndefinedProperties: true });
+} catch {
+  // Already initialized — settings can only be set once
+}
 export const serverTimestamp = () => FieldValue.serverTimestamp();
