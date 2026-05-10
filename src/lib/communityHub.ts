@@ -51,58 +51,6 @@ export async function fetchExistingCHPosts(): Promise<CHPost[]> {
   }
 }
 
-function normalizeTitle(title: string): string {
-  return title.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-export function isDuplicateOfCHPost(
-  post: ReviewPost,
-  chPosts: CHPost[]
-): CHPost | null {
-  const startTime =
-    post.sessions?.[0]?.startTime != null
-      ? Number(post.sessions[0].startTime)
-      : null;
-  const postTitle = normalizeTitle(post.title);
-  const postLocation =
-    "location" in post ? (post.location ?? "").toLowerCase() : "";
-
-  for (const chPost of chPosts) {
-    const chTitle = normalizeTitle(chPost.title);
-
-    // Exact or near-exact title match (regardless of time)
-    if (postTitle.length > 5 && chTitle.length > 5) {
-      if (postTitle === chTitle) return chPost;
-      if (postTitle.includes(chTitle) || chTitle.includes(postTitle)) return chPost;
-    }
-
-    // Time-based matching: same start time (±2 hours) + partial title overlap
-    if (chPost.startTime && startTime !== null) {
-      const timeDiff = Math.abs(chPost.startTime - startTime);
-      if (timeDiff <= 7200) {
-        // Same time window — check title similarity
-        const titleOverlap =
-          postTitle.slice(0, 15) === chTitle.slice(0, 15) ||
-          postTitle.includes(chTitle.slice(0, 12)) ||
-          chTitle.includes(postTitle.slice(0, 12));
-
-        if (titleOverlap) return chPost;
-
-        // Same time + same location
-        const chLocation = (chPost.location ?? "").toLowerCase();
-        const locationMatch =
-          postLocation.length > 3 &&
-          chLocation.length > 3 &&
-          (postLocation.includes(chLocation.slice(0, 10)) ||
-            chLocation.includes(postLocation.slice(0, 10)));
-
-        if (locationMatch) return chPost;
-      }
-    }
-  }
-
-  return null;
-}
 
 export function buildCommunityHubPayload(
   post: ReviewPost,

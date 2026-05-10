@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getReviewPost, updateReviewPost } from "@/lib/reviewStore";
-import { submitToCommunityHub, fetchExistingCHPosts, isDuplicateOfCHPost } from "@/lib/communityHub";
+import { submitToCommunityHub, fetchExistingCHPosts } from "@/lib/communityHub";
+import { runDedupAgent } from "@/lib/gemini";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if this event already exists on Community Hub
+    // AI-powered duplicate check against Community Hub
     const chPosts = await fetchExistingCHPosts();
-    const chDuplicate = isDuplicateOfCHPost(post, chPosts);
-    if (chDuplicate) {
+    const startTime = post.sessions?.[0]?.startTime != null ? Number(post.sessions[0].startTime) : undefined;
+    const location = "location" in post ? (post as Record<string, unknown>).location as string | undefined : undefined;
+    const dedupResult = await runDedupAgent(
+      { title: post.title, startTime, location, description: post.description },
+      chPosts.map((p) => ({ id: p.id, title: p.title, startTime: p.startTime, location: p.location }))
+    );
+    if (dedupResult.isDuplicate && dedupResult.confidence >= 0.7) {
       return NextResponse.json(
-        { error: `This event already exists on Community Hub: "${chDuplicate.title}" (ID: ${chDuplicate.id})` },
+        { error: `AI detected this event already exists on Community Hub: "${dedupResult.matchedTitle}" — ${dedupResult.reason}` },
         { status: 409 }
       );
     }

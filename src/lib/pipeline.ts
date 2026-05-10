@@ -1,6 +1,6 @@
 import { fetchLocalistEvents } from "./localist";
-import { runExtractionAgent, runEditorAgent } from "./gemini";
-import { fetchExistingCHPosts, isDuplicateOfCHPost } from "./communityHub";
+import { runExtractionAgent, runEditorAgent, runDedupAgent } from "./gemini";
+import { fetchExistingCHPosts } from "./communityHub";
 import {
   updatePipelineJob,
   getPipelineJob,
@@ -91,24 +91,37 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
         // Step 5: Editor Agent
         const editor = await runEditorAgent(extraction, rawEvent);
 
-        // Step 6: Community Hub dedup check
-        const tempPost = buildPost(postId, extraction, editor, "pending", rawDesc, rawEvent);
-        const chDuplicate = isDuplicateOfCHPost(tempPost, chPosts);
+        // Step 6: AI-powered Community Hub dedup check
+        const dedupResult = await runDedupAgent(
+          {
+            title: extraction.title,
+            startTime: extraction.sessions[0]?.startTime,
+            location: extraction.location ?? undefined,
+            description: rawDesc,
+          },
+          chPosts.map((p) => ({
+            id: p.id,
+            title: p.title,
+            startTime: p.startTime,
+            location: p.location,
+          }))
+        );
 
         let finalStatus: ReviewPost["status"] = "pending";
         let duplicateGroupId: string | undefined;
 
-        if (chDuplicate) {
+        if (dedupResult.isDuplicate && dedupResult.confidence >= 0.7) {
           finalStatus = "duplicate";
-          const groupId = `ch-${chDuplicate.id}-${postId}`;
+          const matchId = dedupResult.matchedId ?? "unknown";
+          const groupId = `ch-${matchId}-${postId}`;
           duplicateGroupId = groupId;
           const group: DuplicateGroup = {
             id: groupId,
-            postIds: [postId, `community-hub-${chDuplicate.id}`],
-            similarityScore: 0.85,
-            matchingSignals: ["startTime", "location"],
+            postIds: [postId, `community-hub-${matchId}`],
+            similarityScore: dedupResult.confidence,
+            matchingSignals: [dedupResult.reason],
             conflictFields: [],
-            recommendation: "Review against Community Hub post",
+            recommendation: `AI detected duplicate: "${dedupResult.matchedTitle}" — ${dedupResult.reason}`,
             status: "open",
           };
           duplicateGroups.set(groupId, group);
@@ -125,8 +138,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
         await saveReviewPost(finalPost);
         await markEventProcessed(String(rawEvent.id));
 
-        // Only count after a successful save
-        if (chDuplicate) {
+        if (dedupResult.isDuplicate && dedupResult.confidence >= 0.7) {
           duplicates++;
         } else {
           queued++;

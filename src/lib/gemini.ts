@@ -216,6 +216,85 @@ export async function runEditorAgent(
   }
 }
 
+export type DedupCheckResult = {
+  isDuplicate: boolean;
+  matchedTitle: string | null;
+  matchedId: string | null;
+  reason: string;
+  confidence: number;
+};
+
+const DEDUP_PROMPT = `You are a duplicate detection agent for a civic community calendar in Oberlin, Ohio.
+
+Given a NEW EVENT and a list of EXISTING EVENTS already published on the Community Hub, determine if the new event is a duplicate of any existing event.
+
+Two events are duplicates if they are essentially the same event, even if the titles or descriptions differ slightly. Consider:
+- Same event with different wording (e.g. "Piano Recital" vs "Piano Concert")
+- Same event with slightly different times (within a few hours)
+- Same recurring event on the same date
+- Same event posted by different departments
+
+They are NOT duplicates if:
+- They are different sessions of a recurring event on different dates
+- They are genuinely different events at the same venue
+- They have similar names but are clearly different events
+
+NEW EVENT:
+{NEW_EVENT}
+
+EXISTING COMMUNITY HUB EVENTS (showing title, startTime, location):
+{EXISTING_EVENTS}
+
+Respond with ONLY valid JSON:
+{
+  "isDuplicate": true/false,
+  "matchedTitle": "title of the matching existing event or null",
+  "matchedId": "id of the matching existing event or null",
+  "reason": "brief explanation",
+  "confidence": 0.0-1.0
+}`;
+
+export async function runDedupAgent(
+  newEvent: { title: string; startTime?: number; location?: string; description?: string },
+  existingEvents: Array<{ id: string; title: string; startTime?: number; location?: string }>
+): Promise<DedupCheckResult> {
+  if (existingEvents.length === 0) {
+    return { isDuplicate: false, matchedTitle: null, matchedId: null, reason: "No existing events to compare", confidence: 1.0 };
+  }
+
+  const client = getClient();
+  const model = client.getGenerativeModel({ model: MODEL });
+
+  const newEventStr = JSON.stringify({
+    title: newEvent.title,
+    startTime: newEvent.startTime ? new Date(newEvent.startTime * 1000).toISOString() : null,
+    location: newEvent.location ?? null,
+    description: (newEvent.description ?? "").slice(0, 300),
+  });
+
+  const existingStr = JSON.stringify(
+    existingEvents.slice(0, 100).map((e) => ({
+      id: e.id,
+      title: e.title,
+      startTime: e.startTime ? new Date(e.startTime * 1000).toISOString() : null,
+      location: e.location ?? null,
+    }))
+  );
+
+  const prompt = DEDUP_PROMPT
+    .replace("{NEW_EVENT}", newEventStr)
+    .replace("{EXISTING_EVENTS}", existingStr);
+
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+
+  try {
+    return parseJson<DedupCheckResult>(text);
+  } catch {
+    return { isDuplicate: false, matchedTitle: null, matchedId: null, reason: "Failed to parse AI response", confidence: 0 };
+  }
+}
+
 export async function runAgentsBatch(
   events: LocalistEvent[]
 ): Promise<
