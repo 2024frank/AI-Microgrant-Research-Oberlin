@@ -20,6 +20,7 @@
     "react": "latest",
     "react-dom": "latest",
     "resend": "^6.12.3",
+    "server-only": "^0.0.1",
     "tailwind-merge": "latest"
   },
   "devDependencies": {

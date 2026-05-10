@@ -12,7 +12,7 @@ import {
   markEventProcessed,
 } from "./reviewStore";
 import { recordSourceRun } from "./sources";
-import { listAuthorizedUsersAdmin } from "./users";
+import { listAuthorizedUsersAdmin } from "./usersAdmin";
 import { getReviewPostStats } from "./reviewStore";
 import { sendPipelineCompleteEmail } from "./emailServer";
 import type { ReviewPost, EventPost, AnnouncementPost, DuplicateGroup } from "./postTypes";
