@@ -140,6 +140,26 @@ export function PostDetailClient({ id }: { id: string }) {
     setSaveMessage("Changes saved.");
   }
 
+  async function saveFeedbackToAPI(decision: "approved" | "rejected" | "needs_correction", reason?: string) {
+    if (!post) return;
+    try {
+      await fetch("/api/posts/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId: post.id,
+          postTitle: post.title,
+          decision,
+          rejectionReason: reason,
+          postTypeId: post.postTypeId,
+          eventType: post.eventType,
+          aiConfidence: post.aiConfidence,
+          sourceName: post.sourceName,
+        }),
+      });
+    } catch { /* non-blocking */ }
+  }
+
   function approve() {
     if (!post || !validation) {
       return;
@@ -156,6 +176,7 @@ export function PostDetailClient({ id }: { id: string }) {
     }
 
     updatePostsStatus([post.id], "approved");
+    saveFeedbackToAPI("approved");
   }
 
   async function publishToHub() {
@@ -196,6 +217,7 @@ export function PostDetailClient({ id }: { id: string }) {
     }
 
     updatePostsStatus([post.id], "rejected", reason);
+    saveFeedbackToAPI("rejected", reason);
   }
 
   return (
@@ -463,7 +485,7 @@ export function PostDetailClient({ id }: { id: string }) {
               <>
                 <button className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white" onClick={approve} type="button">Approve</button>
                 <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={reject} type="button">Reject</button>
-                <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "needs_correction")} type="button">Send Back / Needs Correction</button>
+                <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => { updatePostsStatus([post.id], "needs_correction"); saveFeedbackToAPI("needs_correction", rejectionReason || undefined); }} type="button">Send Back / Needs Correction</button>
                 <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "archived")} type="button">Archive</button>
               </>
             )}

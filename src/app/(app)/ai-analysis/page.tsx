@@ -1,149 +1,216 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Brain, ThumbsUp, ThumbsDown, AlertCircle, TrendingUp, Loader2 } from "lucide-react";
 import { COMMUNITY_HUB_POST_TYPES } from "@/lib/postTypes";
 import type { ReviewPost } from "@/lib/postTypes";
 import type { PipelineJob } from "@/lib/pipelineJobs";
 
-type TypeCount = { label: string; count: number };
+type FeedbackStats = {
+  totalReviewed: number;
+  approved: number;
+  rejected: number;
+  needsCorrection: number;
+  approvalRate: number;
+  avgConfidenceApproved: number;
+  avgConfidenceRejected: number;
+  topRejectionReasons: { reason: string; count: number }[];
+  rejectionsByType: { typeId: number; count: number }[];
+};
 
 export default function AiAnalysisPage() {
   const [posts, setPosts] = useState<ReviewPost[]>([]);
   const [jobs, setJobs] = useState<PipelineJob[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       const { listAllReviewPosts } = await import("@/lib/reviewStoreClient");
-      const { clientListPipelineJobs: listPipelineJobs } = await import("@/lib/pipelineJobsClient");
-      const [p, j] = await Promise.all([listAllReviewPosts(), listPipelineJobs(10)]);
+      const { clientListPipelineJobs } = await import("@/lib/pipelineJobsClient");
+      const [p, j, fb] = await Promise.all([
+        listAllReviewPosts(),
+        clientListPipelineJobs(10),
+        fetch("/api/posts/feedback-stats").then((r) => r.ok ? r.json() : null).catch(() => null),
+      ]);
       setPosts(p);
       setJobs(j);
+      setFeedback(fb);
       setLoading(false);
     }
     load();
   }, []);
 
   const totalPosts = posts.length;
-  const rejectedCount = posts.filter((p) => p.status === "rejected").length;
-  const rejectionRate = totalPosts > 0 ? Math.round((rejectedCount / totalPosts) * 100) : 0;
+  const rejectedAuto = posts.filter((p) => p.status === "rejected").length;
+  const autoRejectionRate = totalPosts > 0 ? Math.round((rejectedAuto / totalPosts) * 100) : 0;
+  const avgConfidence = posts.length > 0
+    ? Math.round((posts.reduce((s, p) => s + (Number(p.aiConfidence) || 0), 0) / posts.length) * 100) : 0;
 
-  const avgConfidence =
-    posts.length > 0
-      ? Math.round(
-          (posts.reduce((sum, p) => sum + (Number(p.aiConfidence) || 0), 0) / posts.length) * 100
-        )
-      : 0;
-
-  const typeCounts: TypeCount[] = Object.entries(COMMUNITY_HUB_POST_TYPES).map(([id, label]) => ({
-    label,
-    count: posts.filter((p) => p.postTypeId?.includes(Number(id))).length,
-  })).filter((t) => t.count > 0).sort((a, b) => b.count - a.count);
+  const typeCounts = Object.entries(COMMUNITY_HUB_POST_TYPES)
+    .map(([id, label]) => ({ label, count: posts.filter((p) => p.postTypeId?.includes(Number(id))).length }))
+    .filter((t) => t.count > 0).sort((a, b) => b.count - a.count);
+  const maxType = typeCounts[0]?.count ?? 1;
 
   const sponsorCounts: Record<string, number> = {};
-  posts.forEach((p) => {
-    p.sponsors?.forEach((s) => {
-      if (s !== "Oberlin College") {
-        sponsorCounts[s] = (sponsorCounts[s] ?? 0) + 1;
-      }
-    });
-  });
-  const topSponsors = Object.entries(sponsorCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
+  posts.forEach((p) => { p.sponsors?.forEach((s) => { if (s !== "Oberlin College") sponsorCounts[s] = (sponsorCounts[s] ?? 0) + 1; }); });
+  const topSponsors = Object.entries(sponsorCounts).sort(([, a], [, b]) => b - a).slice(0, 5);
 
-  if (loading) {
-    return (
-      <div className="p-6 text-sm text-[var(--muted)]">Loading analysis…</div>
-    );
-  }
+  const calibrationGap = feedback ? feedback.avgConfidenceApproved - feedback.avgConfidenceRejected : null;
+
+  if (loading) return (
+    <div className="p-6 flex items-center gap-2 text-sm text-[var(--muted)]">
+      <Loader2 className="w-4 h-4 animate-spin" /> Loading analysis…
+    </div>
+  );
 
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="font-[var(--font-public-sans)] text-3xl font-bold tracking-[-0.02em] text-[var(--text)]">
-          Operational Intelligence
-        </h1>
-        <p className="mt-2 text-[var(--muted)]">
-          AI extraction quality, confidence scores, and event type breakdown.
-        </p>
+        <h1 className="font-[var(--font-public-sans)] text-3xl font-bold tracking-[-0.02em] text-[var(--text)]">Operational Intelligence</h1>
+        <p className="mt-2 text-[var(--muted)]">AI extraction quality, reviewer feedback, and training signals.</p>
       </div>
 
-      {totalPosts === 0 ? (
+      {totalPosts === 0 && !feedback ? (
         <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-6 text-sm text-[var(--muted)]">
           <p className="font-semibold text-[var(--text)]">No data yet.</p>
-          <p className="mt-2">Run the pipeline from the Sources page to generate AI analysis.</p>
+          <p className="mt-2">Run the pipeline and review some posts to generate AI analysis.</p>
         </div>
       ) : (
         <>
-          {/* Stat cards */}
+          {/* Top stats */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: "Total Processed", value: totalPosts },
-              { label: "Avg AI Confidence", value: `${avgConfidence}%` },
-              { label: "Auto-Rejection Rate", value: `${rejectionRate}%` },
-              { label: "Pipeline Runs", value: jobs.length },
-            ].map(({ label, value }) => (
+              { label: "Events Processed", value: totalPosts, sub: `${jobs.length} pipeline runs` },
+              { label: "Avg AI Confidence", value: `${avgConfidence}%`, sub: "Gemini extraction score" },
+              { label: "Auto-Rejection Rate", value: `${autoRejectionRate}%`, sub: "Athletics / ineligible" },
+              { label: "Reviewer Approval Rate", value: feedback ? `${feedback.approvalRate}%` : "—", sub: feedback ? `${feedback.totalReviewed} manually reviewed` : "No reviews yet" },
+            ].map(({ label, value, sub }) => (
               <div key={label} className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--muted)]">{label}</p>
                 <p className="mt-1 text-2xl font-bold text-[var(--text)]">{value}</p>
+                <p className="text-xs text-[var(--muted)] mt-0.5">{sub}</p>
               </div>
             ))}
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-2">
-            {/* Event type breakdown */}
+          {/* Reviewer feedback */}
+          {feedback && feedback.totalReviewed > 0 && (
             <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
-              <h2 className="font-semibold text-[var(--text)] mb-4">Event Type Breakdown</h2>
-              <div className="space-y-2">
-                {typeCounts.map(({ label, count }) => (
-                  <div key={label} className="flex items-center gap-3 text-sm">
-                    <span className="w-44 shrink-0 text-[var(--muted)] truncate">{label}</span>
-                    <div className="flex-1 h-2 rounded-full bg-[var(--surface)] overflow-hidden">
-                      <div
-                        className="h-full bg-[var(--primary)] rounded-full"
-                        style={{ width: `${Math.round((count / totalPosts) * 100)}%` }}
-                      />
-                    </div>
-                    <span className="w-6 text-right text-[var(--muted)] tabular-nums">{count}</span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2 mb-5">
+                <Brain className="w-4 h-4 text-[var(--primary)]" />
+                <h2 className="font-semibold text-[var(--text)]">Reviewer Feedback — AI Training Signals</h2>
               </div>
+              <div className="grid gap-6 xl:grid-cols-3">
+                {/* Decision breakdown */}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.05em] text-[var(--muted)] mb-3">Decision Breakdown</p>
+                  <div className="space-y-2.5">
+                    {[
+                      { label: "Approved", count: feedback.approved, icon: <ThumbsUp className="w-3.5 h-3.5" />, color: "text-teal-400 bg-teal-900/20" },
+                      { label: "Rejected", count: feedback.rejected, icon: <ThumbsDown className="w-3.5 h-3.5" />, color: "text-red-400 bg-red-900/20" },
+                      { label: "Needs Correction", count: feedback.needsCorrection, icon: <AlertCircle className="w-3.5 h-3.5" />, color: "text-amber-400 bg-amber-900/20" },
+                    ].map(({ label, count, icon, color }) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className={`flex items-center gap-1.5 text-sm px-2 py-1 rounded-md ${color}`}>{icon}{label}</span>
+                        <span className="font-semibold text-[var(--text)] tabular-nums">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Calibration */}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.05em] text-[var(--muted)] mb-3">AI Confidence Calibration</p>
+                  <div className="space-y-3">
+                    {[
+                      { label: "Avg confidence (approved)", value: feedback.avgConfidenceApproved, color: "bg-teal-500", text: "text-teal-400" },
+                      { label: "Avg confidence (rejected)", value: feedback.avgConfidenceRejected, color: "bg-red-500", text: "text-red-400" },
+                    ].map(({ label, value, color, text }) => (
+                      <div key={label}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-[var(--muted)]">{label}</span>
+                          <span className={`font-medium ${text}`}>{value}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-[var(--surface)] overflow-hidden">
+                          <div className={`h-full ${color} rounded-full`} style={{ width: `${value}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                    {calibrationGap !== null && (
+                      <p className="text-xs text-[var(--muted)] flex items-start gap-1 mt-2">
+                        <TrendingUp className="w-3 h-3 shrink-0 mt-0.5" />
+                        {calibrationGap > 10 ? "Well-calibrated — high confidence correlates with approval."
+                         : calibrationGap > 0 ? "Slightly calibrated — room to improve."
+                         : "Not predictive — AI confidence needs recalibration."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {/* Rejection reasons */}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.05em] text-[var(--muted)] mb-3">Top Rejection Reasons</p>
+                  {feedback.topRejectionReasons.length === 0 ? (
+                    <p className="text-sm text-[var(--muted)]">No reasons recorded yet. Add reasons when rejecting posts.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {feedback.topRejectionReasons.map(({ reason, count }) => (
+                        <div key={reason} className="flex items-start gap-2 text-sm">
+                          <span className="shrink-0 text-red-400 font-medium tabular-nums">{count}×</span>
+                          <span className="text-[var(--muted)] line-clamp-2 capitalize">{reason}</span>
+                        </div>
+                      ))}
+                      <p className="text-xs text-[var(--muted)] mt-3 pt-3 border-t border-[var(--border)]">
+                        These patterns are training signals. The more rejections with reasons, the better the AI can be guided.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Types most rejected */}
+              {feedback.rejectionsByType.length > 0 && (
+                <div className="mt-5 pt-5 border-t border-[var(--border)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.05em] text-[var(--muted)] mb-3">Event Types Most Rejected by Reviewers</p>
+                  <div className="flex flex-wrap gap-2">
+                    {feedback.rejectionsByType.slice(0, 6).map(({ typeId, count }) => (
+                      <span key={typeId} className="px-2.5 py-1 rounded-full text-xs bg-red-900/20 text-red-300 border border-red-800/30">
+                        {COMMUNITY_HUB_POST_TYPES[typeId] ?? `Type ${typeId}`} · {count}×
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+          )}
 
-            {/* Top sponsors */}
+          <div className="grid gap-6 xl:grid-cols-2">
             <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
-              <h2 className="font-semibold text-[var(--text)] mb-4">Top Departments / Sponsors</h2>
-              {topSponsors.length === 0 ? (
-                <p className="text-sm text-[var(--muted)]">No sponsor data extracted yet.</p>
-              ) : (
+              <h2 className="font-semibold text-[var(--text)] mb-4">Event Type Breakdown (Pipeline)</h2>
+              {typeCounts.length === 0 ? <p className="text-sm text-[var(--muted)]">No events yet.</p> : (
                 <div className="space-y-2">
-                  {topSponsors.map(([name, count]) => (
-                    <div key={name} className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--muted)] truncate">{name}</span>
-                      <span className="font-medium text-[var(--text)] tabular-nums">{count}</span>
+                  {typeCounts.map(({ label, count }) => (
+                    <div key={label} className="flex items-center gap-3 text-sm">
+                      <span className="w-44 shrink-0 text-[var(--muted)] truncate">{label}</span>
+                      <div className="flex-1 h-1.5 rounded-full bg-[var(--surface)] overflow-hidden">
+                        <div className="h-full bg-[var(--primary)] rounded-full" style={{ width: `${Math.round((count / maxType) * 100)}%` }} />
+                      </div>
+                      <span className="w-5 text-right text-[var(--muted)] tabular-nums">{count}</span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Pipeline runs */}
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
-            <h2 className="font-semibold text-[var(--text)] mb-4">Recent Pipeline Runs</h2>
-            <div className="space-y-2 text-sm">
-              {jobs.map((job) => (
-                <div key={job.id} className="flex items-center gap-4 text-[var(--muted)]">
-                  <span className="w-40 shrink-0">{new Date(job.startedAt).toLocaleString()}</span>
-                  <span className="text-[var(--text)]">{job.totalFetched} fetched</span>
-                  <span className="text-teal-400">{job.totalQueued} queued</span>
-                  <span className="text-red-400">{job.totalRejected} rejected</span>
-                  <span className={job.status === "completed" ? "text-teal-400" : "text-red-400"}>
-                    {job.status}
-                  </span>
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
+              <h2 className="font-semibold text-[var(--text)] mb-4">Top Departments / Sponsors</h2>
+              {topSponsors.length === 0 ? <p className="text-sm text-[var(--muted)]">No sponsor data yet.</p> : (
+                <div className="space-y-2">
+                  {topSponsors.map(([name, count]) => (
+                    <div key={name} className="flex items-center justify-between text-sm">
+                      <span className="text-[var(--muted)] truncate">{name}</span>
+                      <span className="font-medium text-[var(--text)] tabular-nums ml-4">{count}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </>
