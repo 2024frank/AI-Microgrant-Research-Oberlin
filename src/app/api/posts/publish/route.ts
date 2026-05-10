@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getReviewPost, updateReviewPost } from "@/lib/reviewStore";
-import { submitToCommunityHub } from "@/lib/communityHub";
+import { submitToCommunityHub, fetchExistingCHPosts, isDuplicateOfCHPost } from "@/lib/communityHub";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +24,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Only approved posts can be published" },
         { status: 400 }
+      );
+    }
+
+    // Check if this event already exists on Community Hub
+    const chPosts = await fetchExistingCHPosts();
+    const chDuplicate = isDuplicateOfCHPost(post, chPosts);
+    if (chDuplicate) {
+      return NextResponse.json(
+        { error: `This event already exists on Community Hub: "${chDuplicate.title}" (ID: ${chDuplicate.id})` },
+        { status: 409 }
       );
     }
 

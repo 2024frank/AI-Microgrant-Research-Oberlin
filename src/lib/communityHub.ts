@@ -51,6 +51,10 @@ export async function fetchExistingCHPosts(): Promise<CHPost[]> {
   }
 }
 
+function normalizeTitle(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 export function isDuplicateOfCHPost(
   post: ReviewPost,
   chPosts: CHPost[]
@@ -59,27 +63,42 @@ export function isDuplicateOfCHPost(
     post.sessions?.[0]?.startTime != null
       ? Number(post.sessions[0].startTime)
       : null;
+  const postTitle = normalizeTitle(post.title);
   const postLocation =
     "location" in post ? (post.location ?? "").toLowerCase() : "";
 
   for (const chPost of chPosts) {
-    if (!chPost.startTime) continue;
+    const chTitle = normalizeTitle(chPost.title);
 
-    const timeDiff = Math.abs(chPost.startTime - (startTime ?? 0));
-    if (startTime === null || timeDiff > 3600) continue;
+    // Exact or near-exact title match (regardless of time)
+    if (postTitle.length > 5 && chTitle.length > 5) {
+      if (postTitle === chTitle) return chPost;
+      if (postTitle.includes(chTitle) || chTitle.includes(postTitle)) return chPost;
+    }
 
-    const chLocation = (chPost.location ?? "").toLowerCase();
-    const locationMatch =
-      postLocation.length > 0 &&
-      chLocation.length > 0 &&
-      (postLocation.includes(chLocation.slice(0, 10)) ||
-        chLocation.includes(postLocation.slice(0, 10)));
+    // Time-based matching: same start time (±2 hours) + partial title overlap
+    if (chPost.startTime && startTime !== null) {
+      const timeDiff = Math.abs(chPost.startTime - startTime);
+      if (timeDiff <= 7200) {
+        // Same time window — check title similarity
+        const titleOverlap =
+          postTitle.slice(0, 15) === chTitle.slice(0, 15) ||
+          postTitle.includes(chTitle.slice(0, 12)) ||
+          chTitle.includes(postTitle.slice(0, 12));
 
-    const titleSimilar =
-      post.title.toLowerCase().slice(0, 20) ===
-      chPost.title.toLowerCase().slice(0, 20);
+        if (titleOverlap) return chPost;
 
-    if (locationMatch || titleSimilar) return chPost;
+        // Same time + same location
+        const chLocation = (chPost.location ?? "").toLowerCase();
+        const locationMatch =
+          postLocation.length > 3 &&
+          chLocation.length > 3 &&
+          (postLocation.includes(chLocation.slice(0, 10)) ||
+            chLocation.includes(postLocation.slice(0, 10)));
+
+        if (locationMatch) return chPost;
+      }
+    }
   }
 
   return null;
