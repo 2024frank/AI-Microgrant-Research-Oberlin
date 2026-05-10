@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
+import { after } from "next/server";
 import { createPipelineJob } from "@/lib/pipelineJobs";
 import { runPipeline } from "@/lib/pipeline";
 import { ensureDefaultSources } from "@/lib/sources";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
@@ -17,9 +17,10 @@ export async function POST(req: NextRequest) {
 
     const jobId = await createPipelineJob(sourceId, sourceName);
 
-    // Fire and forget — runPipeline updates Firestore as it progresses
-    runPipeline(jobId, sourceId).catch((err) => {
-      console.error("Pipeline error:", err);
+    // after() keeps the serverless function alive after the response is sent
+    // so Vercel doesn't kill the pipeline mid-run
+    after(async () => {
+      await runPipeline(jobId, sourceId);
     });
 
     return NextResponse.json({ jobId, status: "running" });

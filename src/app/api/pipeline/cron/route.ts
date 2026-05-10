@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSourcesDue } from "@/lib/sources";
 import { createPipelineJob } from "@/lib/pipelineJobs";
 import { runPipeline } from "@/lib/pipeline";
@@ -26,9 +26,10 @@ export async function GET(req: NextRequest) {
 
     for (const source of dueSources) {
       const jobId = await createPipelineJob(source.id, source.name);
-      runPipeline(jobId, source.id).catch((err) =>
-        console.error(`Pipeline error for source ${source.id}:`, err)
-      );
+      const sid = source.id;
+      after(async () => {
+        await runPipeline(jobId, sid);
+      });
       triggered.push(jobId);
     }
 
