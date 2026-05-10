@@ -76,7 +76,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
           const rejectedPost: ReviewPost = buildPost(postId, extraction, {
             description: rawDesc.slice(0, 200) || rawEvent.title,
             extendedDescription: "",
-          }, "rejected", rawDesc);
+          }, "rejected", rawDesc, rawEvent);
 
           await saveReviewPost(rejectedPost);
           await markEventProcessed(String(rawEvent.id));
@@ -92,7 +92,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
         const editor = await runEditorAgent(extraction, rawEvent);
 
         // Step 6: Community Hub dedup check
-        const tempPost = buildPost(postId, extraction, editor, "pending", rawDesc);
+        const tempPost = buildPost(postId, extraction, editor, "pending", rawDesc, rawEvent);
         const chDuplicate = isDuplicateOfCHPost(tempPost, chPosts);
 
         let finalStatus: ReviewPost["status"] = "pending";
@@ -118,7 +118,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
         }
 
         // Step 7: Write to Firestore
-        const finalPost = buildPost(postId, extraction, editor, finalStatus, rawDesc);
+        const finalPost = buildPost(postId, extraction, editor, finalStatus, rawDesc, rawEvent);
         if (duplicateGroupId) {
           (finalPost as Record<string, unknown>).duplicateGroupId = duplicateGroupId;
           (finalPost as Record<string, unknown>).duplicateWarning =
@@ -198,8 +198,12 @@ function buildPost(
   extraction: Awaited<ReturnType<typeof runExtractionAgent>>,
   editor: { description: string; extendedDescription: string },
   status: ReviewPost["status"],
-  rawDescription?: string
+  rawDescription?: string,
+  rawEvent?: import("./localist").LocalistEvent
 ): ReviewPost {
+  const contactEmail = rawEvent?.custom_fields?.contact_email_address || undefined;
+  const contactPhone = rawEvent?.custom_fields?.contact_phone_number || undefined;
+  const roomNum = rawEvent?.room_number ? String(rawEvent.room_number) : undefined;
   const base = {
     id: postId,
     email: ADMIN_EMAIL,
@@ -234,6 +238,8 @@ function buildPost(
       eventType: "an",
       locationType: "ne",
       website: extraction.website ?? undefined,
+      contactEmail,
+      phone: contactPhone,
     };
     return ann;
   }
@@ -245,6 +251,9 @@ function buildPost(
     location: extraction.location ?? undefined,
     urlLink: extraction.urlLink ?? undefined,
     website: extraction.website ?? undefined,
+    contactEmail,
+    phone: contactPhone,
+    roomNum,
   };
   return evt;
 }

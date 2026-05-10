@@ -32,6 +32,12 @@ export type LocalistEvent = {
   address: string;
   ticket_url: string;
   photo_url: string | null;
+  room_number?: string | number;
+  custom_fields?: {
+    contact_person?: string;
+    contact_phone_number?: string;
+    contact_email_address?: string;
+  };
   filters: {
     event_public_events?: LocalistEventFilter[];
     event_types?: LocalistEventFilter[];
