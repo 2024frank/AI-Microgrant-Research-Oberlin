@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI, SchemaType, type Part, type FunctionCallPart, type Tool } from "@google/generative-ai";
+import { runManagedAgentText } from "@/lib/anthropicManagedAgent";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -123,6 +123,19 @@ EXISTING SOURCE: Localist (calendar.oberlin.edu) - already integrated.
 
 Be concise and action-oriented. Probe first, ask questions later.`;
 
+function buildAgentPrompt(messages: Array<{ role: string; content: string }>) {
+  const conversation = messages
+    .map((m) => `${m.role === "assistant" ? "Assistant" : "User"}:\n${m.content}`)
+    .join("\n\n");
+
+  return `${SYSTEM_PROMPT}
+
+CONVERSATION SO FAR:
+${conversation}
+
+Respond to the latest user message. If you generate a source configuration, include it in a fenced \`\`\`json block. If custom code is needed, include it in a fenced \`\`\`typescript block.`;
+}
+
 // Probe a URL server-side (same logic as /api/source-builder/probe)
 async function executeProbe(url: string): Promise<Record<string, unknown>> {
   try {
@@ -168,90 +181,30 @@ async function executeProbe(url: string): Promise<Record<string, unknown>> {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: "No Gemini key" }, { status: 500 });
-
   const { messages, sessionId } = await req.json();
   if (!messages?.length) return NextResponse.json({ error: "Messages required" }, { status: 400 });
+  const typedMessages = messages as Array<{ role: string; content: string }>;
+  const latestMessage = typedMessages.at(-1)?.content ?? "";
+  const urls = Array.from(new Set(latestMessage.match(/https?:\/\/[^\s)]+/g) ?? [])).slice(0, 3);
+  const probeResults = await Promise.all(
+    urls.map(async (url) => ({ url, result: await executeProbe(url) }))
+  );
 
-  const client = new GoogleGenerativeAI(apiKey);
+  const prompt = probeResults.length
+    ? `${buildAgentPrompt(typedMessages)}
 
-  const tools: Tool[] = [
-    {
-      functionDeclarations: [
-        {
-          name: "probe_url",
-          description: "Probe a URL to discover what kind of API, RSS feed, or iCal it serves. Call this proactively when you have a candidate URL — try multiple patterns if needed.",
-          parameters: {
-            type: SchemaType.OBJECT,
-            properties: {
-              url: {
-                type: SchemaType.STRING,
-                description: "The URL to probe",
-                nullable: false,
-              } as never,
-            },
-            required: ["url"],
-          },
-        },
-      ],
-    },
-  ];
+SERVER-SIDE URL PROBE RESULTS:
+\`\`\`json
+${JSON.stringify(probeResults, null, 2)}
+\`\`\``
+    : buildAgentPrompt(typedMessages);
 
-  const model = client.getGenerativeModel({ model: "gemini-2.5-flash", tools });
-
-  const chatHistory = messages.map((m: { role: string; content: string }) => ({
-    role: m.role === "user" ? "user" : "model",
-    parts: [{ text: m.content }],
-  }));
-
-  const lastMsg = chatHistory.pop();
-
-  const chat = model.startChat({
-    history: [
-      { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
-      { role: "model", parts: [{ text: "I'm ready to help you add a new data source. Tell me what source you want — I'll probe it and build the config." }] },
-      ...chatHistory,
-    ],
+  const result = await runManagedAgentText(prompt, {
+    title: "Civic Calendar source builder",
+    onText: (chunk) => console.log(chunk),
   });
 
-  // Function-calling loop — Gemini may call probe_url one or more times before giving a text reply
-  const probeResults: Array<{ url: string; result: Record<string, unknown> }> = [];
-  let response = await chat.sendMessage(lastMsg.parts[0].text);
-
-  for (let round = 0; round < 5; round++) {
-    const parts: Part[] = response.response.candidates?.[0]?.content?.parts ?? [];
-    const functionCalls = parts.filter((p): p is FunctionCallPart => "functionCall" in p && p.functionCall != null);
-
-    if (functionCalls.length === 0) break; // No more function calls — we have the final text reply
-
-    // Execute all function calls in parallel
-    const functionResponses = await Promise.all(
-      functionCalls.map(async (part) => {
-        const call = part.functionCall;
-        if (call.name === "probe_url") {
-          const url = (call.args as { url: string }).url;
-          const result = await executeProbe(url);
-          probeResults.push({ url, result });
-          return {
-            functionResponse: {
-              name: "probe_url",
-              response: result,
-            },
-          };
-        }
-        return null;
-      })
-    );
-
-    const validResponses = functionResponses.filter(Boolean);
-    if (validResponses.length === 0) break;
-
-    // Send function results back to Gemini
-    response = await chat.sendMessage(validResponses as Parameters<typeof chat.sendMessage>[0]);
-  }
-
-  const text = response.response.text();
+  const text = result.text;
 
   // Extract JSON config
   let generatedConfig = null;
@@ -279,6 +232,6 @@ export async function POST(req: NextRequest) {
     generatedConfig,
     generatedCode,
     probeResults,
-    sessionId,
+    sessionId: sessionId ?? result.sessionId,
   });
 }
