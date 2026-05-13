@@ -112,6 +112,10 @@ export default function SourceBuilderPage() {
         body: JSON.stringify({ messages: chatMsgs, sessionId, agentSessionId }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        const detail = data?.detail ?? data?.error ?? `HTTP ${res.status}`;
+        throw new Error(detail);
+      }
       if (data.agentSessionId) setAgentSessionId(data.agentSessionId);
 
       const newMsgBatch: Message[] = [];
@@ -150,8 +154,9 @@ export default function SourceBuilderPage() {
       if (sessionId) {
         await appendChatMessage(sessionId, { role: "assistant", content: data.reply, timestamp: Date.now() });
       }
-    } catch {
-      setMessages([...newMessages, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : "Unknown error";
+      setMessages([...newMessages, { role: "assistant", content: `Sorry, something went wrong: ${detail}` }]);
     }
 
     setLoading(false);
@@ -190,6 +195,7 @@ export default function SourceBuilderPage() {
         }),
       });
       const chatData = await chatRes.json();
+      if (!chatRes.ok) throw new Error(chatData?.detail ?? chatData?.error ?? `HTTP ${chatRes.status}`);
       if (chatData.agentSessionId) setAgentSessionId(chatData.agentSessionId);
       const aiReply: Message = { role: "assistant", content: chatData.reply };
       if (chatData.generatedConfig) {
