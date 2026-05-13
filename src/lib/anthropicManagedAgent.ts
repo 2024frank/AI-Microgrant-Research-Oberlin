@@ -9,6 +9,7 @@ export type ManagedAgentRunResult = {
 };
 
 export type ManagedAgentRunOptions = {
+  sessionId?: string | null;
   title?: string;
   onText?: (text: string) => void;
 };
@@ -37,18 +38,12 @@ export async function runManagedAgentText(
   options: ManagedAgentRunOptions | ((text: string) => void) = {}
 ): Promise<ManagedAgentRunResult> {
   const client = getAnthropicClient();
-  const { agent, environmentId } = getManagedAgentConfig();
   const runOptions = typeof options === "function" ? { onText: options } : options;
+  const sessionId = runOptions.sessionId ?? await createManagedAgentSession(runOptions.title);
 
-  const session = await client.beta.sessions.create({
-    agent,
-    environment_id: environmentId,
-    title: runOptions.title ?? "Civic Calendar managed agent run",
-  });
+  const stream = await client.beta.sessions.events.stream(sessionId);
 
-  const stream = await client.beta.sessions.events.stream(session.id);
-
-  await client.beta.sessions.events.send(session.id, {
+  await client.beta.sessions.events.send(sessionId, {
     events: [
       {
         type: "user.message",
@@ -103,5 +98,18 @@ export async function runManagedAgentText(
     }
   }
 
-  return { sessionId: session.id, text };
+  return { sessionId, text };
+}
+
+export async function createManagedAgentSession(title?: string): Promise<string> {
+  const client = getAnthropicClient();
+  const { agent, environmentId } = getManagedAgentConfig();
+
+  const session = await client.beta.sessions.create({
+    agent,
+    environment_id: environmentId,
+    title: title ?? "Civic Calendar managed agent run",
+  });
+
+  return session.id;
 }

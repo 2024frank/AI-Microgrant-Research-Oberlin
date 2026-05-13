@@ -40,6 +40,7 @@ export default function SourceBuilderPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [agentSessionId, setAgentSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [pendingConfig, setPendingConfig] = useState<SourceConfig | null>(null);
@@ -66,6 +67,7 @@ export default function SourceBuilderPage() {
     if (!user?.email) return;
     const id = await createChatSession(user.email, "New source");
     setSessionId(id);
+    setAgentSessionId(null);
     setMessages([]);
     setPendingConfig(null);
     setPendingCode(null);
@@ -74,6 +76,7 @@ export default function SourceBuilderPage() {
 
   async function loadSession(session: ChatSession) {
     setSessionId(session.id);
+    setAgentSessionId(null);
     setMessages(
       session.messages
         .filter((m) => m.role !== "system")
@@ -106,9 +109,10 @@ export default function SourceBuilderPage() {
       const res = await fetch("/api/source-builder/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: chatMsgs, sessionId }),
+        body: JSON.stringify({ messages: chatMsgs, sessionId, agentSessionId }),
       });
       const data = await res.json();
+      if (data.agentSessionId) setAgentSessionId(data.agentSessionId);
 
       const newMsgBatch: Message[] = [];
 
@@ -182,9 +186,11 @@ export default function SourceBuilderPage() {
         body: JSON.stringify({
           messages: [...messages, probeMsg, userAnalysis].map((m) => ({ role: m.role, content: m.probeResult ? JSON.stringify(m.probeResult) : m.content })),
           sessionId,
+          agentSessionId,
         }),
       });
       const chatData = await chatRes.json();
+      if (chatData.agentSessionId) setAgentSessionId(chatData.agentSessionId);
       const aiReply: Message = { role: "assistant", content: chatData.reply };
       if (chatData.generatedConfig) {
         aiReply.config = chatData.generatedConfig;

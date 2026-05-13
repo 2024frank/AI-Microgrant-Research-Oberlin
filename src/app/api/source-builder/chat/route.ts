@@ -123,7 +123,7 @@ EXISTING SOURCE: Localist (calendar.oberlin.edu) - already integrated.
 
 Be concise and action-oriented. Probe first, ask questions later.`;
 
-function buildAgentPrompt(messages: Array<{ role: string; content: string }>) {
+function buildInitialAgentPrompt(messages: Array<{ role: string; content: string }>) {
   const conversation = messages
     .map((m) => `${m.role === "assistant" ? "Assistant" : "User"}:\n${m.content}`)
     .join("\n\n");
@@ -134,6 +134,12 @@ CONVERSATION SO FAR:
 ${conversation}
 
 Respond to the latest user message. If you generate a source configuration, include it in a fenced \`\`\`json block. If custom code is needed, include it in a fenced \`\`\`typescript block.`;
+}
+
+function buildFollowUpAgentPrompt(message: string) {
+  return `${message}
+
+If you generate a source configuration, include it in a fenced \`\`\`json block. If custom code is needed, include it in a fenced \`\`\`typescript block.`;
 }
 
 // Probe a URL server-side (same logic as /api/source-builder/probe)
@@ -181,7 +187,7 @@ async function executeProbe(url: string): Promise<Record<string, unknown>> {
 }
 
 export async function POST(req: NextRequest) {
-  const { messages, sessionId } = await req.json();
+  const { messages, sessionId, agentSessionId } = await req.json();
   if (!messages?.length) return NextResponse.json({ error: "Messages required" }, { status: 400 });
   const typedMessages = messages as Array<{ role: string; content: string }>;
   const latestMessage = typedMessages.at(-1)?.content ?? "";
@@ -190,16 +196,21 @@ export async function POST(req: NextRequest) {
     urls.map(async (url) => ({ url, result: await executeProbe(url) }))
   );
 
+  const basePrompt = agentSessionId
+    ? buildFollowUpAgentPrompt(latestMessage)
+    : buildInitialAgentPrompt(typedMessages);
+
   const prompt = probeResults.length
-    ? `${buildAgentPrompt(typedMessages)}
+    ? `${basePrompt}
 
 SERVER-SIDE URL PROBE RESULTS:
 \`\`\`json
 ${JSON.stringify(probeResults, null, 2)}
 \`\`\``
-    : buildAgentPrompt(typedMessages);
+    : basePrompt;
 
   const result = await runManagedAgentText(prompt, {
+    sessionId: agentSessionId,
     title: "Civic Calendar source builder",
     onText: (chunk) => console.log(chunk),
   });
@@ -232,6 +243,7 @@ ${JSON.stringify(probeResults, null, 2)}
     generatedConfig,
     generatedCode,
     probeResults,
-    sessionId: sessionId ?? result.sessionId,
+    sessionId,
+    agentSessionId: result.sessionId,
   });
 }
