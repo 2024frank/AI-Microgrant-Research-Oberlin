@@ -187,11 +187,27 @@ async function executeProbe(url: string): Promise<Record<string, unknown>> {
 }
 
 export async function POST(req: NextRequest) {
-  const { messages, sessionId, agentSessionId } = await req.json();
-  if (!messages?.length) return NextResponse.json({ error: "Messages required" }, { status: 400 });
-  const typedMessages = messages as Array<{ role: string; content: string }>;
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const { messages, sessionId, agentSessionId } = body as {
+    messages?: Array<{ role: string; content: string }>;
+    sessionId?: string | null;
+    agentSessionId?: string | null;
+  };
+
+  if (!messages?.length) {
+    return NextResponse.json({ error: "Messages required" }, { status: 400 });
+  }
+
+  const typedMessages = messages;
   const latestMessage = typedMessages.at(-1)?.content ?? "";
   const urls = Array.from(new Set(latestMessage.match(/https?:\/\/[^\s)]+/g) ?? [])).slice(0, 3);
+
   const probeResults = await Promise.all(
     urls.map(async (url) => ({ url, result: await executeProbe(url) }))
   );
@@ -209,11 +225,21 @@ ${JSON.stringify(probeResults, null, 2)}
 \`\`\``
     : basePrompt;
 
-  const result = await runManagedAgentText(prompt, {
-    sessionId: agentSessionId,
-    title: "Civic Calendar source builder",
-    onText: (chunk) => console.log(chunk),
-  });
+  let result: Awaited<ReturnType<typeof runManagedAgentText>>;
+  try {
+    result = await runManagedAgentText(prompt, {
+      sessionId: agentSessionId,
+      title: "Civic Calendar source builder",
+      onText: (chunk) => console.log(chunk),
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[source-builder/chat] runManagedAgentText failed:", message);
+    return NextResponse.json(
+      { error: "Agent error", detail: message },
+      { status: 502 }
+    );
+  }
 
   const text = result.text;
 
