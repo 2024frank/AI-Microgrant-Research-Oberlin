@@ -66,11 +66,12 @@ function isAthletic(event: LocalistEvent): boolean {
 export async function fetchLocalistEvents(
   days = 180,
   perPage = 100,
+  startPage = 1,
   maxPages = 5
 ): Promise<LocalistEvent[]> {
   const results: LocalistEvent[] = [];
 
-  for (let page = 1; page <= maxPages; page++) {
+  for (let page = startPage; page < startPage + maxPages; page++) {
     const url = new URL(LOCALIST_BASE_URL);
     url.searchParams.set("days", String(days));
     url.searchParams.set("pp", String(perPage));
@@ -87,6 +88,8 @@ export async function fetchLocalistEvents(
     const events: LocalistEvent[] = (data.events ?? []).map(
       (e: { event: LocalistEvent }) => e.event
     );
+
+    if (events.length === 0) break;
 
     const filtered = events.filter(
       (ev) => isOpenToPublic(ev) && !isAthletic(ev)

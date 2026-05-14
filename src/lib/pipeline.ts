@@ -10,6 +10,9 @@ import {
   saveDuplicateGroup,
   bulkCheckProcessed,
   markEventProcessed,
+  bulkSaveReviewPosts,
+  bulkSaveDuplicateGroups,
+  bulkMarkEventsProcessed,
 } from "./reviewStore";
 import { recordSourceRun } from "./sources";
 import { listAuthorizedUsersAdmin } from "./usersAdmin";
@@ -44,173 +47,203 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
   if (!job) return;
   if (job.status !== "running") return;
 
+  const CONCURRENCY = 8;
+  const BATCH_SIZE = 16;
+
   try {
-    // Step 1: Fetch all Localist events
-    const rawEvents = await fetchLocalistEvents(180);
-
-    // Step 2: Idempotency — MySQL `processed_event_ids` only (no Firestore). Localist event id strings.
-    const allIds = rawEvents.map((e) => String(e.id));
-    const processedSet = await bulkCheckProcessed(allIds);
-
-    // Split into already-done vs new — counts set ONCE, accurately
-    const alreadyIngested = rawEvents.filter((e) => processedSet.has(String(e.id)));
-    const newEvents = rawEvents.filter((e) => !processedSet.has(String(e.id)));
-
-    // On first invocation (continuationIndex === 0) set the totals.
-    // On continuation, preserve existing totals so the UI doesn't jump.
-    const isFirstRun = (job.continuationIndex ?? 0) === 0;
-    if (isFirstRun) {
-      await updatePipelineJob(jobId, {
-        totalFetched: rawEvents.length,
-        totalSkipped: alreadyIngested.length,
-        progressTotal: newEvents.length,
-        progress: 0,
-      });
-    }
+    let currentPage = job.currentPage || 1;
+    let isFinalPage = false;
 
     // Restore cumulative counters from job (continuation adds to these)
     let queued = job.totalQueued || 0;
     let rejected = job.totalRejected || 0;
     let duplicates = job.totalDuplicates || 0;
-
-    // continuationIndex = how many of newEvents were already processed in prior segments
-    const startIndex = job.continuationIndex || 0;
+    let totalFetched = job.totalFetched || 0;
+    let totalSkipped = job.totalSkipped || 0;
 
     // Step 3: Fetch Community Hub posts for dedup (once per invocation)
     const chPosts = await fetchExistingCHPosts();
-    const duplicateGroups: Map<string, DuplicateGroup> = new Map();
 
-    // Step 4-9: Process only new events, resuming from startIndex
-    for (let i = startIndex; i < newEvents.length; i++) {
-      const rawEvent = newEvents[i];
+    while (!isFinalPage) {
+      // Step 1: Fetch Localist events in pages
+      const PAGE_CHUNK = 5; // Fetch 5 pages at a time (500 events)
+      const rawEvents = await fetchLocalistEvents(180, 100, currentPage, PAGE_CHUNK);
 
-      // Time limit check — auto-continue in a new function invocation
-      if (Date.now() - startTime > TIME_LIMIT_MS) {
+      if (rawEvents.length === 0) {
+        isFinalPage = true;
+        break;
+      }
+
+      // Step 2: Idempotency
+      const allIds = rawEvents.map((e) => String(e.id));
+      const processedSet = await bulkCheckProcessed(allIds);
+
+      const batchAlreadyIngested = rawEvents.filter((e) => processedSet.has(String(e.id)));
+      const batchNewEvents = rawEvents.filter((e) => !processedSet.has(String(e.id)));
+
+      totalFetched += rawEvents.length;
+      totalSkipped += batchAlreadyIngested.length;
+
+      await updatePipelineJob(jobId, {
+        totalFetched,
+        totalSkipped,
+        progressTotal: totalFetched - totalSkipped,
+      });
+
+      // Step 4-9: Process the batch
+      for (let i = 0; i < batchNewEvents.length; i += BATCH_SIZE) {
+        // Time limit check
+        if (Date.now() - startTime > TIME_LIMIT_MS) {
+          await updatePipelineJob(jobId, {
+            totalQueued: queued,
+            totalRejected: rejected,
+            totalDuplicates: duplicates,
+            totalFetched,
+            totalSkipped,
+            currentPage,
+            continuationIndex: 0,
+          });
+          await triggerContinuation(jobId, sourceId);
+          return;
+        }
+
+        const batch = batchNewEvents.slice(i, i + BATCH_SIZE);
+        const batchResults: ReviewPost[] = [];
+        const batchDuplicates: DuplicateGroup[] = [];
+        const processedIds: string[] = [];
+
+        let batchQueued = 0;
+        let batchRejected = 0;
+        let batchDuplicatesCount = 0;
+
+        let eventIndexInBatch = 0;
+        const workers = Array.from({ length: CONCURRENCY }, async () => {
+          while (eventIndexInBatch < batch.length) {
+            const currentIndex = eventIndexInBatch++;
+            const rawEvent = batch[currentIndex];
+            const postId = generatePostId(String(rawEvent.id));
+
+            try {
+              // Step 4: Extraction Agent
+              const extraction = await runExtractionAgent(rawEvent);
+
+              const rawDesc = (rawEvent.description_text || rawEvent.description || "")
+                .replace(/<[^>]*>/g, "")
+                .replace(/More info:.*$/i, "")
+                .trim();
+
+              // Auto-reject athletics
+              if (extraction.isAthletic) {
+                const rejectedPost: ReviewPost = buildPost(postId, extraction, {
+                  description: rawDesc.slice(0, 200) || rawEvent.title,
+                  extendedDescription: "",
+                }, "rejected", rawDesc, rawEvent);
+
+                batchResults.push(rejectedPost);
+                processedIds.push(String(rawEvent.id));
+                batchRejected++;
+                continue;
+              }
+
+              // Step 5: Editor Agent
+              const editor = await runEditorAgent(extraction, rawEvent);
+
+              // Step 6: AI-powered Community Hub dedup check
+              const dedupResult = await runDedupAgent(
+                {
+                  title: extraction.title,
+                  startTime: extraction.sessions[0]?.startTime,
+                  location: extraction.location ?? undefined,
+                  description: rawDesc,
+                },
+                chPosts.map((p) => ({
+                  id: p.id,
+                  title: p.title,
+                  startTime: p.startTime,
+                  location: p.location,
+                }))
+              );
+
+              let finalStatus: ReviewPost["status"] = "pending";
+              let duplicateGroupId: string | undefined;
+
+              if (dedupResult.isDuplicate && dedupResult.confidence >= 0.7) {
+                finalStatus = "duplicate";
+                const matchId = dedupResult.matchedId ?? "unknown";
+                const groupId = `ch-${matchId}-${postId}`;
+                duplicateGroupId = groupId;
+                const group: DuplicateGroup = {
+                  id: groupId,
+                  postIds: [postId, `community-hub-${matchId}`],
+                  similarityScore: dedupResult.confidence,
+                  matchingSignals: [dedupResult.reason],
+                  conflictFields: [],
+                  recommendation: `AI detected duplicate: "${dedupResult.matchedTitle}" — ${dedupResult.reason}`,
+                  status: "open",
+                };
+                batchDuplicates.push(group);
+                batchDuplicatesCount++;
+              } else {
+                batchQueued++;
+              }
+
+              // Step 7: Build review post
+              const finalPost = buildPost(postId, extraction, editor, finalStatus, rawDesc, rawEvent);
+              if (duplicateGroupId) {
+                (finalPost as Record<string, unknown>).duplicateGroupId = duplicateGroupId;
+                (finalPost as Record<string, unknown>).duplicateWarning =
+                  "Potential duplicate found in Community Hub";
+              }
+
+              batchResults.push(finalPost);
+              processedIds.push(String(rawEvent.id));
+            } catch (eventErr) {
+              if (eventErr instanceof GeminiQuotaError) throw eventErr;
+              // Non-quota errors: skip and continue
+            }
+          }
+        });
+
+        try {
+          await Promise.all(workers);
+        } catch (err) {
+          if (err instanceof GeminiQuotaError) {
+            await updatePipelineJob(jobId, {
+              status: "failed",
+              completedAt: Date.now(),
+              error: "Gemini API quota exceeded. Email alert sent to admin.",
+              totalQueued: queued,
+              totalRejected: rejected,
+              totalDuplicates: duplicates,
+              totalFetched,
+              totalSkipped,
+              currentPage,
+            });
+            return;
+          }
+          throw err;
+        }
+
+        // Step 8: Bulk save batch results
+        await Promise.all([
+          bulkSaveReviewPosts(batchResults),
+          bulkSaveDuplicateGroups(batchDuplicates),
+          bulkMarkEventsProcessed(processedIds),
+        ]);
+
+        queued += batchQueued;
+        rejected += batchRejected;
+        duplicates += batchDuplicatesCount;
+
         await updatePipelineJob(jobId, {
-          progress: i,
-          continuationIndex: i,
+          progress: totalFetched - totalSkipped,
           totalQueued: queued,
           totalRejected: rejected,
           totalDuplicates: duplicates,
         });
-        for (const group of duplicateGroups.values()) {
-          await saveDuplicateGroup(group);
-        }
-        await triggerContinuation(jobId, sourceId);
-        return;
       }
 
-      const postId = generatePostId(String(rawEvent.id));
-
-      try {
-        // Step 4: Extraction Agent
-        const extraction = await runExtractionAgent(rawEvent);
-
-        const rawDesc = (rawEvent.description_text || rawEvent.description || "")
-          .replace(/<[^>]*>/g, "")
-          .replace(/More info:.*$/i, "")
-          .trim();
-
-        // Auto-reject athletics
-        if (extraction.isAthletic) {
-          const rejectedPost: ReviewPost = buildPost(postId, extraction, {
-            description: rawDesc.slice(0, 200) || rawEvent.title,
-            extendedDescription: "",
-          }, "rejected", rawDesc, rawEvent);
-
-          await saveReviewPost(rejectedPost);
-          await markEventProcessed(String(rawEvent.id));
-          rejected++;
-          await updatePipelineJob(jobId, {
-            progress: i + 1,
-            continuationIndex: i + 1,
-            totalRejected: rejected,
-          });
-          continue;
-        }
-
-        // Step 5: Editor Agent
-        const editor = await runEditorAgent(extraction, rawEvent);
-
-        // Step 6: AI-powered Community Hub dedup check
-        const dedupResult = await runDedupAgent(
-          {
-            title: extraction.title,
-            startTime: extraction.sessions[0]?.startTime,
-            location: extraction.location ?? undefined,
-            description: rawDesc,
-          },
-          chPosts.map((p) => ({
-            id: p.id,
-            title: p.title,
-            startTime: p.startTime,
-            location: p.location,
-          }))
-        );
-
-        let finalStatus: ReviewPost["status"] = "pending";
-        let duplicateGroupId: string | undefined;
-
-        if (dedupResult.isDuplicate && dedupResult.confidence >= 0.7) {
-          finalStatus = "duplicate";
-          const matchId = dedupResult.matchedId ?? "unknown";
-          const groupId = `ch-${matchId}-${postId}`;
-          duplicateGroupId = groupId;
-          const group: DuplicateGroup = {
-            id: groupId,
-            postIds: [postId, `community-hub-${matchId}`],
-            similarityScore: dedupResult.confidence,
-            matchingSignals: [dedupResult.reason],
-            conflictFields: [],
-            recommendation: `AI detected duplicate: "${dedupResult.matchedTitle}" — ${dedupResult.reason}`,
-            status: "open",
-          };
-          duplicateGroups.set(groupId, group);
-        }
-
-        // Step 7: Persist review post (MySQL)
-        const finalPost = buildPost(postId, extraction, editor, finalStatus, rawDesc, rawEvent);
-        if (duplicateGroupId) {
-          (finalPost as Record<string, unknown>).duplicateGroupId = duplicateGroupId;
-          (finalPost as Record<string, unknown>).duplicateWarning =
-            "Potential duplicate found in Community Hub";
-        }
-
-        await saveReviewPost(finalPost);
-        await markEventProcessed(String(rawEvent.id));
-
-        if (dedupResult.isDuplicate && dedupResult.confidence >= 0.7) {
-          duplicates++;
-        } else {
-          queued++;
-        }
-      } catch (eventErr) {
-        if (eventErr instanceof GeminiQuotaError) {
-          await updatePipelineJob(jobId, {
-            status: "failed",
-            completedAt: Date.now(),
-            error: "Gemini API quota exceeded. Email alert sent to admin.",
-            totalQueued: queued,
-            totalRejected: rejected,
-            totalDuplicates: duplicates,
-          });
-          return;
-        }
-        // Non-quota errors: log and continue to next event
-      }
-
-      await updatePipelineJob(jobId, {
-        progress: i + 1,
-        continuationIndex: i + 1,
-        totalQueued: queued,
-        totalRejected: rejected,
-        totalDuplicates: duplicates,
-      });
-    }
-
-    // Step 8: Save duplicate groups
-    for (const group of duplicateGroups.values()) {
-      await saveDuplicateGroup(group);
+      currentPage += PAGE_CHUNK;
     }
 
     // Step 10: Mark job complete
@@ -218,6 +251,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
       status: "completed",
       completedAt: Date.now(),
       continuationIndex: 0,
+      currentPage: 1,
       totalQueued: queued,
       totalRejected: rejected,
       totalDuplicates: duplicates,
@@ -294,7 +328,7 @@ function buildPost(
     aiConfidence: extraction.confidence,
     extractedMetadata: {
       extractedAt: new Date().toISOString(),
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       sourceRecordId: postId.replace("oberlin-", ""),
     },
     createdAt: Date.now(),

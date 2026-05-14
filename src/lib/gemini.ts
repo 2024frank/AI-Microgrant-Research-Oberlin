@@ -2,10 +2,32 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LocalistEvent } from "./localist";
 import type { ReviewPost } from "./postTypes";
 
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-1.5-flash";
 const ADMIN_EMAIL = "fkusiapp@oberlin.edu";
 
 let quotaAlertSent = false;
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (isQuotaError(err)) {
+        // Quota errors are handled by the caller or specialized logic
+        throw err;
+      }
+      const delay = baseDelay * Math.pow(2, i);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastErr;
+}
 
 function getClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -251,7 +273,7 @@ export async function runExtractionAgent(
 
   let text: string;
   try {
-    const result = await model.generateContent(prompt);
+    const result = await withRetry(() => model.generateContent(prompt));
     text = result.response.text();
   } catch (err) {
     if (isQuotaError(err)) {
@@ -320,7 +342,7 @@ export async function runEditorAgent(
 
   let text: string;
   try {
-    const result = await model.generateContent(prompt);
+    const result = await withRetry(() => model.generateContent(prompt));
     text = result.response.text();
   } catch (err) {
     if (isQuotaError(err)) {
@@ -419,7 +441,7 @@ export async function runDedupAgent(
 
   let text: string;
   try {
-    const result = await model.generateContent(prompt);
+    const result = await withRetry(() => model.generateContent(prompt));
     text = result.response.text();
   } catch (err) {
     if (isQuotaError(err)) {
@@ -451,7 +473,7 @@ export async function runCorrectionAgent(
     .replace("{ORIGINAL_DESCRIPTION}", original)
     .replace("{TITLE}", post.title);
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetry(() => model.generateContent(prompt));
   const text = result.response.text();
 
   try {
@@ -473,31 +495,31 @@ export async function runCorrectionAgent(
 }
 
 export async function runAgentsBatch(
-  events: LocalistEvent[]
+  events: LocalistEvent[],
+  concurrency = 5
 ): Promise<
   Array<{ extraction: ExtractionResult; editor: EditorResult } | null>
 > {
-  const BATCH_SIZE = 5;
   const results: Array<{
     extraction: ExtractionResult;
     editor: EditorResult;
-  } | null> = [];
+  } | null> = new Array(events.length).fill(null);
 
-  for (let i = 0; i < events.length; i += BATCH_SIZE) {
-    const batch = events.slice(i, i + BATCH_SIZE);
-    const batchResults = await Promise.all(
-      batch.map(async (event) => {
-        try {
-          const extraction = await runExtractionAgent(event);
-          const editor = await runEditorAgent(extraction, event);
-          return { extraction, editor };
-        } catch {
-          return null;
-        }
-      })
-    );
-    results.push(...batchResults);
-  }
+  let index = 0;
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (index < events.length) {
+      const i = index++;
+      try {
+        const extraction = await runExtractionAgent(events[i]);
+        const editor = await runEditorAgent(extraction, events[i]);
+        results[i] = { extraction, editor };
+      } catch (err) {
+        if (err instanceof GeminiQuotaError) throw err;
+        results[i] = null;
+      }
+    }
+  });
 
+  await Promise.all(workers);
   return results;
 }

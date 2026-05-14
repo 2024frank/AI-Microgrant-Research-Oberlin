@@ -16,6 +16,7 @@ export type PipelineJob = {
   progress: number;
   progressTotal: number;
   continuationIndex: number;
+  currentPage?: number;
   startedAt: number;
   completedAt?: number;
   error?: string;
@@ -42,6 +43,7 @@ export async function createPipelineJob(
     progress: 0,
     progressTotal: 0,
     continuationIndex: 0,
+    currentPage: 1,
     startedAt: Date.now(),
   };
   await getMysqlPool().execute(

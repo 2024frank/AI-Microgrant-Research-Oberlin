@@ -22,6 +22,35 @@ export async function saveReviewPost(post: ReviewPost): Promise<void> {
   );
 }
 
+export async function bulkSaveReviewPosts(posts: ReviewPost[]): Promise<void> {
+  if (posts.length === 0) return;
+  await ensureMysqlSchema();
+  const chunks: ReviewPost[][] = [];
+  for (let i = 0; i < posts.length; i += 100) chunks.push(posts.slice(i, i + 100));
+
+  for (const chunk of chunks) {
+    const values: any[] = [];
+    const placeholders = chunk
+      .map((post) => {
+        const data = stripUndefined({
+          ...post,
+          updatedAt: Date.now(),
+          createdAt: post.createdAt ?? Date.now(),
+        });
+        values.push(post.id, json(data));
+        return "(?, CAST(? AS JSON))";
+      })
+      .join(",");
+
+    await getMysqlPool().execute(
+      `INSERT INTO review_posts (id, data)
+       VALUES ${placeholders}
+       ON DUPLICATE KEY UPDATE data = VALUES(data)`,
+      values
+    );
+  }
+}
+
 export async function getReviewPost(id: string): Promise<ReviewPost | null> {
   await ensureMysqlSchema();
   const [rows] = await getMysqlPool().execute<import("mysql2").RowDataPacket[]>(
@@ -104,6 +133,30 @@ export async function saveDuplicateGroup(group: DuplicateGroup): Promise<void> {
   );
 }
 
+export async function bulkSaveDuplicateGroups(groups: DuplicateGroup[]): Promise<void> {
+  if (groups.length === 0) return;
+  await ensureMysqlSchema();
+  const chunks: DuplicateGroup[][] = [];
+  for (let i = 0; i < groups.length; i += 100) chunks.push(groups.slice(i, i + 100));
+
+  for (const chunk of chunks) {
+    const values: any[] = [];
+    const placeholders = chunk
+      .map((group) => {
+        values.push(group.id, json({ ...group, updatedAt: Date.now() }));
+        return "(?, CAST(? AS JSON))";
+      })
+      .join(",");
+
+    await getMysqlPool().execute(
+      `INSERT INTO duplicate_groups (id, data)
+       VALUES ${placeholders}
+       ON DUPLICATE KEY UPDATE data = VALUES(data)`,
+      values
+    );
+  }
+}
+
 export async function updateDuplicateGroup(
   id: string,
   updates: Partial<DuplicateGroup>
@@ -161,6 +214,31 @@ export async function markEventProcessed(localistEventId: string): Promise<void>
      ON DUPLICATE KEY UPDATE processed_at = VALUES(processed_at)`,
     [localistEventId, Date.now()]
   );
+}
+
+export async function bulkMarkEventsProcessed(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  await ensureMysqlSchema();
+  const now = Date.now();
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += 500) chunks.push(ids.slice(i, i + 500));
+
+  for (const chunk of chunks) {
+    const values: any[] = [];
+    const placeholders = chunk
+      .map((id) => {
+        values.push(id, now);
+        return "(?, ?)";
+      })
+      .join(",");
+
+    await getMysqlPool().execute(
+      `INSERT INTO processed_event_ids (id, processed_at)
+       VALUES ${placeholders}
+       ON DUPLICATE KEY UPDATE processed_at = VALUES(processed_at)`,
+      values
+    );
+  }
 }
 
 export async function countProcessedEventIds(): Promise<number> {
