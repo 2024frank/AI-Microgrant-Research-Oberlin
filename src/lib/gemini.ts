@@ -161,11 +161,12 @@ Respond with ONLY valid JSON, no markdown, no explanation:
 
 const EDITOR_PROMPT = `You are a careful copy editor for a civic community calendar. Events appear on public screens in Oberlin, Ohio.
 
-Your job is to produce two display-ready descriptions with MINIMAL departure from the organizer's wording. Prefer selecting useful original sentences, trimming clutter, and preserving meaning over rewriting.
+Your job is to produce an extended description with MINIMAL departure from the organizer's wording. Prefer selecting useful original sentences, trimming clutter, and preserving meaning over rewriting.
+For the short description, you MUST use the exact event title. Do not invent or summarize for the short description, just return the title verbatim.
 
 FAITHFULNESS (critical):
 - Stay anchored to the RAW DESCRIPTION facts; do not invent details, anecdotes, "moments," emotional beats, or narrative flourishes.
-- Use the RAW DESCRIPTION's own phrases and sentences whenever they are clear enough. The best answer often lifts one concise sentence for the short description and 2-4 important original sentences for the extended description.
+- Use the RAW DESCRIPTION's own phrases and sentences whenever they are clear enough.
 - If you must edit a sentence, make the smallest possible edit for length, grammar, or removing links.
 - Do not speculate about audience experience, impact, or why someone should attend unless the raw text already says so plainly.
 - Preserve the organizer's voice and level of formality when reasonable.
@@ -175,7 +176,7 @@ FAITHFULNESS (critical):
 STYLE RULES:
 - NO raw URLs, NO website links, NO "More info at:", NO "Register at:", NO "click here"
 - NO clipboard-style text like "copy this link"
-- Short description: 1-2 sentences, max 200 characters. Clear and direct (not salesy).
+- Short description: MUST be EXACTLY the event title provided as {TITLE}. Max 200 chars.
 - Extended description: up to 4 sentences, max 1000 characters. Add structure only where it clarifies information already implied by the raw text.
 - Tone: warm, civic, public-facing — but restrained, not promotional fiction
 - Reflect the event type lightly (workshop/lecture/concert) without overwriting specifics
@@ -189,7 +190,7 @@ LOCATION: {LOCATION}
 
 Respond with ONLY valid JSON, no markdown:
 {
-  "description": "string (max 200 chars)",
+  "description": "exact event title here (max 200 chars)",
   "extendedDescription": "string (max 1000 chars)"
 }`;
 
@@ -302,6 +303,7 @@ export async function runEditorAgent(
 ): Promise<EditorResult> {
   const client = getClient();
   const model = client.getGenerativeModel({ model: MODEL });
+  const shortDescription = extraction.title.trim().slice(0, 200);
 
   const { COMMUNITY_HUB_POST_TYPES } = await import("./postTypes");
   const typeLabels = extraction.postTypeId
@@ -330,7 +332,7 @@ export async function runEditorAgent(
 
   try {
     const parsed = parseJson<EditorResult>(text);
-    parsed.description = parsed.description.slice(0, 200);
+    parsed.description = shortDescription;
     parsed.extendedDescription = parsed.extendedDescription.slice(0, 1000);
     return parsed;
   } catch {
@@ -338,10 +340,10 @@ export async function runEditorAgent(
       .replace(/<[^>]*>/g, "")
       .replace(/More info:.*$/i, "")
       .trim()
-      .slice(0, 200);
+      .slice(0, 1000);
     return {
-      description: fallback || extraction.title,
-      extendedDescription: fallback || extraction.title,
+      description: shortDescription,
+      extendedDescription: fallback || shortDescription,
     };
   }
 }

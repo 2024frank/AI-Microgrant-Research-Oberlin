@@ -1,10 +1,6 @@
 import { ensureMysqlSchema, getMysqlPool, json, parseJson } from "./mysql";
 import type { ReviewPost, DuplicateGroup, ReviewStatus } from "./postTypes";
 
-const POSTS = "reviewPosts";
-const DUPES = "duplicateGroups";
-const PROCESSED = "processedEventIds";
-
 function stripUndefined(obj: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
@@ -138,14 +134,19 @@ export async function isEventProcessed(localistEventId: string): Promise<boolean
 
 export async function bulkCheckProcessed(ids: string[]): Promise<Set<string>> {
   if (ids.length === 0) return new Set();
-  // Firestore getAll supports up to 500 docs at once
+  await ensureMysqlSchema();
+  const processed = new Set<string>();
   const chunks: string[][] = [];
   for (let i = 0; i < ids.length; i += 500) chunks.push(ids.slice(i, i + 500));
-  const processed = new Set<string>();
   for (const chunk of chunks) {
-    const refs = chunk.map((id) => adminDb.collection(PROCESSED).doc(id));
-    const snaps = await adminDb.getAll(...refs);
-    snaps.forEach((s, idx) => { if (s.exists) processed.add(chunk[idx]); });
+    const placeholders = chunk.map(() => "?").join(",");
+    const [rows] = await getMysqlPool().execute<import("mysql2").RowDataPacket[]>(
+      `SELECT id FROM processed_event_ids WHERE id IN (${placeholders})`,
+      chunk
+    );
+    for (const row of rows) {
+      processed.add(String(row.id));
+    }
   }
   return processed;
 }

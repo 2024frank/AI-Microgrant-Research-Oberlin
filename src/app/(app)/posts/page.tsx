@@ -21,6 +21,7 @@ export default function PostsPage() {
   const [approveAnywayPost, setApproveAnywayPost] = useState<ReviewPost | null>(null);
   const [approveAnywayAck, setApproveAnywayAck] = useState(false);
   const [bulkApproveBypassAck, setBulkApproveBypassAck] = useState(false);
+  const [inlineMessage, setInlineMessage] = useState<{ id: string; text: string } | null>(null);
   const canDeletePost = (_post: ReviewPost) => true;
 
   // Always auto-refresh every 5s so posts appear as pipeline adds them
@@ -202,7 +203,8 @@ export default function PostsPage() {
                       <td className="px-4 py-3">{firstSession?.startTime ? new Date(firstSession.startTime * 1000).toLocaleDateString() : "Not set"}</td>
                       <td className="px-4 py-3"><ValidationBadge result={validation} /></td>
                       <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex flex-wrap gap-2">
                           <Link className="rounded border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-high)]" href={`/posts/${post.id}`}>
                             View Details
                           </Link>
@@ -221,6 +223,12 @@ export default function PostsPage() {
                           >
                             Delete
                           </button>
+                          </div>
+                          {inlineMessage?.id === post.id ? (
+                            <p className="text-xs text-teal-300/90" role="status">
+                              {inlineMessage.text}
+                            </p>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
