@@ -1,4 +1,4 @@
-import { adminDb, serverTimestamp } from "./firebaseAdmin";
+import { ensureMysqlSchema, getMysqlPool, json, parseJson } from "./mysql";
 
 export type SourceSchedule = "off" | "2h" | "6h" | "12h" | "daily" | "weekly" | "biweekly";
 
@@ -39,29 +39,43 @@ const DEFAULT_SOURCE = {
 };
 
 export async function ensureDefaultSources(): Promise<void> {
-  const ref = adminDb.collection(COLLECTION).doc("localist-oberlin");
-  const snap = await ref.get();
-  if (!snap.exists) {
-    await ref.set(DEFAULT_SOURCE);
-  }
+  await ensureMysqlSchema();
+  await getMysqlPool().execute(
+    "INSERT IGNORE INTO sources (id, data) VALUES (?, CAST(? AS JSON))",
+    [DEFAULT_SOURCE.id, json(DEFAULT_SOURCE)]
+  );
 }
 
 export async function listSources(): Promise<Source[]> {
-  const snap = await adminDb.collection(COLLECTION).get();
-  return snap.docs.map((d) => d.data() as Source);
+  await ensureMysqlSchema();
+  const [rows] = await getMysqlPool().execute<import("mysql2").RowDataPacket[]>(
+    "SELECT data FROM sources"
+  );
+  return rows.map((row) => parseJson<Source>(row.data, null as unknown as Source));
 }
 
 export async function getSource(id: string): Promise<Source | null> {
-  const snap = await adminDb.collection(COLLECTION).doc(id).get();
-  if (!snap.exists) return null;
-  return snap.data() as Source;
+  await ensureMysqlSchema();
+  const [rows] = await getMysqlPool().execute<import("mysql2").RowDataPacket[]>(
+    "SELECT data FROM sources WHERE id = ? LIMIT 1",
+    [id]
+  );
+  if (!rows[0]) return null;
+  return parseJson<Source>(rows[0].data, null as unknown as Source);
 }
 
 export async function updateSource(
   id: string,
   updates: Partial<Source>
 ): Promise<void> {
-  await adminDb.collection(COLLECTION).doc(id).update({ ...updates, updatedAt: serverTimestamp() });
+  await ensureMysqlSchema();
+  const existing = await getSource(id);
+  if (!existing) return;
+  const next = { ...existing, ...updates, updatedAt: Date.now() };
+  await getMysqlPool().execute(
+    "UPDATE sources SET data = CAST(? AS JSON) WHERE id = ?",
+    [json(next), id]
+  );
 }
 
 export function computeNextRun(schedule: SourceSchedule, scheduleHour?: number): number | undefined {

@@ -1,4 +1,5 @@
-import { adminDb, serverTimestamp } from "./firebaseAdmin";
+import { randomUUID } from "crypto";
+import { ensureMysqlSchema, getMysqlPool, json, parseJson } from "./mysql";
 
 export type PipelineJobStatus = "running" | "completed" | "failed";
 
@@ -26,8 +27,10 @@ export async function createPipelineJob(
   sourceId: string,
   sourceName: string
 ): Promise<string> {
-  const ref = adminDb.collection(COLLECTION).doc();
-  const job: Omit<PipelineJob, "id"> = {
+  await ensureMysqlSchema();
+  const id = randomUUID();
+  const job: PipelineJob = {
+    id,
     status: "running",
     sourceId,
     sourceName,
@@ -41,32 +44,46 @@ export async function createPipelineJob(
     continuationIndex: 0,
     startedAt: Date.now(),
   };
-  await ref.set({ ...job, createdAt: serverTimestamp() });
-  return ref.id;
+  await getMysqlPool().execute(
+    "INSERT INTO pipeline_jobs (id, data) VALUES (?, CAST(? AS JSON))",
+    [id, json(job)]
+  );
+  return id;
 }
 
 export async function updatePipelineJob(
   jobId: string,
   updates: Partial<Omit<PipelineJob, "id">>
 ): Promise<void> {
-  await adminDb.collection(COLLECTION).doc(jobId).update(updates);
+  await ensureMysqlSchema();
+  const existing = await getPipelineJob(jobId);
+  if (!existing) return;
+  const next = { ...existing, ...updates };
+  await getMysqlPool().execute(
+    "UPDATE pipeline_jobs SET data = CAST(? AS JSON) WHERE id = ?",
+    [json(next), jobId]
+  );
 }
 
 export async function getPipelineJob(
   jobId: string
 ): Promise<PipelineJob | null> {
-  const snap = await adminDb.collection(COLLECTION).doc(jobId).get();
-  if (!snap.exists) return null;
-  return { id: snap.id, ...snap.data() } as PipelineJob;
+  await ensureMysqlSchema();
+  const [rows] = await getMysqlPool().execute<import("mysql2").RowDataPacket[]>(
+    "SELECT data FROM pipeline_jobs WHERE id = ? LIMIT 1",
+    [jobId]
+  );
+  if (!rows[0]) return null;
+  return parseJson<PipelineJob>(rows[0].data, null as unknown as PipelineJob);
 }
 
 export async function listPipelineJobs(
   maxResults = 50
 ): Promise<PipelineJob[]> {
-  const snap = await adminDb
-    .collection(COLLECTION)
-    .orderBy("startedAt", "desc")
-    .limit(maxResults)
-    .get();
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as PipelineJob));
+  await ensureMysqlSchema();
+  const limit = Math.max(1, Math.min(Number(maxResults) || 50, 100));
+  const [rows] = await getMysqlPool().execute<import("mysql2").RowDataPacket[]>(
+    `SELECT data FROM pipeline_jobs ORDER BY started_at DESC LIMIT ${limit}`
+  );
+  return rows.map((row) => parseJson<PipelineJob>(row.data, null as unknown as PipelineJob));
 }

@@ -1,26 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveFeedback } from "@/lib/feedback";
+import { getReviewPost } from "@/lib/reviewStore";
+import { validatePost } from "@/lib/postValidation";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { postId, postTitle, decision, rejectionReason, postTypeId, eventType, aiConfidence, sourceName } = body;
+    const { postId, postTitle, decision, rejectionReason, postTypeId, eventType, aiConfidence, sourceName, learningSignal } = body;
 
     if (!postId || !decision) {
       return NextResponse.json({ error: "postId and decision are required" }, { status: 400 });
     }
 
+    const post = await getReviewPost(postId);
+    const validation = post ? validatePost(post) : null;
+
     await saveFeedback({
       postId,
-      postTitle: postTitle ?? "",
+      postTitle: postTitle ?? post?.title ?? "",
       decision,
       rejectionReason: rejectionReason || undefined,
-      postTypeId: postTypeId ?? [],
-      eventType: eventType ?? "ot",
-      aiConfidence: aiConfidence ?? 0,
-      sourceName: sourceName ?? "Unknown",
+      postTypeId: postTypeId ?? post?.postTypeId ?? [],
+      eventType: eventType ?? post?.eventType ?? "ot",
+      aiConfidence: aiConfidence ?? post?.aiConfidence ?? 0,
+      sourceName: sourceName ?? post?.sourceName ?? "Unknown",
+      postSnapshot: post ?? undefined,
+      missingFields: validation?.missingFields,
+      validationErrors: validation?.errors,
+      learningSignal,
       reviewedAt: Date.now(),
     });
 

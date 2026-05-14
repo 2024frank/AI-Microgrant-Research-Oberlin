@@ -1,6 +1,6 @@
 import "server-only";
 import { getApps, initializeApp, cert } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 
 function initAdmin() {
   if (getApps().length > 0) return;
@@ -9,17 +9,18 @@ function initAdmin() {
   if (serviceAccount) {
     initializeApp({ credential: cert(JSON.parse(serviceAccount)) });
   } else {
-    // Fallback: use GOOGLE_APPLICATION_CREDENTIALS or default credentials
     initializeApp();
   }
 }
 
 initAdmin();
 
-export const adminDb = getFirestore();
-try {
-  adminDb.settings({ ignoreUndefinedProperties: true });
-} catch {
-  // Already initialized — settings can only be set once
+export async function verifyBearerIdToken(authHeader: string | null) {
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7);
+  try {
+    return await getAuth().verifyIdToken(token);
+  } catch {
+    return null;
+  }
 }
-export const serverTimestamp = () => FieldValue.serverTimestamp();

@@ -7,6 +7,15 @@ import type { PipelineJob } from "@/lib/pipelineJobs";
 
 const JOB_KEY = "civic_running_job_id";
 
+function getRunStage(job: PipelineJob) {
+  if (job.progressTotal === 0) return "Preparing source run";
+  const ratio = job.progress / Math.max(job.progressTotal, 1);
+  if (job.progress === 0) return "Reading source events";
+  if (ratio < 0.45) return "Gemini is classifying events";
+  if (ratio < 0.8) return "Gemini is writing review copy";
+  return "Saving review-ready posts";
+}
+
 export function setRunningJobId(jobId: string) {
   if (typeof window !== "undefined") {
     localStorage.setItem(JOB_KEY, jobId);
@@ -101,7 +110,7 @@ export function PipelineStatusBar() {
         <div className="flex-1 min-w-0">
           {isRunning ? (
             <span className="text-sm text-[var(--text)]">
-              Pipeline running —{" "}
+              {getRunStage(job)} —{" "}
               <span className="text-[var(--primary)] font-medium tabular-nums">{job.progress}</span>
               <span className="text-[var(--muted)]"> / {job.progressTotal} events processed</span>
               {job.totalQueued > 0 && <span className="text-teal-400"> · {job.totalQueued} queued</span>}

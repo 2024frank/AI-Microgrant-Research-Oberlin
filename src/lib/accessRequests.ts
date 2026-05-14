@@ -1,16 +1,6 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-  type Timestamp,
-} from "firebase/firestore";
-
-import { firebaseDb } from "@/lib/firebase";
-import { normalizeEmail, type UserRole } from "@/lib/users";
+import type { UserRole } from "./users";
+import { firebaseAuth } from "./firebase";
+import { normalizeEmail } from "./userIds";
 
 export type AccessRequestStatus = "pending" | "approved" | "denied";
 
@@ -19,54 +9,35 @@ export type AccessRequest = {
   email: string;
   displayName: string | null;
   photoURL: string | null;
-  requestedAt: Timestamp | null;
+  requestedAt: number | null;
   status: AccessRequestStatus;
   requestedRole: UserRole;
   message: string;
   reviewedBy: string | null;
-  reviewedAt: Timestamp | null;
+  reviewedAt: number | null;
 };
 
-function requestDocRef(email: string) {
-  return doc(firebaseDb, "accessRequests", normalizeEmail(email));
+function rowToAccessRequest(row: AccessRequest): AccessRequest {
+  return row;
 }
 
-function serializeAccessRequest(
-  id: string,
-  data: Record<string, unknown>,
-): AccessRequest {
-  return {
-    id,
-    email: typeof data.email === "string" ? data.email : id,
-    displayName: typeof data.displayName === "string" ? data.displayName : null,
-    photoURL: typeof data.photoURL === "string" ? data.photoURL : null,
-    requestedAt: (data.requestedAt as Timestamp | undefined) ?? null,
-    status:
-      data.status === "approved" || data.status === "denied" || data.status === "pending"
-        ? data.status
-        : "pending",
-    requestedRole:
-      data.requestedRole === "super_admin" ||
-      data.requestedRole === "admin" ||
-      data.requestedRole === "viewer" ||
-      data.requestedRole === "reviewer"
-        ? data.requestedRole
-        : "reviewer",
-    message: typeof data.message === "string" ? data.message : "",
-    reviewedBy: typeof data.reviewedBy === "string" ? data.reviewedBy : null,
-    reviewedAt: (data.reviewedAt as Timestamp | undefined) ?? null,
-  };
+async function bearer(user: NonNullable<typeof firebaseAuth.currentUser>) {
+  return { Authorization: `Bearer ${await user.getIdToken()}` } as const;
 }
 
-export async function getAccessRequest(email: string) {
-  const normalizedEmail = normalizeEmail(email);
-  const snapshot = await getDoc(requestDocRef(normalizedEmail));
-
-  if (!snapshot.exists()) {
-    return null;
+export async function getAccessRequest(email: string): Promise<AccessRequest | null> {
+  const user = firebaseAuth.currentUser;
+  if (!user) throw new Error("Not signed in");
+  const res = await fetch(
+    `/api/admin/access-requests?email=${encodeURIComponent(normalizeEmail(email))}`,
+    { headers: await bearer(user) },
+  );
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? "Unable to load access request");
   }
-
-  return serializeAccessRequest(snapshot.id, snapshot.data());
+  const data = (await res.json()) as { request: AccessRequest | null };
+  return data.request ? rowToAccessRequest(data.request) : null;
 }
 
 export async function submitAccessRequest(input: {
@@ -75,42 +46,44 @@ export async function submitAccessRequest(input: {
   photoURL?: string | null;
   message?: string;
 }) {
-  const email = normalizeEmail(input.email);
-  const existing = await getAccessRequest(email);
-
-  if (existing?.status === "pending") {
-    return { request: existing, alreadyPending: true };
+  const user = firebaseAuth.currentUser;
+  if (!user) throw new Error("Not signed in");
+  if (!user.email || normalizeEmail(input.email) !== normalizeEmail(user.email)) {
+    throw new Error("Signed-in email does not match access request.");
   }
-
-  await setDoc(requestDocRef(email), {
-    id: email,
-    email,
-    displayName: input.displayName ?? null,
-    photoURL: input.photoURL ?? null,
-    requestedAt: serverTimestamp(),
-    status: "pending",
-    requestedRole: "reviewer",
-    message: input.message?.trim() ?? "",
-    reviewedBy: null,
-    reviewedAt: null,
+  const res = await fetch("/api/access-requests", {
+    method: "POST",
+    headers: { ...await bearer(user), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: input.message,
+      displayName: input.displayName,
+      photoURL: input.photoURL,
+    }),
   });
-
-  const request = await getAccessRequest(email);
-  return { request, alreadyPending: false };
+  const data = (await res.json()) as {
+    request?: AccessRequest;
+    alreadyPending?: boolean;
+    error?: string;
+  };
+  if (!res.ok) {
+    throw new Error(data.error ?? "Unable to submit access request");
+  }
+  return {
+    request: data.request ? rowToAccessRequest(data.request) : null,
+    alreadyPending: Boolean(data.alreadyPending),
+  };
 }
 
-export async function listPendingAccessRequests() {
-  const snapshot = await getDocs(collection(firebaseDb, "accessRequests"));
-
-  return snapshot.docs
-    .map((requestDoc) => serializeAccessRequest(requestDoc.id, requestDoc.data()))
-    .filter((request) => request.status === "pending")
-    .sort((first, second) => {
-      const firstTime = first.requestedAt?.toMillis() ?? 0;
-      const secondTime = second.requestedAt?.toMillis() ?? 0;
-
-      return secondTime - firstTime;
-    });
+export async function listPendingAccessRequests(): Promise<AccessRequest[]> {
+  const user = firebaseAuth.currentUser;
+  if (!user) throw new Error("Not signed in");
+  const res = await fetch("/api/admin/access-requests", { headers: await bearer(user) });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? "Unable to load access requests");
+  }
+  const data = (await res.json()) as { requests: AccessRequest[] };
+  return data.requests;
 }
 
 export async function markAccessRequestReviewed(input: {
@@ -118,9 +91,15 @@ export async function markAccessRequestReviewed(input: {
   status: "approved" | "denied";
   reviewedBy: string | null;
 }) {
-  await updateDoc(requestDocRef(input.email), {
-    status: input.status,
-    reviewedBy: input.reviewedBy,
-    reviewedAt: serverTimestamp(),
+  const user = firebaseAuth.currentUser;
+  if (!user) throw new Error("Not signed in");
+  const res = await fetch("/api/admin/access-requests", {
+    method: "PATCH",
+    headers: { ...await bearer(user), "Content-Type": "application/json" },
+    body: JSON.stringify(input),
   });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? "Unable to update access request");
+  }
 }

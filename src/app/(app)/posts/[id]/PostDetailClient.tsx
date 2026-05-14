@@ -11,6 +11,7 @@ import { useReviewStore } from "@/context/ReviewStoreContext";
 import type { LocationType, ReviewPost } from "@/lib/postTypes";
 import { getCommunityHubPostTypeLabel } from "@/lib/postTypes";
 import { validatePost } from "@/lib/postValidation";
+import { clientGetReviewPost } from "@/lib/reviewStoreClient";
 
 function FieldEditor({
   label,
@@ -85,15 +86,25 @@ function parseUnixInput(value: string) {
 }
 
 export function PostDetailClient({ id }: { id: string }) {
-  const { duplicateGroups, getPostById, updatePost, updatePostsStatus } = useReviewStore();
+  const { duplicateGroups, getPostById, updatePost, updatePostsStatus, refreshPosts } = useReviewStore();
   const storedPost = getPostById(id);
-  const [draftPost, setDraftPost] = useState<ReviewPost | null>(storedPost ?? null);
+  const [remotePost, setRemotePost] = useState<ReviewPost | null>(null);
+  const [remoteLoading, setRemoteLoading] = useState(() => !storedPost);
+  const [remoteError, setRemoteError] = useState<string | null>(null);
+
+  const basePost = useMemo(() => storedPost ?? remotePost, [storedPost, remotePost]);
+
+  const [draftPost, setDraftPost] = useState<ReviewPost | null>(basePost ?? null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
   const [publishing, setPublishing] = useState(false);
+  const [correcting, setCorrecting] = useState(false);
   const [publishMessage, setPublishMessage] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
+  const [confirmApproveDespiteErrors, setConfirmApproveDespiteErrors] = useState(false);
+  const approveBypassHeadingId = "approve-bypass-heading";
+  const approveBypassDescId = "approve-bypass-desc";
 
   function showToast(message: string, type: "error" | "success" = "error") {
     setToast({ message, type });
@@ -101,12 +112,54 @@ export function PostDetailClient({ id }: { id: string }) {
   }
 
   useEffect(() => {
-    setDraftPost(storedPost ?? null);
+    if (storedPost) {
+      setRemotePost(null);
+      setRemoteLoading(false);
+      setRemoteError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setRemoteLoading(true);
+    setRemoteError(null);
+    void clientGetReviewPost(id)
+      .then((p) => {
+        if (cancelled) return;
+        setRemotePost(p);
+        if (!p) {
+          setRemoteError("This post is not in the active queue. It may have been archived or removed.");
+        }
+        setRemoteLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setRemoteError(err instanceof Error ? err.message : "Failed to load post");
+        setRemoteLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, storedPost]);
+
+  useEffect(() => {
+    setDraftPost(basePost ?? null);
     setHasUnsavedChanges(false);
     setSaveMessage("");
-  }, [storedPost?.id, storedPost]);
+  }, [basePost]);
+
+  useEffect(() => {
+    setRejectionReason(basePost?.rejectionReason ?? "");
+  }, [basePost?.id, basePost?.rejectionReason]);
 
   const validation = useMemo(() => (draftPost ? validatePost(draftPost) : null), [draftPost]);
+
+  useEffect(() => {
+    if (validation?.isValid) {
+      setConfirmApproveDespiteErrors(false);
+    }
+  }, [validation?.isValid]);
+
   const duplicatePosts = useMemo(() => {
     if (!draftPost?.duplicateGroupId) {
       return [];
@@ -116,7 +169,27 @@ export function PostDetailClient({ id }: { id: string }) {
     return group?.postIds.filter((postId) => postId !== draftPost.id).map(getPostById).filter(Boolean) ?? [];
   }, [draftPost, duplicateGroups, getPostById]);
 
-  if (!storedPost || !draftPost || !validation) {
+  if (!storedPost && remoteLoading) {
+    return (
+      <section className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-6 text-sm text-[var(--muted)]">
+        <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[var(--primary)]" aria-hidden />
+        Loading post…
+      </section>
+    );
+  }
+
+  if (remoteError && !basePost) {
+    return (
+      <section className="rounded-lg border border-red-900/40 bg-red-950/20 p-6 text-sm text-red-200">
+        <p>{remoteError}</p>
+        <p className="mt-3">
+          Return to <Link className="text-[#ffb3b3] underline" href="/posts">Content Queue</Link>.
+        </p>
+      </section>
+    );
+  }
+
+  if (!basePost || !draftPost || !validation) {
     return (
       <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-6 text-sm text-[var(--muted)]">
         Post not found. Return to <Link className="text-[#ffb3b3]" href="/posts">Content Queue</Link>.
@@ -146,24 +219,31 @@ export function PostDetailClient({ id }: { id: string }) {
     setSaveMessage("Changes saved.");
   }
 
-  async function saveFeedbackToAPI(decision: "approved" | "rejected" | "needs_correction", reason?: string) {
+  async function saveFeedbackToAPI(
+    decision: "approved" | "rejected" | "needs_correction",
+    reason?: string,
+    learningSignal?: string
+  ) {
     if (!post) return;
-    try {
-      await fetch("/api/posts/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          postId: post.id,
-          postTitle: post.title,
-          decision,
-          rejectionReason: reason,
-          postTypeId: post.postTypeId,
-          eventType: post.eventType,
-          aiConfidence: post.aiConfidence,
-          sourceName: post.sourceName,
-        }),
-      });
-    } catch { /* non-blocking */ }
+    const res = await fetch("/api/posts/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        postId: post.id,
+        postTitle: post.title,
+        decision,
+        rejectionReason: reason,
+        postTypeId: post.postTypeId,
+        eventType: post.eventType,
+        aiConfidence: post.aiConfidence,
+        sourceName: post.sourceName,
+        learningSignal,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      throw new Error(data.error ?? "Failed to save reviewer feedback");
+    }
   }
 
   function approve() {
@@ -171,9 +251,8 @@ export function PostDetailClient({ id }: { id: string }) {
       return;
     }
 
-    if (!validation.isValid) {
-      showToast("Required fields are missing. Resolve validation errors before approving.");
-      return;
+    if (!validation.isValid && !confirmApproveDespiteErrors) {
+      showToast("Required fields are missing. Confirm approval anyway below, or fix the fields first.");
       return;
     }
 
@@ -182,8 +261,18 @@ export function PostDetailClient({ id }: { id: string }) {
       setHasUnsavedChanges(false);
     }
 
-    updatePostsStatus([post.id], "approved");
-    saveFeedbackToAPI("approved");
+    const overrideReason = !validation.isValid
+      ? `Human approved despite missing required fields: ${validation.missingFields.join(", ")}`
+      : undefined;
+
+    updatePostsStatus([post.id], "approved", overrideReason);
+    void saveFeedbackToAPI(
+      "approved",
+      overrideReason,
+      overrideReason ? "human_approved_missing_fields" : "human_approved"
+    ).catch((err) => {
+      showToast(err instanceof Error ? err.message : "Feedback save failed");
+    });
   }
 
   async function publishToHub() {
@@ -218,7 +307,6 @@ export function PostDetailClient({ id }: { id: string }) {
     if (!reason) {
       showToast("Enter a rejection reason in the box below before rejecting.");
       return;
-      return;
     }
 
     if (hasUnsavedChanges) {
@@ -227,7 +315,66 @@ export function PostDetailClient({ id }: { id: string }) {
     }
 
     updatePostsStatus([post.id], "rejected", reason);
-    saveFeedbackToAPI("rejected", reason);
+    void saveFeedbackToAPI("rejected", reason).catch((err) => {
+      showToast(err instanceof Error ? err.message : "Feedback save failed");
+    });
+  }
+
+  async function sendBackForCorrection() {
+    if (!post) {
+      return;
+    }
+
+    const reason = rejectionReason.trim();
+    if (!reason) {
+      showToast("Enter what needs to change before sending back.");
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      updatePost(post.id, post);
+      setHasUnsavedChanges(false);
+    }
+
+    setCorrecting(true);
+    try {
+      const res = await fetch("/api/posts/correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: post.id, reason }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Correction failed");
+      if (data.post) {
+        setDraftPost(data.post);
+        updatePost(post.id, data.post);
+      }
+      setHasUnsavedChanges(false);
+      setRejectionReason("");
+      await refreshPosts();
+      showToast("Gemini revised the copy and returned it to review.", "success");
+    } catch (err) {
+      updatePostsStatus([post.id], "needs_correction", reason);
+      showToast(err instanceof Error ? err.message : "Correction failed; saved as needs correction.");
+    } finally {
+      setCorrecting(false);
+    }
+  }
+
+  function returnToReviewQueue() {
+    if (!post) {
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      updatePost(post.id, post);
+      setHasUnsavedChanges(false);
+    }
+
+    updatePostsStatus([post.id], "pending", "");
+    void refreshPosts().then(() => {
+      showToast("Returned to the review queue.", "success");
+    });
   }
 
   return (
@@ -329,6 +476,34 @@ export function PostDetailClient({ id }: { id: string }) {
                 No image attached yet. Add an image URL when Community Hub requires a visual.
               </p>
             )}
+
+            {!validation.isValid ? (
+              <div
+                className="rounded-md border border-amber-800/45 bg-amber-950/25 p-4"
+                role="region"
+                aria-labelledby={approveBypassHeadingId}
+              >
+                <h3 id={approveBypassHeadingId} className="font-[var(--font-public-sans)] text-sm font-semibold text-amber-100">
+                  Required fields incomplete
+                </h3>
+                <p id={approveBypassDescId} className="mt-1 text-xs text-[var(--muted)] leading-relaxed">
+                  Community Hub may reject or mis-handle incomplete payloads. You can still mark the post approved in this queue if you accept that risk.
+                </p>
+                <label className="mt-3 flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 shrink-0 rounded border border-[var(--border)] accent-[#a6192e]"
+                    checked={confirmApproveDespiteErrors}
+                    onChange={(e) => setConfirmApproveDespiteErrors(e.target.checked)}
+                    aria-describedby={approveBypassDescId}
+                  />
+                  <span className="text-sm text-[var(--text)] leading-snug">
+                    I understand required Community Hub fields are missing and I still want to approve this post.
+                  </span>
+                </label>
+              </div>
+            ) : null}
+
             <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
               <button
                 className="rounded border border-[var(--border)] px-4 py-2 text-sm font-medium hover:bg-[var(--surface-high)] disabled:opacity-50"
@@ -340,7 +515,7 @@ export function PostDetailClient({ id }: { id: string }) {
               </button>
               <button
                 className="rounded bg-[#a6192e] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                disabled={!validation?.isValid}
+                disabled={!validation?.isValid && !confirmApproveDespiteErrors}
                 onClick={() => {
                   if (hasUnsavedChanges) saveChanges();
                   approve();
@@ -532,10 +707,45 @@ export function PostDetailClient({ id }: { id: string }) {
         </section>
         <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
           <h2 className="font-[var(--font-public-sans)] text-lg font-semibold">Review Decision</h2>
+          {post.status === "needs_correction" && post.rejectionReason ? (
+            <div
+              className="mt-3 rounded-md border border-amber-800/45 bg-amber-950/25 p-3 text-sm text-amber-50"
+              role="status"
+            >
+              <p className="font-[var(--font-plex)] text-[11px] font-semibold uppercase tracking-wide text-amber-200/90">
+                Reviewer feedback
+              </p>
+              <p className="mt-2 whitespace-pre-wrap leading-relaxed">{post.rejectionReason}</p>
+            </div>
+          ) : null}
+          {!validation.isValid ? (
+            <div
+              className="mt-3 rounded-md border border-amber-800/45 bg-amber-950/25 p-3"
+              role="region"
+              aria-labelledby={`${approveBypassHeadingId}-aside`}
+            >
+              <h3 id={`${approveBypassHeadingId}-aside`} className="text-xs font-semibold uppercase tracking-wide text-amber-100">
+                Incomplete required fields
+              </h3>
+              <label className="mt-2 flex cursor-pointer items-start gap-2">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border border-[var(--border)] accent-[#a6192e]"
+                  checked={confirmApproveDespiteErrors}
+                  onChange={(e) => setConfirmApproveDespiteErrors(e.target.checked)}
+                  aria-describedby={approveBypassDescId}
+                />
+                <span className="text-xs text-[var(--text)] leading-snug">
+                  Approve anyway (same as main form).
+                </span>
+              </label>
+            </div>
+          ) : null}
           <textarea
+            aria-label="Rejection or correction notes"
             className="mt-3 min-h-20 w-full rounded border border-[var(--border)] bg-[#131313] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[#a6192e]"
             onChange={(event) => setRejectionReason(event.target.value)}
-            placeholder="Rejection reason"
+            placeholder="Required for Reject or Send Back — what should change?"
             value={rejectionReason}
           />
           <div className="mt-3 grid gap-2">
@@ -559,8 +769,36 @@ export function PostDetailClient({ id }: { id: string }) {
               <>
                 <button className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white" onClick={approve} type="button">Approve</button>
                 <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={reject} type="button">Reject</button>
-                <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={() => { updatePostsStatus([post.id], "needs_correction"); saveFeedbackToAPI("needs_correction", rejectionReason || undefined); }} type="button">Send Back / Needs Correction</button>
-                <button className="rounded border border-red-900/50 px-3 py-2 text-sm text-red-400 hover:bg-red-900/20" onClick={() => { updatePostsStatus([post.id], "archived"); saveFeedbackToAPI("rejected", "Deleted by reviewer"); }} type="button">Delete</button>
+                <button
+                  className="flex items-center justify-center gap-2 rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)] disabled:opacity-50"
+                  disabled={correcting}
+                  onClick={sendBackForCorrection}
+                  type="button"
+                >
+                  {correcting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  {correcting ? "Correcting with AI" : "Send Back / Needs Correction"}
+                </button>
+                {post.status === "needs_correction" ? (
+                  <button
+                    className="rounded border border-teal-800/50 bg-teal-950/30 px-3 py-2 text-sm font-medium text-teal-100 hover:bg-teal-900/35"
+                    onClick={returnToReviewQueue}
+                    type="button"
+                  >
+                    Submit corrections — return to queue
+                  </button>
+                ) : null}
+                <button
+                  className="rounded border border-red-900/50 px-3 py-2 text-sm text-red-400 hover:bg-red-900/20"
+                  onClick={() => {
+                    updatePostsStatus([post.id], "archived");
+                    void saveFeedbackToAPI("rejected", "Deleted by reviewer").catch((err) => {
+                      showToast(err instanceof Error ? err.message : "Feedback save failed");
+                    });
+                  }}
+                  type="button"
+                >
+                  Delete
+                </button>
               </>
             )}
             {post.status === "published" && (

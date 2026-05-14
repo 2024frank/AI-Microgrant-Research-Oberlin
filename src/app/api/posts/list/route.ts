@@ -1,13 +1,17 @@
-import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { NextRequest, NextResponse } from "next/server";
+import { listReviewPosts } from "@/lib/reviewStore";
+import type { ReviewStatus } from "@/lib/postTypes";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const snap = await adminDb.collection("reviewPosts").limit(500).get();
-    const posts = snap.docs.map((d) => d.data());
-    posts.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+    const status = req.nextUrl.searchParams.get("status") as ReviewStatus | null;
+    const maxResults = Number(req.nextUrl.searchParams.get("maxResults") ?? 500);
+    const posts = await listReviewPosts({
+      status: status ?? undefined,
+      maxResults: Math.max(1, Math.min(maxResults, 500)),
+    });
     return NextResponse.json({ posts, total: posts.length });
   } catch (err) {
     return NextResponse.json(

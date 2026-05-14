@@ -18,7 +18,7 @@ type ReviewStoreValue = {
   loading: boolean;
   refreshPosts: () => Promise<void>;
   updatePost: (id: string, updates: Partial<ReviewPost>) => void;
-  updatePostsStatus: (ids: string[], status: ReviewStatus, rejectionReason?: string) => void;
+  updatePostsStatus: (ids: string[], status: ReviewStatus, rejectionReason?: string | undefined) => void;
   removePosts: (ids: string[]) => void;
   updateDuplicateGroup: (id: string, updates: Partial<DuplicateGroup>) => void;
   getPostById: (id: string) => ReviewPost | undefined;
@@ -69,7 +69,9 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
           current.map((post) => (post.id === id ? ({ ...post, ...updates } as ReviewPost) : post))
         );
         import("@/lib/reviewStoreClient").then(({ clientUpdateReviewPost }) =>
-          clientUpdateReviewPost(id, updates)
+          clientUpdateReviewPost(id, updates).catch((err) => {
+            console.error("Failed to persist post update:", err);
+          })
         );
       },
       updatePostsStatus: (ids, status, rejectionReason) => {
@@ -79,7 +81,9 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
               ? ({
                   ...post,
                   status,
-                  ...(rejectionReason ? { rejectionReason } : {}),
+                  ...(rejectionReason !== undefined
+                    ? { rejectionReason: rejectionReason === "" ? undefined : rejectionReason }
+                    : {}),
                 } as ReviewPost)
               : post
           )
@@ -88,7 +92,9 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
           ids.forEach((id) =>
             clientUpdateReviewPost(id, {
               status,
-              ...(rejectionReason ? { rejectionReason } : {}),
+              ...(rejectionReason !== undefined ? { rejectionReason: rejectionReason || "" } : {}),
+            }).catch((err) => {
+              console.error("Failed to persist status update:", err);
             })
           );
         });
@@ -104,7 +110,11 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
             .filter((group) => group.postIds.length >= 2)
         );
         import("@/lib/reviewStoreClient").then(({ clientDeleteReviewPost }) => {
-          ids.forEach((id) => clientDeleteReviewPost(id));
+          ids.forEach((id) =>
+            clientDeleteReviewPost(id).catch((err) => {
+              console.error("Failed to delete post:", err);
+            })
+          );
         });
       },
       updateDuplicateGroup: (id, updates) => {
@@ -112,7 +122,9 @@ export function ReviewStoreProvider({ children }: { children: ReactNode }) {
           current.map((group) => (group.id === id ? { ...group, ...updates } : group))
         );
         import("@/lib/reviewStoreClient").then(({ clientUpdateDuplicateGroup }) =>
-          clientUpdateDuplicateGroup(id, updates)
+          clientUpdateDuplicateGroup(id, updates).catch((err) => {
+            console.error("Failed to update duplicate group:", err);
+          })
         );
       },
       getPostById: (id) => posts.find((post) => post.id === id),

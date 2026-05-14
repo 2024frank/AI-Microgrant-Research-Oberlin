@@ -1,46 +1,28 @@
 "use client";
 
-import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-import { firebaseDb } from "./firebase";
 import type { Source, SourceSchedule } from "./sources";
-// SourceSchedule is re-exported from sources.ts — client uses the same type
 export type { SourceSchedule };
 
-const COLLECTION = "sources";
-
-const DEFAULT_SOURCE = {
-  id: "localist-oberlin",
-  name: "Localist – Oberlin College Calendar",
-  type: "localist" as const,
-  baseUrl: "https://calendar.oberlin.edu",
-  schedule: "off" as SourceSchedule,
-  enabled: true,
-  createdAt: Date.now(),
-};
-
 export async function ensureDefaultSources(): Promise<void> {
-  const ref = doc(firebaseDb, COLLECTION, "localist-oberlin");
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, DEFAULT_SOURCE);
-  }
+  const res = await fetch("/api/sources/ensure", { method: "POST" });
+  if (!res.ok) throw new Error("Failed to initialize sources");
 }
 
 export async function getSource(id: string): Promise<Source | null> {
-  const snap = await getDoc(doc(firebaseDb, COLLECTION, id));
-  if (!snap.exists()) return null;
-  return snap.data() as Source;
+  const res = await fetch(`/api/sources/${encodeURIComponent(id)}`, {
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to load source");
+  const data = await res.json();
+  return data.source as Source;
 }
 
 export async function updateSource(id: string, updates: Partial<Source>): Promise<void> {
-  await updateDoc(doc(firebaseDb, COLLECTION, id), {
-    ...updates,
-    updatedAt: serverTimestamp(),
-  } as Record<string, unknown>);
+  const res = await fetch(`/api/sources/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) throw new Error("Failed to update source");
 }

@@ -18,7 +18,9 @@ export default function PostsPage() {
   const { posts, removePosts, updatePostsStatus, loading, refreshPosts } = useReviewStore();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<BulkAction | null>(null);
-  const [inlineMessage, setInlineMessage] = useState<{ id: string; text: string } | null>(null);
+  const [approveAnywayPost, setApproveAnywayPost] = useState<ReviewPost | null>(null);
+  const [approveAnywayAck, setApproveAnywayAck] = useState(false);
+  const [bulkApproveBypassAck, setBulkApproveBypassAck] = useState(false);
   const canDeletePost = (_post: ReviewPost) => true;
 
   // Always auto-refresh every 5s so posts appear as pipeline adds them
@@ -29,6 +31,10 @@ export default function PostsPage() {
   const selectedPosts = useMemo(
     () => posts.filter((post) => selectedIds.includes(post.id)),
     [posts, selectedIds],
+  );
+  const selectedPostsWithValidationErrors = useMemo(
+    () => selectedPosts.filter((post) => validatePost(post).errors.length > 0),
+    [selectedPosts],
   );
   const selectedDeletableIds = useMemo(
     () => selectedPosts.filter(canDeletePost).map((post) => post.id),
@@ -53,13 +59,14 @@ export default function PostsPage() {
     }
     setSelectedIds([]);
     setConfirmAction(null);
+    setBulkApproveBypassAck(false);
   }
 
   async function approvePost(post: ReviewPost) {
     const validation = validatePost(post);
     if (validation.errors.length > 0) {
-      setInlineMessage({ id: post.id, text: "Missing required fields — open View Details to fix." });
-      setTimeout(() => setInlineMessage(null), 4000);
+      setApproveAnywayPost(post);
+      setApproveAnywayAck(false);
       return;
     }
 
@@ -84,6 +91,13 @@ export default function PostsPage() {
       setInlineMessage({ id: post.id, text: "Publish failed — check your connection." });
     }
     setTimeout(() => setInlineMessage(null), 5000);
+  }
+
+  function confirmApproveAnyway() {
+    if (!approveAnywayPost || !approveAnywayAck) return;
+    updatePostsStatus([approveAnywayPost.id], "approved");
+    setApproveAnywayPost(null);
+    setApproveAnywayAck(false);
   }
 
   return (
@@ -112,7 +126,7 @@ export default function PostsPage() {
         <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)]" onClick={selectAll} type="button">
           Select All
         </button>
-        <button className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={selectedIds.length === 0} onClick={() => setConfirmAction("approved")} type="button">
+        <button className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={selectedIds.length === 0} onClick={() => { setBulkApproveBypassAck(false); setConfirmAction("approved"); }} type="button">
           Approve Selected
         </button>
         <button className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-high)] disabled:opacity-50" disabled={selectedIds.length === 0} onClick={() => setConfirmAction("rejected")} type="button">
@@ -198,9 +212,6 @@ export default function PostsPage() {
                           <button className="rounded border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-high)]" onClick={() => updatePostsStatus([post.id], "rejected", "Rejected from queue.")} type="button">
                             Reject
                           </button>
-                          {inlineMessage?.id === post.id && (
-                            <span className="text-xs text-amber-400 self-center">{inlineMessage.text}</span>
-                          )}
                           <button
                             className="rounded border border-[#82303b] px-2 py-1 text-xs text-[#ffb3b3] hover:bg-[#82303b]/20 disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={false}
@@ -223,19 +234,112 @@ export default function PostsPage() {
 
       {confirmAction ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <section className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
-            <h2 className="font-[var(--font-public-sans)] text-xl font-semibold">Confirm bulk action</h2>
+          <section
+            className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bulk-confirm-title"
+          >
+            <h2 id="bulk-confirm-title" className="font-[var(--font-public-sans)] text-xl font-semibold">Confirm bulk action</h2>
             <p className="mt-2 text-sm text-[var(--muted)]">
               {confirmAction === "delete"
                 ? `Permanently delete ${selectedIds.length} selected posts?`
                 : `Apply ${confirmAction.replace("_", " ")} to ${selectedPosts.length} selected posts?`}
             </p>
+            {confirmAction === "approved" && selectedPostsWithValidationErrors.length > 0 ? (
+              <div className="mt-4 rounded-md border border-amber-800/45 bg-amber-950/25 p-3" role="region" aria-label="Bulk approval validation warning">
+                <p className="text-sm text-amber-100">
+                  {selectedPostsWithValidationErrors.length} of {selectedPosts.length} selected posts are missing required Community Hub fields.
+                </p>
+                <label className="mt-3 flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 shrink-0 rounded border border-[var(--border)] accent-[#a6192e]"
+                    checked={bulkApproveBypassAck}
+                    onChange={(e) => setBulkApproveBypassAck(e.target.checked)}
+                    aria-describedby="bulk-approve-bypass-desc"
+                  />
+                  <span id="bulk-approve-bypass-desc" className="text-xs text-[var(--text)] leading-relaxed">
+                    I understand some selected posts fail validation and I still want to approve all selected posts.
+                  </span>
+                </label>
+              </div>
+            ) : null}
             <div className="mt-5 flex justify-end gap-2">
-              <button className="rounded border border-[var(--border)] px-3 py-2 text-sm" onClick={() => setConfirmAction(null)} type="button">
+              <button
+                className="rounded border border-[var(--border)] px-3 py-2 text-sm"
+                onClick={() => {
+                  setConfirmAction(null);
+                  setBulkApproveBypassAck(false);
+                }}
+                type="button"
+              >
                 Cancel
               </button>
-              <button className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white" onClick={() => applyBulkAction(confirmAction)} type="button">
+              <button
+                className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={
+                  confirmAction === "approved" &&
+                  selectedPostsWithValidationErrors.length > 0 &&
+                  !bulkApproveBypassAck
+                }
+                onClick={() => applyBulkAction(confirmAction)}
+                type="button"
+              >
                 Confirm
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {approveAnywayPost ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <section
+            className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="approve-anyway-title"
+          >
+            <h2 id="approve-anyway-title" className="font-[var(--font-public-sans)] text-xl font-semibold">Approve with missing fields?</h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              <span className="text-[var(--text)] font-medium">{approveAnywayPost.title || "Untitled"}</span> does not pass required-field validation. Approve only if you accept downstream Community Hub risk.
+            </p>
+            <ul className="mt-3 max-h-32 list-disc space-y-1 overflow-y-auto pl-5 text-xs text-amber-200/90">
+              {validatePost(approveAnywayPost).errors.map((err) => (
+                <li key={err}>{err}</li>
+              ))}
+            </ul>
+            <label className="mt-4 flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 shrink-0 rounded border border-[var(--border)] accent-[#a6192e]"
+                checked={approveAnywayAck}
+                onChange={(e) => setApproveAnywayAck(e.target.checked)}
+                aria-describedby="approve-anyway-ack-desc"
+              />
+              <span id="approve-anyway-ack-desc" className="text-sm text-[var(--text)] leading-snug">
+                I understand required fields are missing and I still want to approve this post.
+              </span>
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                className="rounded border border-[var(--border)] px-3 py-2 text-sm"
+                onClick={() => {
+                  setApproveAnywayPost(null);
+                  setApproveAnywayAck(false);
+                }}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded bg-[#a6192e] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={!approveAnywayAck}
+                onClick={confirmApproveAnyway}
+                type="button"
+              >
+                Approve anyway
               </button>
             </div>
           </section>

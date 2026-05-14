@@ -166,7 +166,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
           duplicateGroups.set(groupId, group);
         }
 
-        // Step 7: Write to Firestore
+        // Step 7: Persist review post (MySQL)
         const finalPost = buildPost(postId, extraction, editor, finalStatus, rawDesc, rawEvent);
         if (duplicateGroupId) {
           (finalPost as Record<string, unknown>).duplicateGroupId = duplicateGroupId;

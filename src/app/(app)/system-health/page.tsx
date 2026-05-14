@@ -45,7 +45,7 @@ export default function SystemHealthPage() {
     { name: "Localist API", description: "Oberlin College calendar event feed", status: "checking" },
     { name: "Community Hub API", description: "oberlin.communityhub.cloud submit endpoint", status: "checking" },
     { name: "Gemini API", description: "Google Gemini 2.5 Flash — server-side", status: "checking" },
-    { name: "Firestore", description: "Firebase Firestore — review post storage", status: "checking" },
+    { name: "MySQL Database", description: "DigitalOcean MySQL — review post storage", status: "checking" },
   ]);
   const [pipelineStats, setPipelineStats] = useState({ successRate: 0, avgQueueRate: 0, recentFailures: 0 });
   const [checking, setChecking] = useState(false);
@@ -90,7 +90,7 @@ export default function SystemHealthPage() {
       })(),
       // Gemini — just check if key is configured via a probe endpoint
       (async () => ({ ok: true, latency: 0 }))(),
-      // Firestore
+      // MySQL database
       (async () => {
         const start = Date.now();
         const { clientListPipelineJobs } = await import("@/lib/pipelineJobsClient");
@@ -103,7 +103,7 @@ export default function SystemHealthPage() {
       { name: "Localist API", description: "Oberlin College calendar event feed", ...toStatus(results[0]) },
       { name: "Community Hub API", description: "oberlin.communityhub.cloud submit endpoint", ...toStatus(results[1]) },
       { name: "Gemini API", description: "Google Gemini 2.5 Flash — configured server-side", ...toStatus(results[2]) },
-      { name: "Firestore", description: "Firebase Firestore — review post storage", ...toStatus(results[3]) },
+      { name: "MySQL Database", description: "DigitalOcean MySQL — review post storage", ...toStatus(results[3]) },
     ];
 
     setServices(updated);

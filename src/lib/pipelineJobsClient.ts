@@ -1,31 +1,21 @@
 "use client";
 
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-} from "firebase/firestore";
-import { firebaseDb } from "./firebase";
 import type { PipelineJob } from "./pipelineJobs";
 
-const COLLECTION = "pipelineJobs";
-
 export async function clientGetPipelineJob(jobId: string): Promise<PipelineJob | null> {
-  const snap = await getDoc(doc(firebaseDb, COLLECTION, jobId));
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as PipelineJob;
+  const res = await fetch(`/api/pipeline/status?jobId=${encodeURIComponent(jobId)}`, {
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to load pipeline job");
+  return (await res.json()) as PipelineJob;
 }
 
 export async function clientListPipelineJobs(maxResults = 50): Promise<PipelineJob[]> {
-  const q = query(
-    collection(firebaseDb, COLLECTION),
-    orderBy("startedAt", "desc"),
-    limit(maxResults)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as PipelineJob));
+  const res = await fetch(`/api/pipeline/jobs?maxResults=${maxResults}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to load pipeline jobs");
+  const data = await res.json();
+  return data.jobs as PipelineJob[];
 }

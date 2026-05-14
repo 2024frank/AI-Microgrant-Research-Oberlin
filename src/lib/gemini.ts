@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LocalistEvent } from "./localist";
+import type { ReviewPost } from "./postTypes";
 
 const MODEL = "gemini-2.5-flash";
 const ADMIN_EMAIL = "fkusiapp@oberlin.edu";
@@ -93,6 +94,10 @@ export type EditorResult = {
   extendedDescription: string;
 };
 
+export type CorrectionResult = EditorResult & {
+  notes: string;
+};
+
 const EXTRACTION_PROMPT = `You are an extraction agent for a civic calendar admin tool. Given this raw event from Oberlin College's Localist calendar, normalize it into a structured Community Hub post.
 
 POST TYPE IDs — choose the most fitting (you may select multiple, return as array):
@@ -131,6 +136,7 @@ RULES:
 - calendarSourceUrl is always the event URL from the data
 - confidence: 0.0-1.0 score reflecting how certain you are about the classification
 - title: use the event title as-is (do not rewrite it)
+- Do not invent sponsors, times, locations, or links that are not clearly supported by the raw event text or structured fields.
 
 RAW EVENT:
 {EVENT_JSON}
@@ -153,17 +159,26 @@ Respond with ONLY valid JSON, no markdown, no explanation:
   "confidence": 0.92
 }`;
 
-const EDITOR_PROMPT = `You are an editor agent for a civic community calendar. Events from this calendar are displayed on public screens in Oberlin, Ohio.
+const EDITOR_PROMPT = `You are a careful copy editor for a civic community calendar. Events appear on public screens in Oberlin, Ohio.
 
-Your job is to write two display-ready descriptions for this event. These will appear on a community screen — NOT in an email or web page.
+Your job is to produce two display-ready descriptions with MINIMAL departure from the organizer's wording. Prefer selecting useful original sentences, trimming clutter, and preserving meaning over rewriting.
 
-RULES:
+FAITHFULNESS (critical):
+- Stay anchored to the RAW DESCRIPTION facts; do not invent details, anecdotes, "moments," emotional beats, or narrative flourishes.
+- Use the RAW DESCRIPTION's own phrases and sentences whenever they are clear enough. The best answer often lifts one concise sentence for the short description and 2-4 important original sentences for the extended description.
+- If you must edit a sentence, make the smallest possible edit for length, grammar, or removing links.
+- Do not speculate about audience experience, impact, or why someone should attend unless the raw text already says so plainly.
+- Preserve the organizer's voice and level of formality when reasonable.
+- If the raw description is thin, keep the copy short and factual rather than padding with generic hype.
+- Avoid hype words like "don't miss," "incredible," "thrilling," "unique opportunity," "join us for an unforgettable," unless those exact claims appear in the original description.
+
+STYLE RULES:
 - NO raw URLs, NO website links, NO "More info at:", NO "Register at:", NO "click here"
 - NO clipboard-style text like "copy this link"
-- Short description: 1-2 engaging sentences, max 200 characters. Hook the reader.
-- Extended description: 3-5 informative sentences, max 1000 characters. Give rich context.
-- Tone: warm, civic, public-facing — like a community bulletin board
-- The writing should naturally reflect the event type (e.g., workshop/lecture/concert/exhibit)
+- Short description: 1-2 sentences, max 200 characters. Clear and direct (not salesy).
+- Extended description: up to 4 sentences, max 1000 characters. Add structure only where it clarifies information already implied by the raw text.
+- Tone: warm, civic, public-facing — but restrained, not promotional fiction
+- Reflect the event type lightly (workshop/lecture/concert) without overwriting specifics
 - Do NOT mention the source or that this is from a calendar
 - Write in present tense or future tense only
 
@@ -176,6 +191,41 @@ Respond with ONLY valid JSON, no markdown:
 {
   "description": "string (max 200 chars)",
   "extendedDescription": "string (max 1000 chars)"
+}`;
+
+const CORRECTION_PROMPT = `You are correcting a civic calendar post after a human reviewer found a problem.
+
+Your task is to revise ONLY the short and extended descriptions. Do not change the title, dates, source, location, sponsors, or category.
+
+HUMAN REVIEWER FEEDBACK:
+{REASON}
+
+STRICT RULES:
+- Stay truthful to the original description.
+- Prefer lifting useful sentences or phrases from ORIGINAL DESCRIPTION.
+- Remove invented claims, hype, exaggeration, and unsupported specificity.
+- If the reviewer says the copy is too spicy/promotional, make it plain and factual.
+- Short description: max 200 characters.
+- Extended description: max 1000 characters.
+- No raw URLs, "click here", "register at", or source/calendar mentions.
+
+CURRENT SHORT DESCRIPTION:
+{CURRENT_DESCRIPTION}
+
+CURRENT EXTENDED DESCRIPTION:
+{CURRENT_EXTENDED_DESCRIPTION}
+
+ORIGINAL DESCRIPTION:
+{ORIGINAL_DESCRIPTION}
+
+TITLE:
+{TITLE}
+
+Respond with ONLY valid JSON:
+{
+  "description": "string",
+  "extendedDescription": "string",
+  "notes": "brief explanation of what changed"
 }`;
 
 function parseJson<T>(text: string): T {
@@ -381,6 +431,42 @@ export async function runDedupAgent(
     return parseJson<DedupCheckResult>(text);
   } catch {
     return { isDuplicate: false, matchedTitle: null, matchedId: null, reason: "Failed to parse AI response", confidence: 0 };
+  }
+}
+
+export async function runCorrectionAgent(
+  post: ReviewPost,
+  reviewerReason: string
+): Promise<CorrectionResult> {
+  const client = getClient();
+  const model = client.getGenerativeModel({ model: MODEL });
+  const original =
+    post.originalDescription || post.extendedDescription || post.description || post.title;
+
+  const prompt = CORRECTION_PROMPT.replace("{REASON}", reviewerReason)
+    .replace("{CURRENT_DESCRIPTION}", post.description || "")
+    .replace("{CURRENT_EXTENDED_DESCRIPTION}", post.extendedDescription || "")
+    .replace("{ORIGINAL_DESCRIPTION}", original)
+    .replace("{TITLE}", post.title);
+
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+
+  try {
+    const parsed = parseJson<CorrectionResult>(text);
+    return {
+      description: parsed.description.slice(0, 200),
+      extendedDescription: parsed.extendedDescription.slice(0, 1000),
+      notes:
+        parsed.notes?.slice(0, 500) ||
+        "AI revised the descriptions from reviewer feedback.",
+    };
+  } catch {
+    return {
+      description: post.description,
+      extendedDescription: post.extendedDescription || post.description,
+      notes: "AI correction failed to parse; original descriptions were kept.",
+    };
   }
 }
 

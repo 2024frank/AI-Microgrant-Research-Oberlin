@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { updatePipelineJob } from "@/lib/pipelineJobs";
 
 export const dynamic = "force-dynamic";
 
@@ -8,9 +8,8 @@ export async function POST(req: NextRequest) {
     const { jobId } = await req.json();
     if (!jobId) return NextResponse.json({ error: "jobId required" }, { status: 400 });
 
-    await adminDb.collection("pipelineJobs").doc(jobId).update({
+    await updatePipelineJob(jobId, {
       status: "failed",
-      cancelled: true,
       completedAt: Date.now(),
       error: "Cancelled by admin",
     });

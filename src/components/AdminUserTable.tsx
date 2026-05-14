@@ -21,11 +21,11 @@ type AdminUserTableProps = {
 };
 
 function formatDate(value: AuthorizedUser["lastLoginAt"]) {
-  if (!value) {
+  if (value == null) {
     return "Not yet";
   }
 
-  return value.toDate().toLocaleString(undefined, {
+  return new Date(value).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });

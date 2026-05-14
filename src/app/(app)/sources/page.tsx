@@ -9,8 +9,46 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import type { Source, SourceSchedule } from "@/lib/sources";
 import type { PipelineJob } from "@/lib/pipelineJobs";
+import { SourceBuilderPanel } from "@/components/SourceBuilderPanel";
 
 type JobStatus = "idle" | "running" | "completed" | "failed";
+
+function getRunStage(job: PipelineJob | null) {
+  if (!job || job.progressTotal === 0) {
+    return {
+      title: "Preparing the source run",
+      detail: "Connecting to Localist and setting up the Gemini review pass.",
+    };
+  }
+
+  const ratio = job.progress / Math.max(job.progressTotal, 1);
+
+  if (job.progress === 0) {
+    return {
+      title: "Reading source events",
+      detail: "Collecting public Oberlin College calendar items before analysis begins.",
+    };
+  }
+
+  if (ratio < 0.45) {
+    return {
+      title: "Gemini is classifying events",
+      detail: "The extraction bot is identifying event types, dates, venues, sponsors, and eligibility.",
+    };
+  }
+
+  if (ratio < 0.8) {
+    return {
+      title: "Gemini is writing review copy",
+      detail: "The editor bot is tightening descriptions for community display and reviewer context.",
+    };
+  }
+
+  return {
+    title: "Final checks are running",
+    detail: "The system is flagging duplicates, rejecting athletics, and saving review-ready posts.",
+  };
+}
 
 export default function SourcesPage() {
   const { role } = useAuth();
@@ -24,7 +62,6 @@ export default function SourcesPage() {
   const [error, setError] = useState<string | null>(null);
   const [queuedCount, setQueuedCount] = useState<number | null>(null);
   const [allJobs, setAllJobs] = useState<PipelineJob[]>([]);
-
   useEffect(() => {
     async function load() {
       const { ensureDefaultSources, getSource } = await import("@/lib/sourcesClient");
@@ -119,6 +156,7 @@ export default function SourcesPage() {
 
   const progress = currentJob && currentJob.progressTotal > 0
     ? Math.round((currentJob.progress / currentJob.progressTotal) * 100) : 0;
+  const runStage = getRunStage(currentJob);
 
   function fmt(ts?: number) {
     if (!ts) return "Never";
@@ -126,7 +164,6 @@ export default function SourcesPage() {
   }
 
   const totalRuns = allJobs.length;
-  const successRuns = allJobs.filter((j) => j.status === "completed").length;
   const totalQueued = allJobs.reduce((s, j) => s + j.totalQueued, 0);
   const totalRejected = allJobs.reduce((s, j) => s + j.totalRejected, 0);
 
@@ -146,6 +183,8 @@ export default function SourcesPage() {
           </Link>
         )}
       </div>
+
+      <SourceBuilderPanel />
 
       {/* Source Card */}
       <div className="border border-[var(--border)] rounded-lg bg-[var(--surface-elevated)] overflow-hidden">
@@ -268,13 +307,14 @@ export default function SourcesPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2 text-[var(--muted)]">
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--primary)]" />
-                  Pipeline running…
+                  {runStage.title}
                 </span>
                 {currentJob && <span className="text-[var(--text)] font-medium tabular-nums">{currentJob.progress} / {currentJob.progressTotal}</span>}
               </div>
               <div className="w-full h-2 rounded-full bg-[var(--surface)] overflow-hidden">
                 <div className="h-full bg-[var(--primary)] rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
               </div>
+              <p className="text-xs text-[var(--muted)]">{runStage.detail}</p>
               {currentJob && (
                 <div className="flex flex-wrap gap-4 text-xs pt-1">
                   <span className="text-teal-400">Queued: {currentJob.totalQueued}</span>
@@ -290,7 +330,8 @@ export default function SourcesPage() {
             <div className="flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-[var(--text)]">Run completed · {fmt(currentJob.completedAt)}</p>
+                <p className="text-sm font-medium text-[var(--text)]">Source run complete · {fmt(currentJob.completedAt)}</p>
+                <p className="text-xs text-[var(--muted)] mt-0.5">Gemini finished analysis and the new posts are ready for editorial review.</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--muted)] mt-1">
                   <span>{currentJob.totalFetched} fetched</span>
                   <span className="text-teal-400">{currentJob.totalQueued} queued</span>
@@ -306,7 +347,7 @@ export default function SourcesPage() {
             <div className="flex items-start gap-3">
               <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-[var(--text)]">Pipeline failed</p>
+                <p className="text-sm font-medium text-[var(--text)]">Source run needs attention</p>
                 <p className="text-xs text-red-400 mt-0.5">{error}</p>
               </div>
             </div>

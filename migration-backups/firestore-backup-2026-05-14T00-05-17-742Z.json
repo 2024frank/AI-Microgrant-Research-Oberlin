@@ -1,0 +1,3347 @@
+{
+  "sources": [
+    {
+      "id": "localist-oberlin",
+      "data": {
+        "name": "Localist – Oberlin College Calendar",
+        "type": "localist",
+        "baseUrl": "https://calendar.oberlin.edu",
+        "enabled": true,
+        "createdAt": 1778379563225,
+        "id": "localist-oberlin",
+        "scheduleHour": 6,
+        "schedule": "2h",
+        "lastJobId": "is6dRvp2iQGRwlm7Td6u",
+        "lastRun": 1778690727044,
+        "nextRun": 1778697927044,
+        "updatedAt": 1778690727116
+      }
+    }
+  ],
+  "pipelineJobs": [
+    {
+      "id": "1n1E5h6beGZxtK7Mihzr",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778568910455,
+        "createdAt": 1778568910526,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778568917913,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "2NGiohjwp44rqs8gziXy",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778662726293,
+        "createdAt": 1778662726368,
+        "totalSkipped": 54,
+        "totalFetched": 54,
+        "completedAt": 1778662732173,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "3hrBsMmFKwZngJ3W1Srj",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778511759373,
+        "createdAt": 1778511759448,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778511768682,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "46C7jF81mdKs29rMOCe7",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778669417432,
+        "createdAt": 1778669417510,
+        "totalSkipped": 54,
+        "totalFetched": 54,
+        "completedAt": 1778669424558,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "4D4s2gwf3ZkXlKuKfTzV",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778497378452,
+        "createdAt": 1778497378522,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778497385048,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "7Qdlb3MJ82NUQ0HGH3M2",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "startedAt": 1778389736999,
+        "createdAt": 1778389737082,
+        "progressTotal": 61,
+        "totalFetched": 61,
+        "totalQueued": 32,
+        "totalSkipped": 113,
+        "progress": 61,
+        "completedAt": 1778390408658,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "8ZoMJRRutqt42zuRO0sy",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778390713411,
+        "createdAt": 1778390713495,
+        "totalSkipped": 61,
+        "totalFetched": 61,
+        "completedAt": 1778390725865,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "Azh36XFfjEl3UzyK8wnk",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778504132744,
+        "createdAt": 1778504132826,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778504140510,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "Ei1Tf6JZp2HYnj0WxwTI",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778576206018,
+        "createdAt": 1778576206080,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778576215630,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "FNXEuRCG6Ig0OnkHlIHk",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778610871079,
+        "createdAt": 1778610871236,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778610878250,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "GUZYVltiYKqHrusYJmLG",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778490332014,
+        "createdAt": 1778490332084,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778490339392,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "GleBrSzL6jDgvk5hwJ4C",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778555000714,
+        "createdAt": 1778555000791,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778555005272,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "ILnm9blZgda2V72PSp4f",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "startedAt": 1778388289247,
+        "createdAt": 1778388289328,
+        "progressTotal": 61,
+        "totalFetched": 61,
+        "totalSkipped": 7,
+        "totalQueued": 15,
+        "progress": 22,
+        "completedAt": 1778389727792,
+        "cancelled": true,
+        "error": "Cancelled by admin",
+        "status": "failed"
+      }
+    },
+    {
+      "id": "IVwIWtUp8z2taMwzwmkV",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778483229883,
+        "createdAt": 1778483229959,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778483237172,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "KqwV0dmymz0kuwc0OgQD",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778624730216,
+        "createdAt": 1778624730261,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778624739531,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "LedKVyx1RZbvX8gnV8mz",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778632149076,
+        "createdAt": 1778632149156,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778632158321,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "OMU7ZmWYaN1vMbHfxy0x",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778390695945,
+        "createdAt": 1778390695990,
+        "totalSkipped": 61,
+        "totalFetched": 61,
+        "completedAt": 1778390704755,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "QRRnj9oxeBW5EFILLsfk",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778518316699,
+        "createdAt": 1778518316796,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778518325112,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "SLyuqLTQ75fyj2qD1Eys",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778684385432,
+        "createdAt": 1778684385481,
+        "totalSkipped": 54,
+        "totalFetched": 54,
+        "completedAt": 1778684393799,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "VcO3hFYYHqz2gzzCYnRj",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778582851785,
+        "createdAt": 1778582851843,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778582860022,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "XRmbVs8XlUuEiZbtjeLn",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778617918417,
+        "createdAt": 1778617918482,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778617926366,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "aRbtZO1aMimC8YQtOiuK",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778538123145,
+        "createdAt": 1778538123211,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778538130507,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "cVRet3ZazqbQjuoLSdIH",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778390794143,
+        "createdAt": 1778390794246,
+        "totalSkipped": 61,
+        "totalFetched": 61,
+        "completedAt": 1778390796071,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "eusIPArOQRXgavQz3RaP",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778562697609,
+        "createdAt": 1778562697683,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778562703245,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "fB2cIoT0td23xKFClPgJ",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778604172704,
+        "createdAt": 1778604172781,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778604179305,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "fvwqR6RSPK0Ap4HVQTSj",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778597741611,
+        "createdAt": 1778597741709,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778597749816,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "gseMo3iGI6uEEPJ4CJCH",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778545626828,
+        "createdAt": 1778545626887,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778545634506,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "is6dRvp2iQGRwlm7Td6u",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778690720350,
+        "createdAt": 1778690720452,
+        "totalSkipped": 54,
+        "totalFetched": 54,
+        "completedAt": 1778690726839,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "kaPvAngIi2WdfxLIWGku",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778655548086,
+        "createdAt": 1778655548173,
+        "totalSkipped": 54,
+        "totalFetched": 54,
+        "completedAt": 1778655558260,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "proM4RLvtfIr7Fiud1GX",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778641404183,
+        "createdAt": 1778641404260,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778641412037,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "qVsRgpsVqSjZWIA3p6jH",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778531582777,
+        "createdAt": 1778531582852,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778531592873,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "tZ1LF2Xe5cmshSOyhLT2",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778524521508,
+        "createdAt": 1778524521577,
+        "totalSkipped": 58,
+        "totalFetched": 58,
+        "completedAt": 1778524531308,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "xQwsCwsv1qbXmnLTlT1y",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778589410365,
+        "createdAt": 1778589410434,
+        "totalSkipped": 57,
+        "totalFetched": 57,
+        "completedAt": 1778589417399,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "yCzWch0TmlWSkyI9J9E2",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778649364492,
+        "createdAt": 1778649364571,
+        "totalSkipped": 54,
+        "totalFetched": 54,
+        "completedAt": 1778649372919,
+        "status": "completed"
+      }
+    },
+    {
+      "id": "yGMv9pLuHG051FiYDM6u",
+      "data": {
+        "sourceId": "localist-oberlin",
+        "sourceName": "Localist – Oberlin College Calendar",
+        "totalQueued": 0,
+        "totalRejected": 0,
+        "totalDuplicates": 0,
+        "progress": 0,
+        "progressTotal": 0,
+        "continuationIndex": 0,
+        "startedAt": 1778675993397,
+        "createdAt": 1778675993462,
+        "totalSkipped": 54,
+        "totalFetched": 54,
+        "completedAt": 1778676005458,
+        "status": "completed"
+      }
+    }
+  ],
+  "reviewPosts": [
+    {
+      "id": "oberlin-42924343951285",
+      "data": {
+        "description": "Discover Oberlin's rich past at your own pace! Explore the 1866 Monroe House and uncover stories of its founding, co-education, and abolitionist spirit.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Self-Guided Tour: Oberlin Origins",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "createdAt": 1778388484324,
+        "roomNum": "Monroe House",
+        "sponsors": [
+          "Community Partners",
+          "Oberlin Heritage Center"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/42924296034940/huge/ac14a76eb903e823058d9504053b816940295794.jpg",
+        "id": "oberlin-42924343951285",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Move at your own pace through the Oberlin Heritage Center's 1866 Monroe House, exploring stories that outline Oberlin's founding, the college's promise of co-education, the community's commitment to abolition, and more. Tours are accessed through a provided tablet or your personal smart phone.\n\nCost: $3/adult; free for college students and children under 18. Walk-ins are welcome. Last entry at 3:30 p.m. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
+        "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "updatedAt": 1778388484363,
+        "sessions": [
+          {
+            "startTime": 1779439200,
+            "endTime": 1779460800
+          }
+        ],
+        "website": "https://oberlinheritagecenter.org/",
+        "contactEmail": "mailto:tourinfo@oberlinheritage.org",
+        "extractedMetadata": {
+          "sourceRecordId": "42924343951285",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:48:04.324Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/42924296034940/huge/ac14a76eb903e823058d9504053b816940295794.jpg",
+        "phone": "440-774-1700",
+        "location": "Oberlin Heritage Center, Monroe House, 20 W Vine St, Oberlin OH, 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Embark on a unique self-guided journey through Oberlin's compelling history at the 1866 Monroe House. Using a provided tablet or your personal smartphone, you'll delve into the origins of Oberlin, the pioneering spirit of co-education, and the community's steadfast dedication to the abolitionist movement. This flexible experience allows you to explore significant narratives at your own pace. Admission is $3 for adults; college students and children under 18 are free. Walk-ins are always welcome, with the last entry at 3:30 p.m. For more details, call the Oberlin Heritage Center at 440-774-1700.",
+        "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51198454378422",
+      "data": {
+        "description": "Experience a beloved Oberlin tradition! Enjoy live music, delicious food trucks, and a festive evening as Tappan Square illuminates.",
+        "locationType": "ph2",
+        "postTypeId": [
+          3,
+          5
+        ],
+        "title": "Campus Illumination and Social on the Square",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51198454378422",
+        "createdAt": 1778390043587,
+        "sponsors": [
+          "Administrative",
+          "Office of the President"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/51198454427585/huge/957a313b1f0bf310076a111d3ccb1c5dcd94adbc.jpg",
+        "id": "oberlin-51198454378422",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Join us for this Oberlin tradition that gathers faculty, alumni, graduates and their families, staff, and community members for an evening of live music and fun. This event will feature food trucks, so come hungry!",
+        "updatedAt": 1778390043619,
+        "sessions": [
+          {
+            "startTime": 1779634800,
+            "endTime": 1779645600
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/campus-illumination-and-social-on-the-square-1824",
+        "contactEmail": "nbishman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51198454378422",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:14:03.587Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/51198454427585/huge/957a313b1f0bf310076a111d3ccb1c5dcd94adbc.jpg",
+        "phone": "440-370-6780",
+        "location": "Tappan Square, Oberlin, OH 44074, United States",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Gather with faculty, alumni, graduates, staff, and community members for Oberlin's annual Campus Illumination. This cherished tradition transforms Tappan Square into a festive hub of light and celebration. Enjoy an evening filled with vibrant live music and delicious offerings from local food trucks. It's a perfect opportunity to connect with friends and neighbors, celebrating the spirit of Oberlin together.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51198454378422",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51800468257124",
+      "data": {
+        "description": "Explore the fascinating concept of 'Sprezzatura' in Italian Baroque music! Join Kenneth Slowik from the Oberlin Baroque Performance Institute for an engaging lecture.",
+        "locationType": "ph2",
+        "postTypeId": [
+          8
+        ],
+        "title": "\"Sprezzatura and the Italian Baroque\"",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800468257124",
+        "createdAt": 1778390104725,
+        "sponsors": [
+          "Oberlin College"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "id": "oberlin-51800468257124",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Lecture by Kenneth Slowik, artistic director of the Oberlin Baroque Performance Institute. Open to the public!",
+        "updatedAt": 1778390104755,
+        "sessions": [
+          {
+            "startTime": 1781584800,
+            "endTime": 1781587800
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/sprezzatura-and_the_italian_baroque",
+        "extractedMetadata": {
+          "sourceRecordId": "51800468257124",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:15:04.725Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "location": "Kulas Recital Hall, Conservatory Central Unit, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Delve into the captivating world of 'Sprezzatura' and its significance in Italian Baroque music. This insightful lecture is presented by Kenneth Slowik, the esteemed artistic director of the Oberlin Baroque Performance Institute. Discover how this concept of effortless grace shaped the performance and aesthetics of the era. All community members are warmly invited to attend this enriching public presentation.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800468257124",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51800542052140",
+      "data": {
+        "description": "Experience the beauty of English Baroque music! Faculty of the Baroque Performance Institute perform a special concert at Kulas Recital Hall.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Baroque Performance Institute Faculty Recital",
+        "aiConfidence": 0.98,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800542052140",
+        "createdAt": 1778390121824,
+        "sponsors": [
+          "Oberlin College"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "id": "oberlin-51800542052140",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Faculty of the Baroque Performance Institute perform a concert of English Baroque Music. $10 at the door (only cash or check please). Limited seating available.",
+        "updatedAt": 1778390121880,
+        "sessions": [
+          {
+            "startTime": 1781865600,
+            "endTime": 1781871000
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/baroque-performance-institute-faculty-recital-1805",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51800542052140",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:15:21.824Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "location": "Kulas Recital Hall, Conservatory Central Unit",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Immerse yourself in the rich sounds of English Baroque music performed by the distinguished faculty of the Baroque Performance Institute. This special recital showcases masterful interpretations of timeless compositions. Join us for an evening of historical elegance at Kulas Recital Hall, Conservatory Central Unit. Tickets are $10 at the door, payable by cash or check only. Please note that seating is limited, so arrive early to secure your spot.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800542052140",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51800568912081",
+      "data": {
+        "description": "Step into the elegant world of Baroque chamber music! Enjoy a free concert presented by talented participants of the Baroque Performance Institute.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Baroque Performance Institute Chamber Music Concert",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800568912081",
+        "createdAt": 1778390139469,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "id": "oberlin-51800568912081",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Participants of the Baroque Performance Institute perform Baroque chamber music. Free of charge to attend and open to the public!",
+        "updatedAt": 1778390139534,
+        "sessions": [
+          {
+            "startTime": 1781832600,
+            "endTime": 1781847000
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/baroque-performance-institute-chamber-music-concert-43",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51800568912081",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:15:39.469Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "location": "Kulas Recital Hall, Conservatory Central Unit",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Step into the elegant world of Baroque chamber music! This special concert features talented participants from the esteemed Baroque Performance Institute. They will bring captivating historical pieces to life with their skill and passion, offering an enriching musical experience for all. Join us in Kulas Recital Hall for an evening of exquisite melodies and harmonies. This performance is free of charge and open to everyone in the community, celebrating the timeless beauty of Baroque artistry.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800568912081",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51800621440847",
+      "data": {
+        "description": "Enjoy an evening of beautiful music as participants of the Oberlin Flute Boot Camp showcase their talent! All are welcome.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Oberlin Flute Boot Camp Participant Recital",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800621440847",
+        "createdAt": 1778390191269,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45807959604627/huge/ebc3a1d7f8b22c947ef2c304055981a93430c251.jpg",
+        "id": "oberlin-51800621440847",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Participants of the Oberlin Flute Boot Camp perform a recital. Everyone welcome to attend!",
+        "sessions": [
+          {
+            "startTime": 1782687600,
+            "endTime": 1782693000
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/oberlin-flute-boot-camp-participant-recital-552",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51800621440847",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:16:31.269Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45807959604627/huge/ebc3a1d7f8b22c947ef2c304055981a93430c251.jpg",
+        "location": "77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Come celebrate the dedication and talent of the Oberlin Flute Boot Camp participants! After intensive training, these musicians are ready to share their progress in a special recital. This is a wonderful opportunity to hear beautiful flute music performed by emerging artists right here in Oberlin. Join us for an inspiring evening supporting our local musical community. Everyone is warmly invited to attend!",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800621440847",
+        "status": "approved",
+        "updatedAt": 1778408867221
+      }
+    },
+    {
+      "id": "oberlin-51800642729478",
+      "data": {
+        "description": "Experience the exciting sounds of the trumpet! Workshop participants showcase their talent in a special recital.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Oberlin Trumpet Workshop Participant Recital",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800642729478",
+        "createdAt": 1778390158939,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56758/huge/c462312214ec7f632da1165e34a4cce1723b1c8d.jpg",
+        "id": "oberlin-51800642729478",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Participants of the Oberlin Trumpet Workshop perform a recital. Everyone welcome!",
+        "sessions": [
+          {
+            "startTime": 1782442800,
+            "endTime": 1782446400
+          }
+        ],
+        "extractedMetadata": {
+          "sourceRecordId": "51800642729478",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:15:58.939Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56758/huge/c462312214ec7f632da1165e34a4cce1723b1c8d.jpg",
+        "location": "77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for a wonderful afternoon of trumpet music! The dedicated participants of the Oberlin Trumpet Workshop are excited to share their progress and talent in a public recital. This is a fantastic opportunity to hear a variety of pieces performed by emerging musicians. Come celebrate their hard work and passion for music in a supportive community setting.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800642729478",
+        "status": "approved",
+        "updatedAt": 1778408996713
+      }
+    },
+    {
+      "id": "oberlin-51800698270525",
+      "data": {
+        "description": "Step back in time! Enjoy elegant baroque chamber music performed by talented participants of the Baroque Performance Institute. Free and open to all.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Baroque Performance Institute Participant Chamber Music Concert",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800698270525",
+        "createdAt": 1778390173245,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "id": "oberlin-51800698270525",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Participants of the Baroque Performance Institute perform a chamber music concert.\nOpen to the public!",
+        "updatedAt": 1778390173269,
+        "sessions": [
+          {
+            "startTime": 1782523800,
+            "endTime": 1782538200
+          }
+        ],
+        "extractedMetadata": {
+          "sourceRecordId": "51800698270525",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:16:13.245Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "location": "Kulas Recital Hall, Conservatory Central Unit, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for a captivating evening of chamber music, performed by the talented participants of the Baroque Performance Institute. This special concert showcases their dedicated study and mastery of 17th and 18th-century musical styles. Immerse yourself in the elegant sounds and intricate compositions of the Baroque era, brought to life by these skilled musicians. It's a unique opportunity to experience a high level of performance from rising stars in early music. This delightful event is free and open to the entire Oberlin community.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800698270525",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51800755580642",
+      "data": {
+        "description": "Experience the majestic sounds of the organ as Jonathan Moyer performs a special faculty recital at Peace Church. A captivating musical evening awaits you!",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Organ Academy Faculty Recital, Jonathan Moyer",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800755580642",
+        "createdAt": 1778390216947,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/33183034658775/huge/09291a56505eaece0be025cdd3ef02c0e97ade6a.jpg",
+        "id": "oberlin-51800755580642",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Jonathan Moyer performs a recital on the organ in Peace Church, \n\n44 E Lorain St, Oberlin, OH 44074",
+        "sessions": [
+          {
+            "startTime": 1784014200,
+            "endTime": 1784017800
+          }
+        ],
+        "extractedMetadata": {
+          "sourceRecordId": "51800755580642",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:16:56.947Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/33183034658775/huge/09291a56505eaece0be025cdd3ef02c0e97ade6a.jpg",
+        "location": "Peace Church, 44 E Lorain St, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for an exquisite evening of organ music featuring Jonathan Moyer, presented as part of the Organ Academy Faculty Recital series. Moyer, a renowned performer, will showcase the majestic beauty and power of the organ in a captivating program. Prepare to be swept away by intricate melodies and resonant harmonies in the beautiful setting of Peace Church. This is a must-see event for music lovers in Oberlin.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800755580642",
+        "status": "approved",
+        "updatedAt": 1778408861404
+      }
+    },
+    {
+      "id": "oberlin-51800796703505",
+      "data": {
+        "description": "Experience the exquisite harpsichord! Mark Edwards, faculty artist, performs a captivating recital. Join us for a beautiful evening of music.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Organ Academy Faculty Recital - Mark Edwards, harpsichord",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800796703505",
+        "createdAt": 1778390234723,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "id": "oberlin-51800796703505",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Mark Edwards performs a recital on the harpsichord.",
+        "sessions": [
+          {
+            "startTime": 1784091000,
+            "endTime": 1784094600
+          }
+        ],
+        "extractedMetadata": {
+          "sourceRecordId": "51800796703505",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:17:14.723Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "location": "Kulas Recital Hall, Conservatory Central Unit, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for a special evening featuring Organ Academy faculty member Mark Edwards. He will present a captivating recital on the harpsichord, showcasing the instrument's intricate beauty and historical resonance. This performance offers a unique opportunity to experience the rich sonic palette of the harpsichord in the beautiful acoustics of Kulas Recital Hall. Discover a world of exquisite sound with this master performer.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800796703505",
+        "status": "approved",
+        "updatedAt": 1778408864275
+      }
+    },
+    {
+      "id": "oberlin-51800830121904",
+      "data": {
+        "description": "Experience the future of sound! Workshop participants showcase their innovative sonic art compositions in a captivating recital.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Sonic Arts Workshop Participant Recital",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51800830121904",
+        "createdAt": 1778390266492,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56758/huge/c462312214ec7f632da1165e34a4cce1723b1c8d.jpg",
+        "id": "oberlin-51800830121904",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Participants of the Sonic Arts Workshop present a recital.",
+        "updatedAt": 1778390266520,
+        "sessions": [
+          {
+            "startTime": 1784343600,
+            "endTime": 1784392200
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/sonic-arts-workshop-participant-recital-6093",
+        "extractedMetadata": {
+          "sourceRecordId": "51800830121904",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:17:46.492Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56758/huge/c462312214ec7f632da1165e34a4cce1723b1c8d.jpg",
+        "location": "77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Dive into the exciting world of sonic arts at this special participant recital. Workshop attendees, after weeks of creative exploration, present their unique and innovative sound compositions, pushing the boundaries of traditional music. Expect a diverse range of auditory experiences, from experimental soundscapes to digital compositions, all crafted by local talent. This is a wonderful opportunity to support emerging artists and discover new forms of musical expression in our community. Join us for an unforgettable evening of cutting-edge sound.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51800830121904",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51814152694188",
+      "data": {
+        "description": "The prestigious Cooper Competition begins! Catch some of the world's most talented young violinists as they perform live in Round 1 today.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5,
+          8
+        ],
+        "title": "Thomas & Evon Cooper Competition 2026 - Violin: Round 1, Day 1 Session 1",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
+        "createdAt": 1778390365617,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "id": "oberlin-51814152694188",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Founded in 2010, the Thomas & Evon Cooper International Competition brings some of the world's most talented young musicians to the campus of Oberlin College and Conservatory. Alternating years feature a competition for violinists and a competition for pianists.\n\nThursday, August 6 | Round 1, Day 1\nViolinists perform 30-minute programs in Warner Concert Hall. \n2:30-5:45 p.m. - Session 1\n7:30-9:30 p.m. - Session 2\n\nFriday, August 7 | Round 1, Day 2\nViolinists perform 30-minute programs in Warner Concert Hall. \n2:30-5:45 p.m. - Session 1\n7:30-10:00 p.m. - Session 2\nAnnouncement of the six advancing violinists follows the evening session.\n\nSaturday, August 8 | Round 2\nSix violinists perform 45-minute recital programs in Warner Concert Hall. \n3:00-6:15 p.m. - Session 1\n8:00-9:30 p.m. - Session 2\nAnnouncement of the three finalists follows the evening session.\n\nSunday, August 9 | Honors Recital\nThis evening's concert in Warner Concert Hall features outstanding performances selected by the Jury from the first three days of the Competition.\n7:30 p.m.   Honors Recital\n\nMonday, August 10 | Concerto Finals\nThree violinists perform complete concertos with the ProMusica Chamber Orchestra and David Danzmayr, conductor.\n7:30 p.m. Concerto Finals | Warner Concert Hall",
+        "updatedAt": 1778390365657,
+        "sessions": [
+          {
+            "startTime": 1786079400,
+            "endTime": 1786090000
+          }
+        ],
+        "website": "https://www.oberlin.edu/cooper-competition/violin-2026",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51814152694188",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:19:25.617Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "phone": "440-775-8200",
+        "location": "77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "The renowned Thomas & Evon Cooper International Competition brings extraordinary young violinists to Oberlin College & Conservatory. Today marks the exciting beginning of Round 1, Day 1, where contestants will perform 30-minute programs showcasing their exceptional skill. This prestigious competition alternates yearly between violin and piano, drawing top talent globally. Come witness the future stars of classical music as they embark on their journey through the rounds.",
+        "calendarSourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51814262645056",
+      "data": {
+        "description": "Catch future stars today! The Cooper International Competition showcases incredibly talented young violinists in Round 1, Day 2, Session 1 at Warner Concert Hall.",
+        "locationType": "bo",
+        "postTypeId": [
+          3,
+          5
+        ],
+        "title": "Thomas & Evon Cooper Competition 2026 - Violin Round 1, Day 2 Session 1",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
+        "createdAt": 1778390388216,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "id": "oberlin-51814262645056",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Founded in 2010, the Thomas & Evon Cooper International Competition brings some of the world's most talented young musicians to the campus of Oberlin College and Conservatory. Alternating years feature a competition for violinists and a competition for pianists.\n\nThursday, August 6 | Round 1, Day 1\nViolinists perform 30-minute programs in Warner Concert Hall. \n2:30-5:45 p.m. - Session 1\n7:30-9:30 p.m. - Session 2\n\nFriday, August 7 | Round 1, Day 2\nViolinists perform 30-minute programs in Warner Concert Hall. \n2:30-5:45 p.m. - Session 1\n7:30-10:00 p.m. - Session 2\nAnnouncement of the six advancing violinists follows the evening session.\n\nSaturday, August 8 | Round 2\nSix violinists perform 45-minute recital programs in Warner Concert Hall. \n3:00-6:15 p.m. - Session 1\n8:00-9:30 p.m. - Session 2\nAnnouncement of the three finalists follows the evening session.\n\nSunday, August 9 | Honors Recital\nThis evening's concert in Warner Concert Hall features outstanding performances selected by the Jury from the first three days of the Competition.\n7:30 p.m.   Honors Recital\n\nMonday, August 10 | Concerto Finals\nThree violinists perform complete concertos with the ProMusica Chamber Orchestra and David Danzmayr, conductor.\n7:30 p.m. Concerto Finals | Warner Concert Hall",
+        "updatedAt": 1778390388260,
+        "sessions": [
+          {
+            "startTime": 1786079400,
+            "endTime": 1786090020
+          }
+        ],
+        "website": "https://www.oberlin.edu/cooper-competition/violin-2026",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51814262645056",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:19:48.216Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "phone": "440-775-8200",
+        "location": "Warner Concert Hall",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Experience the Thomas & Evon Cooper International Competition, bringing the world's most promising young violinists to Oberlin. This afternoon features Round 1, Day 2, Session 1, where each exceptional musician will present a captivating 30-minute program in Warner Concert Hall. This prestigious biennial competition alternates between violin and piano, offering a unique opportunity to witness the next generation of classical music virtuosos right in our community.",
+        "calendarSourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51814457189582",
+      "data": {
+        "description": "Don't miss the Cooper Competition Concerto Finals! See three incredible young violinists perform with the ProMusica Chamber Orchestra in a thrilling classical music showcase.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Thomas & Evon Cooper Competition 2026 - Concerto Finals with the ProMusica Chamber Orchestra, David Danzmayr, conductor.",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
+        "createdAt": 1778390408091,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "id": "oberlin-51814457189582",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Founded in 2010, the Thomas & Evon Cooper International Competition brings some of the world's most talented young musicians to the campus of Oberlin College and Conservatory. Alternating years feature a competition for violinists and a competition for pianists.\n\nThursday, August 6 | Round 1, Day 1\nViolinists perform 30-minute programs in Warner Concert Hall. \n2:30-5:45 p.m. - Session 1\n7:30-9:30 p.m. - Session 2\n\nFriday, August 7 | Round 1, Day 2\nViolinists perform 30-minute programs in Warner Concert Hall. \n2:30-5:45 p.m. - Session 1\n7:30-10:00 p.m. - Session 2\nAnnouncement of the six advancing violinists follows the evening session.\n\nSaturday, August 8 | Round 2\nSix violinists perform 45-minute recital programs in Warner Concert Hall. \n3:00-6:15 p.m. - Session 1\n8:00-9:30 p.m. - Session 2\nAnnouncement of the three finalists follows the evening session.\n\nSunday, August 9 | Honors Recital\nThis evening's concert in Warner Concert Hall features outstanding performances selected by the Jury from the first three days of the Competition.\n7:30 p.m.   Honors Recital\n\nMonday, August 10 | Concerto Finals\nThree violinists perform complete concertos with the ProMusica Chamber Orchestra and David Danzmayr, conductor.\n7:30 p.m. Concerto Finals | Warner Concert Hall",
+        "updatedAt": 1778390408119,
+        "sessions": [
+          {
+            "startTime": 1786692600,
+            "endTime": 1786701600
+          }
+        ],
+        "website": "https://www.oberlin.edu/cooper-competition/violin-2026",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51814457189582",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:20:08.090Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "phone": "440-775-8200",
+        "location": "Warner Concert Hall, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "The Thomas & Evon Cooper International Competition brings the world's most talented young musicians to Oberlin. Tonight is the thrilling Concerto Finals, where the top three violinists perform complete concertos. They will be accompanied by the esteemed ProMusica Chamber Orchestra, led by conductor David Danzmayr. Experience an evening of breathtaking classical music as these rising stars showcase their artistry and compete for top honors. It's a truly spectacular display of musical prowess you won't want to miss.",
+        "calendarSourceUrl": "https://www.oberlin.edu/cooper-competition/violin-2026\t\t\t\t",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51815210388404",
+      "data": {
+        "description": "Experience a stunning piano performance by Jon Shih, the 2025 Adult Amateur Piano Competition winner! Enjoy works by Beach, Griffes, Boulanger, and Scriabin.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Adult Amateur Piano Festival Guest Concert: Jon Shih",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "createdAt": 1778390303437,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "id": "oberlin-51815210388404",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "John Shih, the 2025 Adult Amateur Piano Competition first-place winner will perform a concert - works by Beach, Griffes, Nadia Boulanger, Scriabin",
+        "updatedAt": 1778390303465,
+        "sessions": [
+          {
+            "startTime": 1785051000,
+            "endTime": 1785056400
+          }
+        ],
+        "website": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51815210388404",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:18:23.437Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "phone": "440-775-8200",
+        "location": "Warner Concert Hall, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for a special guest concert featuring Jon Shih, the acclaimed first-place winner of the 2025 Adult Amateur Piano Competition. As part of the Adult Amateur Piano Festival, Shih performs a captivating program at Warner Concert Hall. He brings to life diverse works by composers like Beach, Griffes, Nadia Boulanger, and Scriabin. Don't miss this opportunity to hear a masterful performance from one of the competition's brightest stars. It's an evening of exceptional classical music right here in Oberlin!",
+        "calendarSourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51815547574650",
+      "data": {
+        "description": "Don't miss a beautiful evening of piano music! Talented adult amateur pianists perform live in concert.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Adult Amateur Piano Festival Concert II",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "createdAt": 1778390338813,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "id": "oberlin-51815547574650",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Participants of the Adult Amateur Piano Festival perform a concert.",
+        "sessions": [
+          {
+            "startTime": 1785483000,
+            "endTime": 1785490200
+          }
+        ],
+        "website": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51815547574650",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:18:58.812Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "phone": "440-775-8200",
+        "location": "Warner Concert Hall, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Come experience the joy of live piano music at Warner Concert Hall! This special concert showcases the skills and passion of talented adult amateur pianists participating in the festival. It's a wonderful opportunity to support local musicians and enjoy a delightful evening of artistry from our community.",
+        "calendarSourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "communityHubPostId": "4348",
+        "status": "published",
+        "updatedAt": 1778390979681
+      }
+    },
+    {
+      "id": "oberlin-51815586487392",
+      "data": {
+        "description": "Experience the joy of music! Talented adult amateur pianists share their passion and skill in the first concert of the Piano Festival.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Adult Amateur Piano Festival Concert I",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "createdAt": 1778390321430,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "id": "oberlin-51815586487392",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Participants of the Adult Amateur Piano Festival perform a concert.",
+        "sessions": [
+          {
+            "startTime": 1785295800,
+            "endTime": 1785303000
+          }
+        ],
+        "website": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51815586487392",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:18:41.430Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "phone": "440-775-8200",
+        "location": "Warner Concert Hall, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for Concert I of the Adult Amateur Piano Festival! This special event showcases the dedication and talent of adult pianists from our community and beyond. Participants, ranging in skill and experience, will perform a diverse program of classical and contemporary pieces, sharing their love for music with you. It's a wonderful opportunity to support fellow music lovers and enjoy an inspiring evening of piano artistry at Warner Concert Hall.",
+        "calendarSourceUrl": "https://www.oberlin.edu/summer-programs/programs/oberlin-international-adult-amateur-piano-competition-festival",
+        "status": "approved",
+        "updatedAt": 1778624068510
+      }
+    },
+    {
+      "id": "oberlin-51815760861682",
+      "data": {
+        "description": "Hear tomorrow's music today! Young composers from our workshop share their original works in a special recital. Celebrate local talent and creativity!",
+        "locationType": "ph2",
+        "postTypeId": [
+          5,
+          13
+        ],
+        "title": "Young Composers Workshop ",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://www.oberlin.edu/summer-programs/composition-workshop",
+        "createdAt": 1778390286272,
+        "sponsors": [
+          "Administrative",
+          "Conservatory Summer Programs"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "id": "oberlin-51815760861682",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Participants of the Young Composers Workshop present a recital.",
+        "sessions": [
+          {
+            "startTime": 1785050000,
+            "endTime": 1785053600
+          }
+        ],
+        "website": "https://www.oberlin.edu/summer-programs/composition-workshop",
+        "contactEmail": "ahoffman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51815760861682",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:18:06.272Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45712835438571/huge/554c61c993305296970473cc2315ad28ba433bcb.jpg",
+        "phone": "440-775-8200",
+        "location": "Kulas Recital Hall, Conservatory Central Unit, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for an inspiring recital featuring original compositions by the talented participants of the Young Composers Workshop. This special event is the exciting culmination of weeks of creativity, learning, and collaboration where young musicians developed their unique voices. Experience a diverse program of new music, showcasing a range of styles and innovative ideas from Oberlin's next generation of composers. It's a wonderful opportunity to celebrate local artistry and support emerging talent in our community.",
+        "calendarSourceUrl": "https://www.oberlin.edu/summer-programs/composition-workshop",
+        "status": "approved",
+        "updatedAt": 1778408856662
+      }
+    },
+    {
+      "id": "oberlin-51913428862458",
+      "data": {
+        "description": "Gaze at the stars from our observing deck! If clouds appear, enjoy a cosmic journey in our planetarium.",
+        "locationType": "ph2",
+        "postTypeId": [
+          8
+        ],
+        "title": "Observe the Night Sky",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51913428862458",
+        "createdAt": 1778388439923,
+        "sponsors": [
+          "Academic",
+          "Physics and Astronomy"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56727/huge/5a4d2ddb92554a1a92b1976d4f3fe2c0a166eb3a.jpg",
+        "id": "oberlin-51913428862458",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Observe the night sky from our observing deck. If it is cloudy, we will have a planetarium program.",
+        "updatedAt": 1778388439964,
+        "sessions": [
+          {
+            "startTime": 1779296400,
+            "endTime": 1779303600
+          }
+        ],
+        "contactEmail": "dlengyel@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51913428862458",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:47:19.923Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56727/huge/5a4d2ddb92554a1a92b1976d4f3fe2c0a166eb3a.jpg",
+        "phone": "440-667-0130",
+        "location": "50 North Professor Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for an evening of celestial wonder! We'll open our observing deck at 50 North Professor Street for a chance to view stars, planets, and other cosmic marvels through our telescopes. This is a fantastic opportunity to learn about astronomy and experience the universe firsthand. In case of cloudy weather, don't worry – we have a backup plan! We will move indoors for an immersive planetarium program, taking you on a guided tour of the cosmos, rain or shine. Come explore the beauty of our universe with us.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51913428862458",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-51959059514013",
+      "data": {
+        "description": "What makes art 'bad'? Join a lively discussion on sparking student dialogue around unconventional artworks that defy easy categorization.",
+        "locationType": "ph2",
+        "postTypeId": [
+          8
+        ],
+        "title": "Tuesday Tea / Bad Art? Engaging Students with the Unexpected and the Unconventional",
+        "aiConfidence": 0.98,
+        "sourceUrl": "https://calendar.oberlin.edu/event/51959059514013",
+        "createdAt": 1778388418276,
+        "sponsors": [
+          "Administrative",
+          "Allen Memorial Art Museum"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/51959059562153/huge/00fbcd7fb20429126f787544661edda7d07e68f7.jpg",
+        "id": "oberlin-51959059514013",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "How can we teach with art that refuses categorization? Fiona Giménez-Collins (OC 2025), Academic Programs Curatorial Assistant, will discuss sparking student dialogue around art objects that challenge typical modes of viewing. Delving into experiences of teaching with Mary Miss's Untitled (1975), Giménez-Collins will reflect on pushing students past discomfort and into new understandings of unconventional artworks.",
+        "updatedAt": 1778388418323,
+        "sessions": [
+          {
+            "startTime": 1778334000,
+            "endTime": 1778337600
+          }
+        ],
+        "contactEmail": "education.amam@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "51959059514013",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:46:58.276Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/51959059562153/huge/00fbcd7fb20429126f787544661edda7d07e68f7.jpg",
+        "phone": "440-775-8665",
+        "location": "Allen Memorial Art Museum",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Curious about art that defies categorization? Join Fiona Giménez-Collins (OC 2025) for a thoughtful presentation at the Allen Memorial Art Museum. As Academic Programs Curatorial Assistant, Fiona will discuss sparking engaging student dialogue around art objects that challenge typical modes of viewing. She'll share experiences teaching with unconventional pieces like Mary Miss's Untitled (1975), reflecting on methods to push students past initial discomfort. Discover how to foster deeper understanding and appreciation for artworks that refuse easy labels and broaden artistic perspectives.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/51959059514013",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52302936266509",
+      "data": {
+        "description": "Prepare for The Grand Piano Extravaganza! Conservatory faculty and graduating seniors will fill the stage with music in this special performance benefiting piano projects.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "The Grand Piano Extravaganza",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52302936266509",
+        "createdAt": 1778388534641,
+        "sponsors": [
+          "Academic",
+          "Keyboard Studies",
+          "Piano",
+          "Administrative",
+          "Central Ticket Service",
+          "Concert Production",
+          "Conservatory of Music"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52305615720799/huge/2715b9095514f795080f3d3ffb1837c9c395d74e.jpg",
+        "id": "oberlin-52302936266509",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "How many pianos can we get on a stage? This event, featuring conservatory piano faculty members and graduating seniors, is a great way to begin the weekend. Proceeds benefit piano department projects.\n\nTICKET INFORMATION\n25th and 50th Reunion Attendees\nWhen you register to attend Reunion Weekend with the Alumni Engagement Office, you will be able to purchase tickets as part of your registration. Please visit the Reunion page for more information about the weekend and to register. Registration is open from March 10-May 15, 2026. \n\nOther Alumni, Students, Faculty, Staff and General Public\nOnline Box Office | $25\nFor assistance in purchasing tickets, contact Oberlin College Central Ticket Service.",
+        "updatedAt": 1778388534682,
+        "sessions": [
+          {
+            "startTime": 1779379200,
+            "endTime": 1779388200
+          }
+        ],
+        "website": "https://www.oberlin.edu/tickets/event-details?EventId=24201",
+        "contactEmail": "conpro@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52302936266509",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:48:54.641Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52305615720799/huge/2715b9095514f795080f3d3ffb1837c9c395d74e.jpg",
+        "phone": "440-775-8610",
+        "location": "Warner Concert Hall, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for The Grand Piano Extravaganza, an exhilarating concert showcasing the incredible talents of Oberlin Conservatory piano faculty and graduating seniors. Experience a unique performance that promises to be a memorable start to your weekend. Proceeds from this event will directly support vital piano department projects, enriching the musical community. Tickets are $25 for the general public and available through Oberlin College Central Ticket Service. Reunion attendees have specific purchase options for this event.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52302936266509",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52354015654357",
+      "data": {
+        "description": "Dive into \"The Fog of War,\" Errol Morris's Oscar-winning documentary. This powerful film explores war, ethics, and crucial political choices.",
+        "locationType": "ph2",
+        "postTypeId": [
+          4
+        ],
+        "title": "OFS Presents \"The Fog of War\" (2003)",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52354015654357",
+        "createdAt": 1778388323937,
+        "sponsors": [
+          "Academic",
+          "Cinema and Media"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52354015680991/huge/66073070d36654dc8b72acd25026c6be91ac3d3a.jpg",
+        "id": "oberlin-52354015654357",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "The Oberlin Film Society (OFS) will screen The Fog of War (2003), a documentary directed by Errol Morris. Centered on former U.S. Secretary of Defense Robert McNamara, the film reflects on war, ethics, and political decision-making in the 20th century. Provocative and unsettling, it won the Academy Award for Best Documentary.",
+        "updatedAt": 1778388323971,
+        "sessions": [
+          {
+            "startTime": 1778588100,
+            "endTime": 1778595300
+          }
+        ],
+        "contactEmail": "ayang2@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52354015654357",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:45:23.937Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52354015680991/huge/66073070d36654dc8b72acd25026c6be91ac3d3a.jpg",
+        "phone": "440-657-8428",
+        "location": "Apollo Theatre, 19 East College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "The Oberlin Film Society presents \"The Fog of War\" (2003), the Academy Award-winning documentary by Errol Morris. Centered on former U.S. Secretary of Defense Robert McNamara, the film offers a rare and candid reflection on 20th-century warfare, ethics, and the profound complexities of political decision-making. Prepare for a provocative and unsettling cinematic experience that challenges perspectives on leadership and conflict.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52354015654357",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52354028255267",
+      "data": {
+        "description": "Relive the iconic \"The Graduate\" at the Apollo Theatre! Dive into 60s angst, sharp humor, and an unforgettable soundtrack.",
+        "locationType": "ph2",
+        "postTypeId": [
+          4
+        ],
+        "title": "OFS Presents \"The Graduate\" (1967)",
+        "aiConfidence": 0.98,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52354028255267",
+        "createdAt": 1778388463762,
+        "sponsors": [
+          "Academic",
+          "Cinema and Media"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52354028285996/huge/d9da87d8a6f70fa434947fd50a813d7a3f74c693.jpg",
+        "id": "oberlin-52354028255267",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "The Oberlin Film Society (OFS) will screen The Graduate (1967), a comedy-drama directed by Mike Nichols. Starring Dustin Hoffman, the film captures post-college aimlessness and generational anxiety in 1960s America. With its iconic soundtrack and sharp humor, it helped launch the New Hollywood era.",
+        "updatedAt": 1778388463804,
+        "sessions": [
+          {
+            "startTime": 1779096900,
+            "endTime": 1779104100
+          }
+        ],
+        "website": "https://www.clevelandcinemas.com/our-locations/x03gq-apollo-theatre/",
+        "contactEmail": "ayang2@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52354028255267",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:47:43.762Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52354028285996/huge/d9da87d8a6f70fa434947fd50a813d7a3f74c693.jpg",
+        "phone": "440-657-8428",
+        "location": "Apollo Theatre, 19 East College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "The Oberlin Film Society screens \"The Graduate,\" a groundbreaking comedy-drama from 1967. Directed by Mike Nichols and starring Dustin Hoffman, this film perfectly captures the post-college aimlessness and generational anxiety of 1960s America. With its sharp humor and iconic soundtrack, it's a defining work that helped launch the New Hollywood era. Don't miss this chance to experience a true classic on the big screen at the Apollo Theatre.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52354028255267",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52375092575714",
+      "data": {
+        "description": "Celebrate Oberlin College's Class of 2026! Join the proud faculty-led procession and degree ceremony on Tappan Square, rain or shine.",
+        "locationType": "bo",
+        "postTypeId": [
+          8
+        ],
+        "title": "Oberlin College Commencement",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://www.oberlin.edu/commencement",
+        "createdAt": 1778390058254,
+        "sponsors": [
+          "Administrative",
+          "Dean of the Conservatory of Music",
+          "Dean of the College of Arts and Sciences"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52375092721132/huge/c9028ae8d7cf4449cf45a598b007dd4247af3276.jpg",
+        "id": "oberlin-52375092575714",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "We will honor the graduates of the Class of 2026 with a Commencement Ceremony on Tappan Square. The ceremony begins with a faculty-led procession followed by presentations and conferring of degrees.\n\nTo view live captions while attending the event in Tappan Square, visit go.oberlin.edu/captions on your mobile device. To watch the livestream, visit www.oberlin.edu/commencement/live.\n\nThe event is outdoors and will take place rain or shine. No tickets are required.",
+        "urlLink": "https://www.oberlin.edu/commencement/live",
+        "updatedAt": 1778390058293,
+        "sessions": [
+          {
+            "startTime": 1779687000,
+            "endTime": 1779697800
+          }
+        ],
+        "website": "https://www.oberlin.edu/commencement",
+        "contactEmail": "nbishman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52375092575714",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:14:18.254Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52375092721132/huge/c9028ae8d7cf4449cf45a598b007dd4247af3276.jpg",
+        "phone": "440-774-8864",
+        "location": "Tappan Square, Oberlin, OH 44074, United States",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join the Oberlin community in honoring the graduating Class of 2026! Witness the traditional faculty-led procession on Tappan Square, followed by inspiring presentations and the official conferring of degrees. This proud ceremony celebrates the achievements of our graduates, bringing together families, faculty, and friends. The outdoor event takes place rain or shine, so come prepared for any weather. No tickets are required to attend this special community milestone.",
+        "calendarSourceUrl": "https://www.oberlin.edu/commencement",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52606955918260",
+      "data": {
+        "description": "Step into the past! Join Fanny Jewett for a captivating costumed tour of her 1884 home. Discover Oberlin's Progressive Era through the lives of the influential Jewett family.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11,
+          8
+        ],
+        "title": "Guided Tour of the Jewett House by Fanny Jewett",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "createdAt": 1778388500424,
+        "roomNum": "Jewett House",
+        "sponsors": [
+          "Community Partners",
+          "Oberlin Heritage Center"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/42924296034940/huge/ac14a76eb903e823058d9504053b816940295794.jpg",
+        "id": "oberlin-52606955918260",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Learn about Frank Fanning Jewett, Sarah Frances (Fanny) Gulick Jewett, Charles Martin Hall, the Aluminum Reduction Process and life in Oberlin during the Progressive Era on this 45-minute guided tour of the Oberlin Heritage Center’s 1884 Jewett House. Additional topics include architecture, interior design, social reform, and student boarders who stayed with the family during their time at Oberlin College. This experience includes a costumed living history portrayal of Fanny Jewett. Cost: $6/adult; $3/college student; and free for children under 18. Advance registration is required, and space is limited to 14 participants. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
+        "updatedAt": 1778388500461,
+        "sessions": [
+          {
+            "startTime": 1779438000,
+            "endTime": 1779441600
+          }
+        ],
+        "website": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "contactEmail": "tourinfo@oberlinheritage.org",
+        "extractedMetadata": {
+          "sourceRecordId": "52606955918260",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:48:20.424Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/42924296034940/huge/ac14a76eb903e823058d9504053b816940295794.jpg",
+        "phone": "440-774-1700",
+        "location": "20 W Vine St, Oberlin OH, 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Embark on a fascinating 45-minute guided tour of the Oberlin Heritage Center's 1884 Jewett House, brought to life by a costumed portrayal of Fanny Jewett herself. Discover the compelling lives of Frank Fanning Jewett and Sarah Frances (Fanny) Gulick Jewett, Charles Martin Hall, the Aluminum Reduction Process, and daily life in Oberlin during the transformative Progressive Era. The tour also explores exquisite architecture, period interior design, social reform movements, and stories of the college students who boarded with the family. Admission is $6 for adults, $3 for college students, and free for children under 18. Advance registration is required, as space is limited to 14 participants. Call 440-774-1700 to secure your spot.",
+        "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52606956662777",
+      "data": {
+        "description": "Explore Oberlin's courageous past on a guided history walk! Discover the town's vital role as a haven for freedom seekers on the Underground Railroad.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Tour: Freedom’s Friends: Abolition & the Underground Railroad History Walk",
+        "aiConfidence": 0.98,
+        "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "createdAt": 1778388554638,
+        "roomNum": "Front Steps",
+        "sponsors": [
+          "Community Partners",
+          "Oberlin Heritage Center"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/33183034658775/huge/09291a56505eaece0be025cdd3ef02c0e97ade6a.jpg",
+        "id": "oberlin-52606956662777",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Prior to the Civil War, as many has 3,000 African Americans passed through or lived in Oberlin after escaping from slavery. The town was said to be second only to Canada as an asylum for freedom seekers. Guests on this guided history walk offered by the Oberlin Heritage Center will hear about the historic decision that shaped Oberlin’s growth as a station on the Underground Railroad and stories of the individuals and events that marked Oberlin as one of the most active abolitionist communities in Ohio.\n\nCost: $10/adult; $5/college student; free for children under 18. Advance registration is required, and space is limited to 50 participants. Tour is weather dependent and may be cancelled by the Oberlin Heritage Center. Registrants may request a refund or transfer to another history walk offering if the tour is canceled. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
+        "updatedAt": 1778388554672,
+        "sessions": [
+          {
+            "startTime": 1779343200,
+            "endTime": 1779348600
+          }
+        ],
+        "website": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "contactEmail": "tourinfo@oberlinheritage.org",
+        "extractedMetadata": {
+          "sourceRecordId": "52606956662777",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:49:14.638Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/33183034658775/huge/09291a56505eaece0be025cdd3ef02c0e97ade6a.jpg",
+        "phone": "440-774-1700",
+        "location": "106 N. Main St., Oberlin, OH",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Step back in time to discover Oberlin's powerful legacy as a key station on the Underground Railroad. This guided walk shares how Oberlin became a crucial asylum for freedom seekers and one of Ohio's most active abolitionist communities. Hear captivating stories of the individuals and events that shaped this historic decision, where thousands found refuge before the Civil War.\n\nThe tour costs $10 for adults, $5 for college students, and is free for children under 18. Space is limited, so reserve your spot for this enriching historical experience. Call 440-774-1700 to register.",
+        "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52606957045792",
+      "data": {
+        "description": "Discover Oberlin's stunning architecture on a guided history walk! Explore Tappan Square's iconic buildings and the fascinating stories they tell.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Tour: Architecture History Walk",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "createdAt": 1778389793326,
+        "sponsors": [
+          "Community Partners",
+          "Oberlin Heritage Center"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/297741/huge/f83d564713309b52d83f88282af2dd5f0fd2727b.jpg",
+        "id": "oberlin-52606957045792",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Enjoy a leisurely stroll on this 75-minute tour offered by the Oberlin Heritage Center which explores Oberlin’s architecture and the people who shaped the area around Tappan Square. This walk provides an opportunity to view an array of historic buildings that feature various styles including Gothic Modernist, Neo-Classical Revival, Romanesque, Late Victorian, and Queen Anne Revival.\n\nCost: $10/adult; $5/college student; free for children under 18. Advance registration is required, and space is limited to 20 participants. Meet at the flagpoles on the southeast corner of Tappan Square, across from the Hotel at Oberlin. Tour is weather dependent and may be cancelled by the Oberlin Heritage Center. Registrants may request a refund or transfer to another history walk offering if the tour is canceled. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
+        "updatedAt": 1778389793365,
+        "sessions": [
+          {
+            "startTime": 1779605400,
+            "endTime": 1779610800
+          }
+        ],
+        "website": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "contactEmail": "tourinfo@oberlinheritage.org",
+        "extractedMetadata": {
+          "sourceRecordId": "52606957045792",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:09:53.326Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/297741/huge/f83d564713309b52d83f88282af2dd5f0fd2727b.jpg",
+        "phone": "440-774-1700",
+        "location": "South Main Street and West College Street, Oberlin, OH",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Step back in time on a 75-minute architecture history walk around Tappan Square. Discover Oberlin's rich past through its diverse buildings, from Gothic Modernist to Queen Anne Revival styles. This guided tour reveals the stories of the people who shaped our community. The cost is $10 for adults, $5 for college students, and free for children under 18. Advance registration is required, as space is limited to 20 participants. Meet at the flagpoles on the southeast corner of Tappan Square, across from the Hotel at Oberlin.",
+        "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52606957629538",
+      "data": {
+        "description": "Explore Oberlin's pivotal role in race relations on a 90-minute history walk. Discover tales from Civil War abolition to Civil Rights and beyond.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Tour: Civil War to Civil Rights History Walk",
+        "aiConfidence": 0.98,
+        "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "createdAt": 1778389816147,
+        "roomNum": "Front Steps",
+        "sponsors": [
+          "Community Partners",
+          "Oberlin Heritage Center"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/33183034658775/huge/09291a56505eaece0be025cdd3ef02c0e97ade6a.jpg",
+        "id": "oberlin-52606957629538",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "This 90-minute tour offered by the Oberlin Heritage Center highlights historic events that reveal both Oberlin’s progress and setbacks in race relations dating from early Oberlin all the way up to the 21st Century. Learn how Oberlin was a leader in abolition, participating heavily in events such as the Oberlin-Wellington Rescue, the Raid on Harpers Ferry, and the American Civil War, but also struggled with its own issues of equality and racism during these early years and later through Reconstruction, Jim Crow, Civil Rights, and today.\n\nCost: $10/adult; $5/college student; free for children under 18. Advance registration is required, and space is limited to 40 participants. Tour is weather dependent and may be cancelled by the Oberlin Heritage Center. Registrants may request a refund or transfer to another history walk offering if the tour is canceled. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
+        "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "updatedAt": 1778389816188,
+        "sessions": [
+          {
+            "startTime": 1779699000,
+            "endTime": 1779704400
+          }
+        ],
+        "website": "https://oberlinheritagecenter.org/",
+        "contactEmail": "tourinfo@oberlinheritage.org",
+        "extractedMetadata": {
+          "sourceRecordId": "52606957629538",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:10:16.147Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/33183034658775/huge/09291a56505eaece0be025cdd3ef02c0e97ade6a.jpg",
+        "phone": "440-774-1700",
+        "location": "First Church in Oberlin, 106 N. Main St., Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Embark on a fascinating 90-minute history walk that delves into Oberlin’s complex story of race relations, from its founding days through the 21st century. Discover how Oberlin led the charge in abolition, participating in pivotal moments like the Oberlin-Wellington Rescue and the Civil War. The tour also explores our town's own struggles for equality and justice during Reconstruction, Jim Crow, and the Civil Rights movement, revealing a nuanced past. This insightful experience is $10 for adults, $5 for college students, and free for children under 18. Advance registration is recommended as space is limited to ensure a quality experience.",
+        "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52606960949403",
+      "data": {
+        "description": "Walk through history! Discover the powerful women who shaped Oberlin, transforming the promise of female education into a dynamic legacy.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Tour: One Step More: Oberlin Women’s History Walk",
+        "aiConfidence": 1,
+        "sourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "createdAt": 1778389852354,
+        "sponsors": [
+          "Community Partners",
+          "Oberlin Heritage Center"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/297741/huge/f83d564713309b52d83f88282af2dd5f0fd2727b.jpg",
+        "id": "oberlin-52606960949403",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "In 1834, John J. Shipherd pledged Oberlin’s commitment to “the elevation of female character” through education. Little did he know, there was a dynamite in that promise, and women carried the matches. This 75-minute walking tour offered by the Oberlin Heritage Center explores how powerful women made good on Shipherd’s promise and shaped what it meant to be a woman in Oberlin and beyond. This tour was developed by alumna Jen Graham ’12.\n\nCost: $10/adult; $5/college student; free for children under 18. Advance registration is required, and space is limited to 20 participants. Meet at the flagpoles on the southeast corner of Tappan Square, across from the Hotel at Oberlin. Tour is weather dependent and may be cancelled by the Oberlin Heritage Center. Registrants may request a refund or transfer to another history walk offering if the tour is canceled. Call 440-774-1700 or visit www.oberlinheritagecenter.org to register.",
+        "urlLink": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "updatedAt": 1778389852395,
+        "sessions": [
+          {
+            "startTime": 1779698400,
+            "endTime": 1779703500
+          }
+        ],
+        "website": "https://oberlinheritagecenter.org/",
+        "contactEmail": "tourinfo@oberlinheritage.org",
+        "extractedMetadata": {
+          "sourceRecordId": "52606960949403",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:10:52.354Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/297741/huge/f83d564713309b52d83f88282af2dd5f0fd2727b.jpg",
+        "phone": "440-774-1700",
+        "location": "South Main Street and West College Street, Oberlin, OH",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Embark on 'One Step More,' a 75-minute walking tour revealing the powerful women who shaped Oberlin's history. From Oberlin's 1834 pledge to elevate female character, these trailblazing women ignited that promise, influencing not only the town but the world beyond. This Oberlin Heritage Center tour highlights their incredible contributions and lasting legacy. Space is limited to 20 participants, so advance arrangements are essential. The tour costs $10 for adults, $5 for college students, and is free for children under 18; meet at the flagpoles on the southeast corner of Tappan Square (across from the Hotel at Oberlin). For arrangements or questions, please call 440-774-1700.",
+        "calendarSourceUrl": "https://oberlinheritagecenter.org/evnt/oberlin-college-commencement-reunion-special-weekend-tours/",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52622758664424",
+      "data": {
+        "description": "Celebrate Oberlin's graduating Theater & Music Theater seniors at ENCORE! Don't miss their final, unforgettable performances.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5,
+          10
+        ],
+        "title": "ENCORE!",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52622758664424",
+        "createdAt": 1778388516035,
+        "sponsors": [
+          "Academic",
+          "Theater",
+          "Administrative",
+          "Concert Production",
+          "Conservatory of Music",
+          "Music Theater"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52675737781573/huge/8aea6dcee0d856c91bb0180ea3186f3efea430f7.jpg",
+        "id": "oberlin-52622758664424",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Introducing our graduating seniors in Theater and Oberlin Music Theater, in their Oberlin swan song!",
+        "updatedAt": 1778388516071,
+        "sessions": [
+          {
+            "startTime": 1779375600,
+            "endTime": 1779379200
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/encore",
+        "contactEmail": "conpro@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52622758664424",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:48:36.035Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52675737781573/huge/8aea6dcee0d856c91bb0180ea3186f3efea430f7.jpg",
+        "phone": "440-775-8610",
+        "location": "Hall Auditorium, 67 North Main Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Come support Oberlin's talented graduating seniors in Theater and Music Theater at ENCORE! This special evening is their final bow, a 'swan song' showcasing all their hard work and passion. Experience a diverse range of performances as these students share their artistry with the community one last time before embarking on their next adventures. It's a poignant and thrilling celebration of their time in Oberlin. Join us at Hall Auditorium for an evening of remarkable talent.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52622758664424",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52624896427651",
+      "data": {
+        "description": "Experience an evening of original compositions and vocal performance by Max Lang at his Senior Recital in Fairchild Chapel. Don't miss this special musical event!",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Senior Recital: Max Lang, Musical Studies",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52624896427651",
+        "createdAt": 1778388395668,
+        "sponsors": [
+          "Academic",
+          "Composition"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56696/huge/1e8c7e6fb040fc72892e20cc64d5c3ae6873d5a3.jpg",
+        "id": "oberlin-52624896427651",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "A senior composition and voice recital presented by Max Lang in Fairchild Chapel.",
+        "updatedAt": 1778388395791,
+        "sessions": [
+          {
+            "startTime": 1778572200,
+            "endTime": 1778579400
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/senior-recital-max-lang-musical-studies",
+        "contactEmail": "mlang1@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52624896427651",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:46:35.668Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56696/huge/1e8c7e6fb040fc72892e20cc64d5c3ae6873d5a3.jpg",
+        "location": "Fairchild Chapel, Bosworth Hall, 50 West Lorain Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for a captivating Senior Recital presented by Max Lang. This special evening showcases Max's original compositions and vocal talents, marking a significant milestone in his musical studies. Immerse yourself in a diverse program reflecting his dedication and artistry. The performance takes place in the beautiful Fairchild Chapel, offering an intimate setting for this unique musical experience. Come celebrate Max's achievements and enjoy an unforgettable night of music.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52624896427651",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52648029944548",
+      "data": {
+        "description": "Join us for the Black Families Appreciation Ceremony, a heartfelt celebration of graduates, gratitude, and community spirit!",
+        "locationType": "ph2",
+        "postTypeId": [
+          3
+        ],
+        "title": "Black Families Appreciation Ceremony",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52648029944548",
+        "createdAt": 1778390024964,
+        "sponsors": [
+          "Academic",
+          "Africana Studies"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "id": "oberlin-52648029944548",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "The Black Families Appreciation Ceremony is an annual pre-commencement ceremony and dinner. This annual event allows self-identifying Black graduates and allies the opportunity to express words of gratitude in front of their community and receive their kente cloth stole. This event is for graduating students, their families and friends, faculty and staff, and community supporters. Dinner is served immediately following the ceremony at Afrikan Heritage House. All are welcome to participate.",
+        "updatedAt": 1778390025009,
+        "sessions": [
+          {
+            "startTime": 1779691200,
+            "endTime": 1779698400
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/black-families-appreciation-ceremony-4517",
+        "contactEmail": "mgeorge@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52648029944548",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:13:44.964Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/58674/huge/d6a4f0549fcf56717d12c487568e80e7815c79db.jpg",
+        "phone": "4440-775-8479",
+        "location": "Warner Concert Hall, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "The Black Families Appreciation Ceremony is a cherished annual event honoring Black graduates and their allies. This special occasion provides an opportunity for graduates to express heartfelt gratitude to their community and receive a commemorative kente cloth stole. All graduating students, their families, friends, faculty, staff, and community supporters are warmly welcomed to participate. A delightful dinner will be served immediately following the ceremony at Afrikan Heritage House. Come celebrate achievements and strengthen community bonds!",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52648029944548",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52692734504543",
+      "data": {
+        "description": "Step inside a masterpiece! Tour Frank Lloyd Wright's historic Weltzheimer/Johnson House, Ohio's first Usonian home, open select Sundays from June to November.",
+        "locationType": "ph2",
+        "postTypeId": [
+          2,
+          11
+        ],
+        "title": "Frank Lloyd Wright Open House / June-November 2026",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
+        "createdAt": 1778390088581,
+        "sponsors": [
+          "Administrative",
+          "Allen Memorial Art Museum"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52692734554739/huge/7201bf8e228bf4528a08be14b6be385ba2bfdd58.jpg",
+        "id": "oberlin-52692734504543",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Designed by Frank Lloyd Wright, the Weltzheimer/Johnson House is the first Usonian house in Ohio, and one of the few in the nation open to the public. Situated a mile and a half from the art museum at 534 Morgan Street in Oberlin, the house is open to the public the first Sunday of the month (with the exception of holiday weekends) from April to November with a docent presentation offered on the hour at noon, 1, 2, 3, and 4 p.m.\n\nAdvance registration is required. Admission to the house is $10 per adult, free for OC college students with ID and anyone under 18. For tickets, parking information, and other details, see amam.oberlin.edu/flw.\n\nMake a day of it!\nThe Allen Memorial Art Museum is open 1–5 on Sundays, and is always free. Plus, enjoy 10% off regular-priced menu items and merchandise at participating Oberlin businesses on the day of this event by showing your registration confirmation email. Get more details.\n\nAccess Statement:\n\nLimited accessible parking is available near the back entrance to the home. Download a map to the accessibility parking at the house. This historic home is partially accessible to wheelchairs and fully accessible to most rolling walkers. The presentation space is wheelchair accessible and limited seating is available. The restroom is not wheelchair accessible, nor gender specific. Listening devices and ASL are currently not scheduled for this event, nor will it be recorded.\n\nIf you are interested in touring the home outside of scheduled open houses, groups of 10 or more may make arrangements by contacting the Education Department at education.amam@oberlin.edu.",
+        "updatedAt": 1778390088611,
+        "sessions": [
+          {
+            "startTime": 1780876800,
+            "endTime": 1780894800
+          }
+        ],
+        "website": "https://amam.oberlin.edu/flw",
+        "contactEmail": "education.amam@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52692734504543",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:14:48.581Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52692734554739/huge/7201bf8e228bf4528a08be14b6be385ba2bfdd58.jpg",
+        "phone": "440-775-8665",
+        "location": "Weltzheimer-Johnson House, 534 Morgan Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Discover Frank Lloyd Wright's architectural brilliance at the Weltzheimer/Johnson House, a pioneering Usonian design and Ohio's first. This historic home is open the first Sunday of each month from June through November 2026. Enjoy docent presentations on the hour at noon, 1, 2, 3, and 4 p.m., delving into the home's unique history and design. Admission is $10 for adults; free for Oberlin College students with ID and anyone under 18. Advance registration is required. Make a day of it by visiting the free Allen Memorial Art Museum, open Sundays 1-5 p.m., and receive local business discounts with your event registration. Limited accessible parking and partial wheelchair access are available.",
+        "calendarSourceUrl": "https://amam.oberlin.edu/exhibitions-events/events#to-list",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52709104074414",
+      "data": {
+        "description": "Join a joyful Multifaith End-of-Year Ceremony celebrating the Class of 2026! Enjoy inspiring readings, music, and faculty wisdom. All are welcome to reflect and celebrate.",
+        "locationType": "ph2",
+        "postTypeId": [
+          3,
+          8
+        ],
+        "title": "Multifaith End-of-Year Ceremony",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52709104074414",
+        "createdAt": 1778389770765,
+        "sponsors": [
+          "Administrative",
+          "Multifaith Chaplaincy & Sustained Dialogue"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52709104111288/huge/8b6bcea95f27b01dc193f930c919076842711179.jpg",
+        "id": "oberlin-52709104074414",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Students, faculty, staff, friends, and family are warmly invited to a joyful multifaith (including non-theistic) end-of-year ceremony as we send off the class of 2026.\n\nAt this gathering, students will share readings and music that are meaningful to them, drawn from many traditions, cultures, and personal perspectives. Faculty will also offer letters of wisdom and encouragement as graduates prepare for what's next. This year, we are excited to hear letters written and read by Courtney-Savali Andrews, Raphael Jiménez, Greggor Mattson, John Petersen, and Ellen Wurtzel!\n\nWhether you are religious/spiritual or not, you are absolutely welcome here. This is a space for everyone to pause, reflect, and celebrate the community we've built together, and most especially the candidates for graduation.\n\nFamily members, loved ones, and Oberlin community members encouraged to attend.\n\nCome as you are and join us for a ceremony of reflection and celebration.",
+        "updatedAt": 1778389770805,
+        "sessions": [
+          {
+            "startTime": 1779432600,
+            "endTime": 1779439800
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/multifaith-end-of-year-ceremony",
+        "contactEmail": "ddorsey@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52709104074414",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:09:30.765Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52709104111288/huge/8b6bcea95f27b01dc193f930c919076842711179.jpg",
+        "phone": "440-775-8161",
+        "location": "Finney Chapel, 90 North Professor Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for a joyful Multifaith End-of-Year Ceremony, celebrating and sending off the Class of 2026. This inclusive gathering warmly welcomes students, faculty, staff, friends, and family, embracing all traditions and perspectives, including non-theistic. Students will share meaningful readings and music, while faculty offer letters of wisdom and encouragement as graduates prepare for what's next, featuring Courtney-Savali Andrews, Raphael Jiménez, Greggor Mattson, John Petersen, and Ellen Wurtzel. Whether religious, spiritual, or not, you are invited to pause, reflect, and celebrate the strong community we've built together. Come as you are for this special occasion of reflection and celebration.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52709104074414",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52754961835214",
+      "data": {
+        "description": "Need a study break? Enjoy a Tiny Ref Desk Concert with Abby & Rosalie, a charming banjo and fiddle duo, at the Conservatory Library.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Tiny Ref Desk Concert: Abby & Rosalie",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52754961835214",
+        "createdAt": 1778388356043,
+        "roomNum": "Music Research Commons (East Wing)",
+        "sponsors": [
+          "Administrative",
+          "Libraries"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52754961913047/huge/28f18c9510afd938c3bb5ac579da74b327c3333f.jpg",
+        "id": "oberlin-52754961835214",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Take a study break and attend a Tiny Ref Desk Concert at the Con featuring Abby & Rosalie, a banjo and fiddle playing duo!",
+        "updatedAt": 1778388356080,
+        "sessions": [
+          {
+            "startTime": 1778409600,
+            "endTime": 1778412300
+          }
+        ],
+        "contactEmail": "kmitche2@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52754961835214",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:45:56.043Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52754961913047/huge/28f18c9510afd938c3bb5ac579da74b327c3333f.jpg",
+        "location": "Conservatory Library, Conservatory Central Unit, Music Research Commons (East Wing), 77 W College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Take a delightful study break and immerse yourself in the enchanting sounds of Abby & Rosalie. This talented duo will charm you with their beautiful banjo and fiddle melodies. It's the perfect opportunity to relax and enjoy live music in the unique setting of the Conservatory Library. Find them in the Music Research Commons (East Wing) at 77 W College Street. Come discover your new favorite tunes and unwind with fellow community members.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52754961835214",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52764344811513",
+      "data": {
+        "description": "Join a captivating conversation with Carla Hayden, former Librarian of Congress and Oberlin honorary degree candidate. Light refreshments are provided!",
+        "locationType": "ph2",
+        "postTypeId": [
+          8
+        ],
+        "title": "A Conversation with Carla Hayden - Librarian of Congress",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52764344811513",
+        "createdAt": 1778389961524,
+        "roomNum": "Moffett Auditorium",
+        "sponsors": [
+          "Administrative",
+          "Office of General Counsel"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56719/huge/5704c61cb9736f76a884c0dcdcecdf0dab16f4ad.jpg",
+        "id": "oberlin-52764344811513",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Join us for a live conversation with the former Librarian of Congress and Oberlin Honorary Degree Candidate, Carla Hayden, hosted by Board Vice Chair Molly Raphael '67. Light refreshments will be provided. Register now.",
+        "urlLink": "https://docs.google.com/forms/d/e/1FAIpQLSfq1BnabLThEq5cal2d8r3u_iZGWBIzrI9mOw9MvXrk9xT7FA/viewform",
+        "updatedAt": 1778389961576,
+        "sessions": [
+          {
+            "startTime": 1779695400,
+            "endTime": 1779699000
+          }
+        ],
+        "contactEmail": "jpatter3@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52764344811513",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:12:41.524Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56719/huge/5704c61cb9736f76a884c0dcdcecdf0dab16f4ad.jpg",
+        "phone": "440-775-8401",
+        "location": "Mudd Center, Seeley G. (Terrell Main Library), Moffett Auditorium, 148 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Experience an engaging live conversation with Carla Hayden, the esteemed former Librarian of Congress and an Oberlin honorary degree candidate. This special event is hosted by Board Vice Chair Molly Raphael '67, promising a rich discussion. Hear insights from a pivotal figure in public service and library leadership. Light refreshments will be provided, creating a welcoming atmosphere for all community members to connect and learn. Don't miss this unique opportunity at Mudd Center's Moffett Auditorium.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52764344811513",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52771856580219",
+      "data": {
+        "description": "Step into a world of green! Join Biology Professor Mike Moore for a special tour of Oberlin's vibrant Biology Greenhouse. Discover unique plant life!",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Biology Greenhouse Tour",
+        "aiConfidence": 0.98,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52771856580219",
+        "createdAt": 1778389868513,
+        "roomNum": "Outside of A142 (Please plan to meet in the hallway just outside room A142 which is the first room on your left when you use the Woodland Entrance.)",
+        "sponsors": [
+          "Academic",
+          "Biology"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/550271/huge/c3a0586b759f33cf49881ce9e803e5b3cf107e85.jpg",
+        "id": "oberlin-52771856580219",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Biology Professor Mike Moore will lead a tour to our greenhouse during Commencement/Reunion weekend.",
+        "updatedAt": 1778389868554,
+        "sessions": [
+          {
+            "startTime": 1779603000,
+            "endTime": 1779610200
+          }
+        ],
+        "contactEmail": "tcolley@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52771856580219",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:11:08.513Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/550271/huge/c3a0586b759f33cf49881ce9e803e5b3cf107e85.jpg",
+        "phone": "440-775-8325",
+        "location": "Science Center, Outside of A142 (Please plan to meet in the hallway just outside room A142 which is the first room on your left when you use the Woodland Entrance.), 119 Woodland Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Embark on a fascinating journey through the Biology Greenhouse this weekend! Biology Professor Mike Moore personally guides this special tour, offering insights into our diverse plant collections. Explore unique flora and learn about ongoing research within this vibrant, living laboratory right here in Oberlin. Meet in the Science Center, in the hallway just outside room A142. This room is the first on your left when you use the Woodland Entrance at 119 Woodland Street.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52771856580219",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52772305023687",
+      "data": {
+        "description": "Join the Dance Department Open House! Celebrate the graduating Class of 2026, connect with faculty and students, and enjoy refreshments.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Dance Department Open House",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52772305023687",
+        "createdAt": 1778389941849,
+        "roomNum": "Studio 3",
+        "sponsors": [
+          "Academic",
+          "Dance"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56747/huge/58a8b7babe3666f25f07bd70d71d06b259096d75.jpg",
+        "id": "oberlin-52772305023687",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Please join the Dance Department for an Open House celebrating the graduating Class of 2026. Graduates, families, friends, alumni, and community members are warmly invited to connect with faculty and students and enjoy light refreshments.",
+        "updatedAt": 1778389941887,
+        "sessions": [
+          {
+            "startTime": 1779693600,
+            "endTime": 1779700800
+          }
+        ],
+        "contactEmail": "rfairley@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52772305023687",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:12:21.849Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56747/huge/58a8b7babe3666f25f07bd70d71d06b259096d75.jpg",
+        "phone": "440-775-8152",
+        "location": "Warner Center, 30 N. Professor Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "The Oberlin Dance Department warmly invites you to its annual Open House! Come celebrate the graduating Class of 2026 and connect with our vibrant community. Graduates, families, friends, alumni, and community members are all welcome to meet faculty and current students. Enjoy light refreshments as you explore the Warner Center and learn more about our program. It's a wonderful opportunity to celebrate our future leaders in dance!",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52772305023687",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52772324399960",
+      "data": {
+        "description": "Join the Cinema and Media Department for a vibrant Open House! Celebrate the graduating class of 2026, connect with faculty, and enjoy complimentary lunch.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11,
+          6,
+          3
+        ],
+        "title": "Cinema and Media Department Open House",
+        "aiConfidence": 0.98,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52772324399960",
+        "createdAt": 1778389909713,
+        "roomNum": "Klutznick Commons",
+        "sponsors": [
+          "Academic",
+          "Cinema and Media"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56726/huge/3d9f48f0b7093a613420a6e6f0851ed059772a6a.jpg",
+        "id": "oberlin-52772324399960",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Please join the Cinema and Media Department for an Open House to celebrate the graduating class of 2026. Graduating seniors, their families, friends, and alumni are warmly invited to connect with faculty and fellow students. Lunch will be served.",
+        "updatedAt": 1778389909756,
+        "sessions": [
+          {
+            "startTime": 1779609600,
+            "endTime": 1779615000
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/cinema-and-media-department-open-house",
+        "contactEmail": "rfairley@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52772324399960",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:11:49.713Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56726/huge/3d9f48f0b7093a613420a6e6f0851ed059772a6a.jpg",
+        "phone": "440-775-8152",
+        "location": "Klutznick Commons, Peters Hall, 50 North Professor Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "The Cinema and Media Department welcomes you to a special Open House! Join us to celebrate the accomplishments of the graduating class of 2026 and foster community. This is a fantastic opportunity for graduating seniors, their families, friends, and alumni to connect directly with faculty and fellow students. Enjoy delicious complimentary lunch while networking and exploring the department's spirit. We look forward to seeing you there!",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52772324399960",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52790114591154",
+      "data": {
+        "description": "Step back in time with 'That's What She Sang'! Experience the enchanting vintage sound of a female barbershop quartet live on stage.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "That's What She Sang: Barbershop Quartet Recital",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52790114591154",
+        "createdAt": 1778388305498,
+        "sponsors": [
+          "Oberlin College"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45807959604627/huge/ebc3a1d7f8b22c947ef2c304055981a93430c251.jpg",
+        "id": "oberlin-52790114591154",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Come enjoy the vintage sound of a female barbershop quartet!",
+        "updatedAt": 1778388305543,
+        "sessions": [
+          {
+            "startTime": 1778679600,
+            "endTime": 1778681400
+          }
+        ],
+        "contactEmail": "igershfi@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52790114591154",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:45:05.497Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45807959604627/huge/ebc3a1d7f8b22c947ef2c304055981a93430c251.jpg",
+        "phone": "650-704-3393",
+        "location": "David H. Stull Recital Hall, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for 'That's What She Sang,' a special barbershop quartet recital featuring an all-female ensemble. Prepare to be charmed by their exquisite harmonies and delightful renditions of classic tunes, bringing the beloved vintage sound to life. This performance promises an evening of captivating music and a joyful celebration of a unique vocal tradition. Gather your friends and family for an unforgettable experience at the beautiful David H. Stull Recital Hall.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52790114591154",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52797193540195",
+      "data": {
+        "description": "The annual Big Swap is back! Drop off your unwanted items or discover free treasures for your home, wardrobe, and more. Everyone in Oberlin is welcome!",
+        "locationType": "ph2",
+        "postTypeId": [
+          3
+        ],
+        "title": "The Big Swap",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52797193540195",
+        "createdAt": 1778388378365,
+        "roomNum": "Wilder Main",
+        "sponsors": [
+          "Administrative",
+          "Office of Energy and Sustainability"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/31308003967351/huge/9b1155907c349af9ee70cb4dab43cb28aa684745.jpg",
+        "id": "oberlin-52797193540195",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "The annual Big Swap returns on Tuesday, May 12 and runs through Monday, May 18. The Big Swap, a giant version of the campus Free Store, pops up during the last week of the academic year for students to drop unwanted clothes, school supplies, room essentials, etc. Everything can be taken for free by anyone in the campus or wider community.",
+        "updatedAt": 1778388378405,
+        "sessions": [
+          {
+            "startTime": 1778649600,
+            "endTime": 1778682000
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/the-big-swap",
+        "contactEmail": "hadelman@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52797193540195",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:46:18.365Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/31308003967351/huge/9b1155907c349af9ee70cb4dab43cb28aa684745.jpg",
+        "phone": "440-775-6354",
+        "location": "135 West Lorain Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "The annual Big Swap returns, offering a fantastic opportunity to declutter and discover new-to-you items! Drop off unwanted clothes, school supplies, or room essentials that are still in good shape. Then, explore a wide array of free treasures — everything is available for anyone in the Oberlin campus or wider community to take. This giant Free Store pops up from Tuesday, May 12 through Monday, May 18. Join us to give items a second life and connect with your community!",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52797193540195",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52806745176587",
+      "data": {
+        "description": "Oberlin's oldest women's & nonbinary a cappella group, Nothing But Treble, presents their final concert! Enjoy student-arranged hits.",
+        "locationType": "ph2",
+        "postTypeId": [
+          5
+        ],
+        "title": "Nothing But Treble Final Concert",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52806745176587",
+        "createdAt": 1778388339511,
+        "sponsors": [
+          "Oberlin College"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/45807959604627/huge/ebc3a1d7f8b22c947ef2c304055981a93430c251.jpg",
+        "id": "oberlin-52806745176587",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Join Oberlin's oldest women's and nonbinary a cappella group for our final concert! Featuring student arrangements of music by Charli XCX, Sammy Rae & the Friends, RAYE, Billie Eilish, and many more.",
+        "updatedAt": 1778388339547,
+        "sessions": [
+          {
+            "startTime": 1778398800,
+            "endTime": 1778406000
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/nothing-but-treble-final-concert-8025",
+        "contactEmail": "aditalia@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52806745176587",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:45:39.511Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/45807959604627/huge/ebc3a1d7f8b22c947ef2c304055981a93430c251.jpg",
+        "phone": "6103571064",
+        "location": "David H. Stull Recital Hall, 77 West College Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Nothing But Treble, Oberlin's longest-standing women's and nonbinary a cappella group, invites you to their final performance of the season. Experience an evening of incredible vocal talent as they showcase student arrangements of popular hits. The concert will feature diverse music from artists like Charli XCX, Sammy Rae & the Friends, RAYE, and Billie Eilish. Don't miss this memorable night of captivating harmonies and unique interpretations. Join the community for a celebration of musical artistry!",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52806745176587",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52816106111030",
+      "data": {
+        "description": "Explore a local architectural treasure! Tour Frank Lloyd Wright's Weltzheimer/Johnson House and delve into its unique history.",
+        "locationType": "ph2",
+        "postTypeId": [
+          8,
+          11
+        ],
+        "title": "Frank Lloyd Wright Open House: Commencement and Milestone Reunion Weekend",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://amam.oberlin.edu/flw-house",
+        "createdAt": 1778389928898,
+        "sponsors": [
+          "Administrative",
+          "Allen Memorial Art Museum"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52816106218567/huge/5dafa826158149be5998c66eecd44e45ebb1eb4e.jpg",
+        "id": "oberlin-52816106111030",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "The Weltzheimer/Johnson House, designed by Frank Lloyd Wright, will be available for a walk-up open house. Presentations on the history of the home will be offered on the half hour. No advance tickets are required for this event and can be purchased at the door; cash only—$10 for adults (all funds raised contribute to the care of conservation of the house); OC students (with ID) and youths under 18 are free.\n\nPARKING: Parking is available on the south side of Morgan Street only (golf course side). Permission to park in this location for the open house is granted by the Oberlin Police Department.\n\nARRIVAL: After parking, please follow the gravel path down and around the house to check in under the carport.\n\nACCESSIBILITY: Please consult the Frank Lloyd Wright House page on the Allen Memorial Art Museum’s website for accessibility information or contact the AMAM Education Department if you have any questions.",
+        "updatedAt": 1778389928939,
+        "sessions": [
+          {
+            "startTime": 1779696000,
+            "endTime": 1779710400
+          }
+        ],
+        "website": "https://amam.oberlin.edu/flw-house",
+        "contactEmail": "education.amam@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52816106111030",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:12:08.898Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52816106218567/huge/5dafa826158149be5998c66eecd44e45ebb1eb4e.jpg",
+        "phone": "440-775-8665",
+        "location": "534 Morgan Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Step inside the Frank Lloyd Wright Weltzheimer/Johnson House during this special open house. Explore a local Usonian architectural masterpiece and delve into its unique history, with engaging presentations offered every half hour. Tickets are $10 for adults (cash only, purchased at the door); Oberlin College students and youths under 18 are free. Your admission directly supports the ongoing conservation of this historic residence. Parking is available on the south (golf course) side of Morgan Street; follow the gravel path around the house to check in under the carport.",
+        "calendarSourceUrl": "https://amam.oberlin.edu/flw-house",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52816134314136",
+      "data": {
+        "description": "Celebrate our graduating Comparative Lit, French & Italian majors! Join alumni, family, and friends for an open house in Peters Hall.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Comparative Literature, French & Italian Open House",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52816134314136",
+        "createdAt": 1778389979225,
+        "roomNum": "Language Lab 324",
+        "sponsors": [
+          "Academic",
+          "Comparative Literature",
+          "French and Italian"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56726/huge/3d9f48f0b7093a613420a6e6f0851ed059772a6a.jpg",
+        "id": "oberlin-52816134314136",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "A celebration of graduating majors in Comparative Literature, French & Italian, alumni, family, and friends.",
+        "updatedAt": 1778389979259,
+        "sessions": [
+          {
+            "startTime": 1779697200,
+            "endTime": 1779704400
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/comparative-literature-french-italian-open-house",
+        "contactEmail": "smilkova@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52816134314136",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:12:59.225Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56726/huge/3d9f48f0b7093a613420a6e6f0851ed059772a6a.jpg",
+        "phone": "440-775-5212",
+        "location": "Peters Hall, Language Lab 324, 50 North Professor Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join us for a special Open House celebrating our graduating majors in Comparative Literature, French & Italian! This warm community gathering welcomes alumni, current students, faculty, family, and friends. It's a wonderful opportunity to honor the achievements of our graduates and connect with fellow language and literature enthusiasts. Come share in the joy and camaraderie at Peters Hall, Language Lab 324.",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52816134314136",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52825727222050",
+      "data": {
+        "description": "Explore Hispanic Studies & LATS at their open house! Enjoy snacks, drinks, and discover more about these vibrant programs at La Casa.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "Hispanic Studies & LATS Open House",
+        "aiConfidence": 0.95,
+        "sourceUrl": "https://calendar.oberlin.edu/event/52825727222050",
+        "createdAt": 1778390005275,
+        "sponsors": [
+          "Academic",
+          "Hispanic Studies",
+          "Latin American Studies"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/56739/huge/aed8c7e9cb9ff65485c6dc0c8774d12f55ccf37d.jpg",
+        "id": "oberlin-52825727222050",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Come join the Hispanic Studies and LATS departments at our open house at La Casa! Snacks and drinks will be provided.",
+        "updatedAt": 1778390005306,
+        "sessions": [
+          {
+            "startTime": 1779697200,
+            "endTime": 1779704400
+          }
+        ],
+        "website": "https://calendar.oberlin.edu/event/hispanic-studies-lats-open-house",
+        "contactEmail": "adavila1@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52825727222050",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:13:25.275Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/56739/huge/aed8c7e9cb9ff65485c6dc0c8774d12f55ccf37d.jpg",
+        "phone": "440-775-5256",
+        "location": "Spanish House (La Casa Hispanica; Harvey House) - 96 South Professor Street, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Join the Hispanic Studies and Latin American Studies (LATS) departments for a welcoming open house at La Casa! This is a fantastic opportunity to meet faculty, chat with current students, and learn about the vibrant programs and opportunities offered. Explore the Spanish House, discover academic pathways, and connect with fellow community members. Delicious snacks and refreshing drinks will be provided for all guests. Come experience the heart of Hispanic culture in Oberlin!",
+        "calendarSourceUrl": "https://calendar.oberlin.edu/event/52825727222050",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52833002258892",
+      "data": {
+        "description": "Ready for purr-fect cuteness? Visit the CATSS Kitten Room at First Church to meet adorable, adoptable cats and kittens!",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "CATSS Open Hours at the First Church Kitten Room",
+        "aiConfidence": 0.95,
+        "sourceUrl": "catssoberlin.org",
+        "createdAt": 1778388573868,
+        "roomNum": "Second Floor",
+        "sponsors": [
+          "Oberlin College"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52833002315217/huge/6df9a5912a2c3de087e95afe53c92f2133c790ce.jpg",
+        "id": "oberlin-52833002258892",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Come meet some adorable cats and kittens, all adoptable through local volunteer-run non-profit Community Action to Save Strays!\n\nDonations are encouraged but not required. For the health and safety of the cats, all visitors must follow volunteer instructions.",
+        "updatedAt": 1778388573909,
+        "sessions": [
+          {
+            "startTime": 1779268800,
+            "endTime": 1779283200
+          }
+        ],
+        "website": "catssoberlin.org",
+        "contactEmail": "srabin@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52833002258892",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T04:49:33.868Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52833002315217/huge/6df9a5912a2c3de087e95afe53c92f2133c790ce.jpg",
+        "location": "First Church In Oberlin, 106 N Main St, Oberlin, OH 44074",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Visit the First Church Kitten Room and meet adorable, adoptable cats and kittens during CATSS Open Hours! Community Action to Save Strays (CATSS), a local volunteer-run non-profit, offers these open hours for you to connect with their furry friends. Every interaction helps these felines on their journey to a forever home. While donations are warmly encouraged to support CATSS's vital work, they are not required for entry. For the well-being of all our cats and kittens, please kindly follow the instructions of our dedicated volunteers.",
+        "calendarSourceUrl": "catssoberlin.org",
+        "status": "pending"
+      }
+    },
+    {
+      "id": "oberlin-52833020293789",
+      "data": {
+        "description": "Meet adorable adoptable cats and kittens at CATSS Open Hours! Find your new furry friend and support Community Action to Save Strays.",
+        "locationType": "ph2",
+        "postTypeId": [
+          11
+        ],
+        "title": "CATSS Open Hours at 48 W. Lincoln Street",
+        "aiConfidence": 0.95,
+        "sourceUrl": "catssoberlin.org",
+        "createdAt": 1778389889570,
+        "sponsors": [
+          "Oberlin College"
+        ],
+        "imageUrl": "https://localist-images.azureedge.net/photos/52833020749474/huge/c5bc64dc35a7c96d09a5b4ec54de4448dab82181.jpg",
+        "id": "oberlin-52833020293789",
+        "screensIds": [],
+        "email": "fkusiapp@oberlin.edu",
+        "originalDescription": "Come meet some adorable cats and kittens, all adoptable through local volunteer-run non-profit Community Action to Save Strays!\n\nDonations are encouraged but not required. For the health and safety of the cats, all visitors must follow volunteer instructions.",
+        "updatedAt": 1778389889622,
+        "sessions": [
+          {
+            "startTime": 1779604800,
+            "endTime": 1779619200
+          }
+        ],
+        "website": "catssoberlin.org",
+        "contactEmail": "srabin@oberlin.edu",
+        "extractedMetadata": {
+          "sourceRecordId": "52833020293789",
+          "model": "gemini-2.5-flash",
+          "extractedAt": "2026-05-10T05:11:29.570Z"
+        },
+        "display": "all",
+        "eventType": "ot",
+        "calendarSourceName": "Oberlin College Calendar",
+        "image_cdn_url": "https://localist-images.azureedge.net/photos/52833020749474/huge/c5bc64dc35a7c96d09a5b4ec54de4448dab82181.jpg",
+        "location": "48 W. Lincoln Street",
+        "sourceName": "Oberlin College Calendar",
+        "extendedDescription": "Meet adorable cats and kittens at CATSS Open Hours! All these wonderful animals are available for adoption through Community Action to Save Strays, a dedicated local volunteer-run nonprofit. Your visit helps support their vital work in finding forever homes for strays. Donations are encouraged, though not required, to assist with their care. Please follow volunteer instructions for the health and safety of all our feline friends.",
+        "calendarSourceUrl": "catssoberlin.org",
+        "status": "pending"
+      }
+    }
+  ],
+  "duplicateGroups": [],
+  "processedEventIds": [
+    {
+      "id": "42924343951285",
+      "data": {
+        "processedAt": 1778388484543
+      }
+    },
+    {
+      "id": "51198454378422",
+      "data": {
+        "processedAt": 1778390043657
+      }
+    },
+    {
+      "id": "51800468257124",
+      "data": {
+        "processedAt": 1778390104804
+      }
+    },
+    {
+      "id": "51800542052140",
+      "data": {
+        "processedAt": 1778390121921
+      }
+    },
+    {
+      "id": "51800568912081",
+      "data": {
+        "processedAt": 1778390139581
+      }
+    },
+    {
+      "id": "51800621440847",
+      "data": {
+        "processedAt": 1778390191347
+      }
+    },
+    {
+      "id": "51800642729478",
+      "data": {
+        "processedAt": 1778390159029
+      }
+    },
+    {
+      "id": "51800698270525",
+      "data": {
+        "processedAt": 1778390173311
+      }
+    },
+    {
+      "id": "51800755580642",
+      "data": {
+        "processedAt": 1778390217016
+      }
+    },
+    {
+      "id": "51800796703505",
+      "data": {
+        "processedAt": 1778390234802
+      }
+    },
+    {
+      "id": "51800830121904",
+      "data": {
+        "processedAt": 1778390266572
+      }
+    },
+    {
+      "id": "51814152694188",
+      "data": {
+        "processedAt": 1778390365703
+      }
+    },
+    {
+      "id": "51814262645056",
+      "data": {
+        "processedAt": 1778390388307
+      }
+    },
+    {
+      "id": "51814457189582",
+      "data": {
+        "processedAt": 1778390408169
+      }
+    },
+    {
+      "id": "51815210388404",
+      "data": {
+        "processedAt": 1778390303509
+      }
+    },
+    {
+      "id": "51815547574650",
+      "data": {
+        "processedAt": 1778390338874
+      }
+    },
+    {
+      "id": "51815586487392",
+      "data": {
+        "processedAt": 1778390321512
+      }
+    },
+    {
+      "id": "51815760861682",
+      "data": {
+        "processedAt": 1778390286346
+      }
+    },
+    {
+      "id": "51913428862458",
+      "data": {
+        "processedAt": 1778388440010
+      }
+    },
+    {
+      "id": "51959059514013",
+      "data": {
+        "processedAt": 1778388418426
+      }
+    },
+    {
+      "id": "52302936266509",
+      "data": {
+        "processedAt": 1778388534730
+      }
+    },
+    {
+      "id": "52354015654357",
+      "data": {
+        "processedAt": 1778388324020
+      }
+    },
+    {
+      "id": "52354028255267",
+      "data": {
+        "processedAt": 1778388463850
+      }
+    },
+    {
+      "id": "52375092575714",
+      "data": {
+        "processedAt": 1778390058335
+      }
+    },
+    {
+      "id": "52606955918260",
+      "data": {
+        "processedAt": 1778388500507
+      }
+    },
+    {
+      "id": "52606956662777",
+      "data": {
+        "processedAt": 1778388554717
+      }
+    },
+    {
+      "id": "52606957045792",
+      "data": {
+        "processedAt": 1778389793405
+      }
+    },
+    {
+      "id": "52606957629538",
+      "data": {
+        "processedAt": 1778389816233
+      }
+    },
+    {
+      "id": "52606960949403",
+      "data": {
+        "processedAt": 1778389852439
+      }
+    },
+    {
+      "id": "52622758664424",
+      "data": {
+        "processedAt": 1778388516119
+      }
+    },
+    {
+      "id": "52624896427651",
+      "data": {
+        "processedAt": 1778388395889
+      }
+    },
+    {
+      "id": "52648029944548",
+      "data": {
+        "processedAt": 1778390025045
+      }
+    },
+    {
+      "id": "52692734504543",
+      "data": {
+        "processedAt": 1778390088657
+      }
+    },
+    {
+      "id": "52709104074414",
+      "data": {
+        "processedAt": 1778389770848
+      }
+    },
+    {
+      "id": "52754961835214",
+      "data": {
+        "processedAt": 1778388356121
+      }
+    },
+    {
+      "id": "52764344811513",
+      "data": {
+        "processedAt": 1778389961611
+      }
+    },
+    {
+      "id": "52771856580219",
+      "data": {
+        "processedAt": 1778389868594
+      }
+    },
+    {
+      "id": "52772305023687",
+      "data": {
+        "processedAt": 1778389941944
+      }
+    },
+    {
+      "id": "52772324399960",
+      "data": {
+        "processedAt": 1778389909802
+      }
+    },
+    {
+      "id": "52790114591154",
+      "data": {
+        "processedAt": 1778388305580
+      }
+    },
+    {
+      "id": "52797193540195",
+      "data": {
+        "processedAt": 1778388378450
+      }
+    },
+    {
+      "id": "52806745176587",
+      "data": {
+        "processedAt": 1778388339597
+      }
+    },
+    {
+      "id": "52816106111030",
+      "data": {
+        "processedAt": 1778389928983
+      }
+    },
+    {
+      "id": "52816134314136",
+      "data": {
+        "processedAt": 1778389979315
+      }
+    },
+    {
+      "id": "52825727222050",
+      "data": {
+        "processedAt": 1778390005343
+      }
+    },
+    {
+      "id": "52833002258892",
+      "data": {
+        "processedAt": 1778388573965
+      }
+    },
+    {
+      "id": "52833020293789",
+      "data": {
+        "processedAt": 1778389889663
+      }
+    }
+  ],
+  "postFeedback": [
+    {
+      "id": "NDLuc4eQ0FUYILTVgean",
+      "data": {
+        "postId": "oberlin-51815547574650",
+        "postTitle": "Adult Amateur Piano Festival Concert II",
+        "decision": "approved",
+        "postTypeId": [
+          5
+        ],
+        "eventType": "ot",
+        "aiConfidence": 0.95,
+        "sourceName": "Oberlin College Calendar",
+        "reviewedAt": 1778390968223,
+        "id": "NDLuc4eQ0FUYILTVgean"
+      }
+    },
+    {
+      "id": "ih2OKGgZg0PBrZMJQbGm",
+      "data": {
+        "postId": "oberlin-51815586487392",
+        "postTitle": "Adult Amateur Piano Festival Concert I",
+        "decision": "approved",
+        "postTypeId": [
+          5
+        ],
+        "eventType": "ot",
+        "aiConfidence": 0.95,
+        "sourceName": "Oberlin College Calendar",
+        "reviewedAt": 1778624068336,
+        "id": "ih2OKGgZg0PBrZMJQbGm"
+      }
+    },
+    {
+      "id": "wg10hkcNmriSmuRKtEJ4",
+      "data": {
+        "postId": "oberlin-51800642729478",
+        "postTitle": "Oberlin Trumpet Workshop Participant Recital",
+        "decision": "approved",
+        "postTypeId": [
+          5
+        ],
+        "eventType": "ot",
+        "aiConfidence": 0.95,
+        "sourceName": "Oberlin College Calendar",
+        "reviewedAt": 1778408996933,
+        "id": "wg10hkcNmriSmuRKtEJ4"
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": "cramson@oberlin.edu",
+      "data": {
+        "uid": null,
+        "email": "cramson@oberlin.edu",
+        "displayName": "Cal",
+        "photoURL": null,
+        "role": "reviewer",
+        "status": "active",
+        "invitedBy": "fkusiapp@oberlin.edu",
+        "lastLoginAt": null,
+        "createdAt": 1778390536179,
+        "updatedAt": 1778390536179
+      }
+    },
+    {
+      "id": "fkusiapp@gmail.com",
+      "data": {
+        "email": "fkusiapp@gmail.com",
+        "role": "reviewer",
+        "status": "active",
+        "invitedBy": "fkusiapp@oberlin.edu",
+        "createdAt": 1778387459258,
+        "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocJb-agxwk3GmMwmamfzrElAnkE-MD1NX3MiAWd_I-q-fdcE2Q=s96-c",
+        "uid": "Qzi3vECUEZfzToGqA38X2ox73tl2",
+        "displayName": "Frank",
+        "lastLoginAt": 1778403049705,
+        "updatedAt": 1778403049705
+      }
+    },
+    {
+      "id": "fkusiapp@oberlin.edu",
+      "data": {
+        "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocIqolaxN4eqjnbODnGcdnJud_g1jraJ_E2bFLA1rwe_yUv-3DkY=s96-c",
+        "uid": "Lv9wCEeGjeM49AdJCJg31LVZGt22",
+        "createdAt": 1778314461414,
+        "invitedBy": "bootstrap",
+        "role": "super_admin",
+        "displayName": "Frank Kusi Appiah",
+        "email": "fkusiapp@oberlin.edu",
+        "status": "active",
+        "lastLoginAt": 1778716861773,
+        "updatedAt": 1778716861773
+      }
+    },
+    {
+      "id": "mfaubert@oberlin.edu",
+      "data": {
+        "email": "mfaubert@oberlin.edu",
+        "role": "reviewer",
+        "invitedBy": "fkusiapp@oberlin.edu",
+        "createdAt": 1778623139614,
+        "status": "active",
+        "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocJbwID9h6tV4MTf2uCBTmk8wVXrd9v807k39gAHaGsvOHHQ9uo-=s96-c",
+        "uid": "04pVp9CooVVMOjRKgYXD003Re4Y2",
+        "displayName": "Madeleine Faubert",
+        "lastLoginAt": 1778707398182,
+        "updatedAt": 1778707398182
+      }
+    },
+    {
+      "id": "petersen@oberlin.edu",
+      "data": {
+        "email": "petersen@oberlin.edu",
+        "role": "reviewer",
+        "invitedBy": "fkusiapp@oberlin.edu",
+        "createdAt": 1778390552820,
+        "status": "active",
+        "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocKIE66lTF4IDLPOZvw35t1iNtFOgKx2gxF-kdEltgP9I9R5Gi36=s96-c",
+        "uid": "cHw0JIVeluNWcUdePG4neZbi4u63",
+        "displayName": "John Petersen",
+        "lastLoginAt": 1778716868200,
+        "updatedAt": 1778716868200
+      }
+    }
+  ],
+  "accessRequests": [
+    {
+      "id": "cransom@oberlin.edu",
+      "data": {
+        "id": "cransom@oberlin.edu",
+        "email": "cransom@oberlin.edu",
+        "displayName": "Cal Ransom",
+        "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocIaZIVEBkEKcZ_fjzUTuR0m0HMvscu6ZUpYb3EQBs4_1tnus8U=s96-c",
+        "status": "pending",
+        "requestedRole": "reviewer",
+        "message": "",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "requestedAt": 1778507577008
+      }
+    },
+    {
+      "id": "frankkusiap@gmail.com",
+      "data": {
+        "id": "frankkusiap@gmail.com",
+        "email": "frankkusiap@gmail.com",
+        "displayName": "Frank Kusi Appiah",
+        "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocLNip6lSFAzjS9H98Z_ZfzlKxwMF4zKNRhbx2Tn2fGLLWEmxw=s96-c",
+        "status": "pending",
+        "requestedRole": "reviewer",
+        "message": "research",
+        "reviewedBy": null,
+        "reviewedAt": null,
+        "requestedAt": 1778645880868
+      }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 import "server-only";
-import { adminDb } from "./firebaseAdmin";
+import { randomUUID } from "crypto";
+import { ensureMysqlSchema, getMysqlPool, json, parseJson } from "./mysql";
+import type { ReviewPost } from "./postTypes";
 
 export type ReviewDecision = "approved" | "rejected" | "needs_correction";
 
@@ -14,22 +16,85 @@ export type PostFeedback = {
   aiConfidence: number;
   sourceName: string;
   reviewedAt: number;
+  postSnapshot?: ReviewPost;
+  missingFields?: string[];
+  validationErrors?: string[];
+  learningSignal?: AiLearningSignal;
+  aiCorrectionApplied?: boolean;
+};
+
+export type AiLearningSignal =
+  | "human_approved"
+  | "human_rejected"
+  | "human_requested_correction"
+  | "human_approved_missing_fields"
+  | "ai_corrected_and_requeued"
+  | "human_published_after_override";
+
+export type AiLearningEvent = {
+  id: string;
+  postId: string;
+  signal: AiLearningSignal;
+  reason?: string;
+  postTitle: string;
+  sourceName: string;
+  aiConfidence: number | null;
+  missingFields?: string[];
+  validationErrors?: string[];
+  before?: Partial<ReviewPost>;
+  after?: Partial<ReviewPost>;
+  createdAt: number;
 };
 
 const COLLECTION = "postFeedback";
 
 export async function saveFeedback(feedback: Omit<PostFeedback, "id">): Promise<void> {
-  const ref = adminDb.collection(COLLECTION).doc();
-  await ref.set({ ...feedback, id: ref.id });
+  await ensureMysqlSchema();
+  const id = randomUUID();
+  const saved = { ...feedback, id };
+  await getMysqlPool().execute(
+    "INSERT INTO post_feedback (id, data) VALUES (?, CAST(? AS JSON))",
+    [id, json(saved)]
+  );
+
+  await saveAiLearningEvent({
+    postId: feedback.postId,
+    postTitle: feedback.postTitle,
+    signal:
+      feedback.learningSignal ??
+      (feedback.decision === "approved"
+        ? "human_approved"
+        : feedback.decision === "needs_correction"
+          ? "human_requested_correction"
+          : "human_rejected"),
+    reason: feedback.rejectionReason,
+    sourceName: feedback.sourceName,
+    aiConfidence: feedback.aiConfidence,
+    missingFields: feedback.missingFields,
+    validationErrors: feedback.validationErrors,
+    before: feedback.postSnapshot,
+  });
+}
+
+export async function saveAiLearningEvent(
+  event: Omit<AiLearningEvent, "id" | "createdAt">
+): Promise<void> {
+  await ensureMysqlSchema();
+  const id = randomUUID();
+  const createdAt = Date.now();
+  await getMysqlPool().execute(
+    "INSERT INTO ai_learning_events (id, data) VALUES (?, CAST(? AS JSON))",
+    [id, json({ ...event, id, createdAt })]
+  );
 }
 
 export async function listFeedback(maxResults = 200): Promise<PostFeedback[]> {
-  const snap = await adminDb
-    .collection(COLLECTION)
-    .orderBy("reviewedAt", "desc")
-    .limit(maxResults)
-    .get();
-  return snap.docs.map((d) => d.data() as PostFeedback);
+  await ensureMysqlSchema();
+  const limit = Math.max(1, Math.min(Number(maxResults) || 200, 500));
+  const [rows] = await getMysqlPool().execute<import("mysql2").RowDataPacket[]>(
+    `SELECT data FROM post_feedback ORDER BY reviewed_at DESC LIMIT ${limit}`
+  );
+  return rows.map((row) => parseJson<PostFeedback>(row.data, null as unknown as PostFeedback));
 }
 
 export async function getFeedbackStats(): Promise<{

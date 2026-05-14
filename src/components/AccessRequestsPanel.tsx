@@ -15,12 +15,12 @@ type AccessRequestsPanelProps = {
   onDeny: (request: AccessRequest) => Promise<void>;
 };
 
-function formatDate(value: AccessRequest["requestedAt"]) {
-  if (!value) {
+function formatDate(value: number | null) {
+  if (value == null) {
     return "Unknown";
   }
 
-  return value.toDate().toLocaleString(undefined, {
+  return new Date(value).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });
