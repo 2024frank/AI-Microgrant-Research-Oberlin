@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
+
 type EmailRequest =
   | {
       type: "access-approved";
@@ -86,6 +88,9 @@ function getEmailContent(body: EmailRequest) {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireActiveAppUser(request.headers.get("authorization"), "admin");
+  if (!guard.ok) return guard.response;
+
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {

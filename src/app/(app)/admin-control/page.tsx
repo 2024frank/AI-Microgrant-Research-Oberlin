@@ -21,10 +21,11 @@ import {
   type AuthorizedUser,
   type UserRole,
   type UserStatus,
+  canAccessAdminControl,
 } from "@/lib/users";
 
 export default function AdminControlPage() {
-  const { user, refreshUserAccess } = useAuth();
+  const { user, refreshUserAccess, role } = useAuth();
   const [users, setUsers] = useState<AuthorizedUser[]>([]);
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [selectedRequestRoles, setSelectedRequestRoles] = useState<Record<string, UserRole>>({});
@@ -32,6 +33,10 @@ export default function AdminControlPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [processedIdCount, setProcessedIdCount] = useState<number | null>(null);
+  const [processedLoading, setProcessedLoading] = useState(false);
+  const [processedClearing, setProcessedClearing] = useState(false);
+  const showPipelineTools = role != null && canAccessAdminControl(role);
   const invitedUsers = users.filter((authorizedUser) => authorizedUser.status === "pending");
 
   async function loadUsers() {
@@ -56,6 +61,30 @@ export default function AdminControlPage() {
   useEffect(() => {
     void loadUsers();
   }, []);
+
+  async function loadProcessedEventIdCount() {
+    if (!user || !showPipelineTools) return;
+    setProcessedLoading(true);
+    try {
+      const res = await fetch("/api/admin/processed-event-ids", {
+        headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+      });
+      if (!res.ok) {
+        setProcessedIdCount(null);
+        return;
+      }
+      const data = (await res.json()) as { count?: number };
+      setProcessedIdCount(typeof data.count === "number" ? data.count : null);
+    } catch {
+      setProcessedIdCount(null);
+    } finally {
+      setProcessedLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (user && showPipelineTools) void loadProcessedEventIdCount();
+  }, [user, showPipelineTools]);
 
   async function handleCreateUser(input: {
     email: string;
@@ -177,6 +206,38 @@ export default function AdminControlPage() {
     }
   }
 
+  async function handleClearProcessedEventIds() {
+    if (!user || !showPipelineTools) return;
+    const ok = window.confirm(
+      "Clear all processed Localist event IDs from MySQL? The pipeline will treat every event as new (it may create duplicates in review unless you also clear review posts).",
+    );
+    if (!ok) return;
+
+    setProcessedClearing(true);
+    setMessage(null);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch("/api/admin/processed-event-ids", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; deleted?: number };
+      if (!res.ok) {
+        setErrorMessage(data.error ?? "Unable to clear processed event IDs.");
+        return;
+      }
+      setMessage(
+        `Cleared processed Localist IDs (${data.deleted ?? 0} rows removed from MySQL).`,
+      );
+      await loadProcessedEventIdCount();
+    } catch (error) {
+      setErrorMessage(getSafeErrorMessage(error, "Unable to clear processed event IDs."));
+    } finally {
+      setProcessedClearing(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -217,6 +278,54 @@ export default function AdminControlPage() {
               </p>
             </section>
           </div>
+          {showPipelineTools ? (
+            <section
+              aria-labelledby="pipeline-dedupe-heading"
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-4"
+            >
+              <h2
+                id="pipeline-dedupe-heading"
+                className="font-[var(--font-public-sans)] text-lg font-semibold text-[var(--text)]"
+              >
+                Pipeline — deduplication (MySQL)
+              </h2>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                The pipeline skips events whose Localist IDs are stored in{" "}
+                <code className="rounded bg-[var(--surface)] px-1 py-0.5 text-xs">processed_event_ids</code>.
+                Clearing this table lets you re-run ingestion without touching review posts or sources.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <p className="text-sm text-[var(--text)]" aria-live="polite">
+                  {processedLoading ? (
+                    <span className="text-[var(--muted)]">Loading count…</span>
+                  ) : processedIdCount === null ? (
+                    <span className="text-[var(--muted)]">Could not load count.</span>
+                  ) : (
+                    <>
+                      <span className="font-semibold">{processedIdCount}</span> processed Localist
+                      event ID{processedIdCount === 1 ? "" : "s"} in MySQL
+                    </>
+                  )}
+                </p>
+                <button
+                  type="button"
+                  className="rounded-md border border-amber-400/50 bg-amber-500/15 px-3 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-500/25 disabled:opacity-50"
+                  disabled={processedClearing || processedLoading}
+                  onClick={() => void handleClearProcessedEventIds()}
+                >
+                  {processedClearing ? "Clearing…" : "Clear processed event IDs"}
+                </button>
+                <button
+                  type="button"
+                  className="text-sm text-[var(--muted)] underline-offset-2 hover:underline"
+                  disabled={processedLoading || processedClearing}
+                  onClick={() => void loadProcessedEventIdCount()}
+                >
+                  Refresh count
+                </button>
+              </div>
+            </section>
+          ) : null}
           <AccessRequestsPanel
             isSaving={isSaving}
             onApprove={handleApproveRequest}

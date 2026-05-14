@@ -76,9 +76,10 @@ export default function PostsPage() {
     setInlineMessage({ id: post.id, text: "Publishing to Community Hub…" });
 
     try {
+      const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
       const res = await fetch("/api/posts/publish", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ postId: post.id }),
       });
       const data = await res.json();

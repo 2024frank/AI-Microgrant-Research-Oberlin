@@ -1,4 +1,7 @@
+"use client";
+
 import type { SourceConfig } from "./sourceConfig";
+import { getClientBearerAuthHeader, getClientJsonAuthHeaders } from "./clientAuthHeaders";
 
 export type ChatSession = {
   id: string;
@@ -18,7 +21,7 @@ export type ChatMsg = {
 export async function saveSourceConfig(config: SourceConfig) {
   const res = await fetch("/api/source-configs", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: await getClientJsonAuthHeaders(),
     body: JSON.stringify({ config }),
   });
   if (!res.ok) {
@@ -28,21 +31,30 @@ export async function saveSourceConfig(config: SourceConfig) {
 }
 
 export async function getSourceConfig(id: string): Promise<SourceConfig | null> {
-  const res = await fetch(`/api/source-configs?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+  const res = await fetch(`/api/source-configs?id=${encodeURIComponent(id)}`, {
+    cache: "no-store",
+    headers: await getClientBearerAuthHeader(),
+  });
   if (!res.ok) return null;
   const data = (await res.json()) as { config?: SourceConfig | null };
   return data.config ?? null;
 }
 
 export async function listSourceConfigs(): Promise<SourceConfig[]> {
-  const res = await fetch("/api/source-configs", { cache: "no-store" });
+  const res = await fetch("/api/source-configs", {
+    cache: "no-store",
+    headers: await getClientBearerAuthHeader(),
+  });
   if (!res.ok) return [];
   const data = (await res.json()) as { configs?: SourceConfig[] };
   return data.configs ?? [];
 }
 
 export async function deleteSourceConfig(id: string) {
-  const res = await fetch(`/api/source-configs?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+  const res = await fetch(`/api/source-configs?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: await getClientBearerAuthHeader(),
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(typeof err.error === "string" ? err.error : "Failed to delete source config");
@@ -52,7 +64,7 @@ export async function deleteSourceConfig(id: string) {
 export async function updateSourceConfig(id: string, updates: Partial<SourceConfig>) {
   const res = await fetch("/api/source-configs", {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: await getClientJsonAuthHeaders(),
     body: JSON.stringify({ id, updates }),
   });
   if (!res.ok) {
@@ -64,7 +76,7 @@ export async function updateSourceConfig(id: string, updates: Partial<SourceConf
 export async function createChatSession(createdBy: string, title: string): Promise<string> {
   const res = await fetch("/api/source-builder/conversations", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: await getClientJsonAuthHeaders(),
     body: JSON.stringify({ createdBy, title }),
   });
   if (!res.ok) {
@@ -79,6 +91,7 @@ export async function createChatSession(createdBy: string, title: string): Promi
 export async function getChatSession(id: string): Promise<ChatSession | null> {
   const res = await fetch(`/api/source-builder/conversations/${encodeURIComponent(id)}`, {
     cache: "no-store",
+    headers: await getClientBearerAuthHeader(),
   });
   if (!res.ok) return null;
   const data = (await res.json()) as { session?: ChatSession };
@@ -88,7 +101,7 @@ export async function getChatSession(id: string): Promise<ChatSession | null> {
 export async function appendChatMessage(sessionId: string, msg: ChatMsg) {
   const res = await fetch(`/api/source-builder/conversations/${encodeURIComponent(sessionId)}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: await getClientJsonAuthHeaders(),
     body: JSON.stringify({ action: "append", message: msg }),
   });
   if (!res.ok) {
@@ -100,7 +113,7 @@ export async function appendChatMessage(sessionId: string, msg: ChatMsg) {
 export async function listChatSessions(userEmail: string, count = 20): Promise<ChatSession[]> {
   const res = await fetch(
     `/api/source-builder/conversations?email=${encodeURIComponent(userEmail)}&count=${count}`,
-    { cache: "no-store" }
+    { cache: "no-store", headers: await getClientBearerAuthHeader() },
   );
   if (!res.ok) return [];
   const data = (await res.json()) as { sessions?: ChatSession[] };
@@ -110,7 +123,7 @@ export async function listChatSessions(userEmail: string, count = 20): Promise<C
 export async function updateChatTitle(sessionId: string, title: string) {
   const res = await fetch(`/api/source-builder/conversations/${encodeURIComponent(sessionId)}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: await getClientJsonAuthHeaders(),
     body: JSON.stringify({ action: "title", title }),
   });
   if (!res.ok) {

@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveSuperAdmin } from "@/lib/adminAuthGuard";
 import { ensureMysqlSchema, getMysqlPool } from "@/lib/mysql";
 import { ensureDefaultSources } from "@/lib/sources";
 
@@ -27,7 +29,10 @@ async function clearCollection(name: string) {
   return Number((result as { affectedRows?: number }).affectedRows ?? 0);
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const guard = await requireActiveSuperAdmin(req.headers.get("authorization"));
+  if (!guard.ok) return guard.response;
+
   try {
     const [
       posts,

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
+
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   const { url } = await req.json();
   if (!url) return NextResponse.json({ error: "URL required" }, { status: 400 });
 

@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+
+import { isValidCronSecret, requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { runPipeline } from "@/lib/pipeline";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
+  if (process.env.CRON_SECRET) {
+    if (!isValidCronSecret(req)) {
+      const guard = await requireActiveAppUser(req.headers.get("authorization"), "viewer");
+      if (!guard.ok) return guard.response;
+    }
+  }
+
   try {
     const { jobId, sourceId } = await req.json();
     if (!jobId || !sourceId) {

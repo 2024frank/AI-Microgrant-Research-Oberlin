@@ -1,3 +1,7 @@
+"use client";
+
+import { getClientJsonAuthHeaders } from "@/lib/clientAuthHeaders";
+
 type SendEmailInput =
   | {
       type: "access-approved";
@@ -14,9 +18,7 @@ type SendEmailInput =
 export async function sendEmail(input: SendEmailInput) {
   const response = await fetch("/api/email", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: await getClientJsonAuthHeaders(),
     body: JSON.stringify(input),
   });
 

@@ -126,9 +126,10 @@ export default function SourcesPage() {
     setJobStatus("running");
     setCurrentJob(null);
     try {
+      const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
       const res = await fetch("/api/pipeline/trigger", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ sourceId: "localist-oberlin", sourceName: "Localist – Oberlin College Calendar" }),
       });
       const data = await res.json();
@@ -210,9 +211,10 @@ export default function SourcesPage() {
               {jobStatus === "running" && currentJob && (
                 <button
                   onClick={async () => {
+                    const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
                     await fetch("/api/pipeline/cancel", {
                       method: "POST",
-                      headers: { "Content-Type": "application/json" },
+                      headers: await getClientJsonAuthHeaders(),
                       body: JSON.stringify({ jobId: currentJob.id }),
                     });
                     setJobStatus("failed");

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import {
   deleteSourceConfigRecord,
   getSourceConfigRecord,
@@ -11,6 +13,9 @@ import type { SourceConfig } from "@/lib/sourceConfig";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const id = req.nextUrl.searchParams.get("id");
     if (id) {
@@ -28,6 +33,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const body = (await req.json()) as { config?: SourceConfig };
     if (!body.config?.id) {
@@ -44,6 +52,9 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const body = (await req.json()) as { id?: string; updates?: Partial<SourceConfig> };
     if (!body.id || !body.updates) {
@@ -60,6 +71,9 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const id = req.nextUrl.searchParams.get("id");
     if (!id) {

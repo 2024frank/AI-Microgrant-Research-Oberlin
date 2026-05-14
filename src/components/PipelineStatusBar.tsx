@@ -138,9 +138,10 @@ export function PipelineStatusBar() {
               onClick={async () => {
                 if (!job) return;
                 setStopping(true);
+                const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
                 await fetch("/api/pipeline/cancel", {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                  headers: await getClientJsonAuthHeaders(),
                   body: JSON.stringify({ jobId: job.id }),
                 });
                 clearRunningJobId();

@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { fetchWithConfig, runCustomCode, type SourceConfig } from "@/lib/sourceConfig";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   const { config, sourceCode } = await req.json();
   if (!config) return NextResponse.json({ error: "Config required" }, { status: 400 });
 

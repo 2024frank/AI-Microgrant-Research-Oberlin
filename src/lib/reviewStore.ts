@@ -162,3 +162,18 @@ export async function markEventProcessed(localistEventId: string): Promise<void>
     [localistEventId, Date.now()]
   );
 }
+
+export async function countProcessedEventIds(): Promise<number> {
+  await ensureMysqlSchema();
+  const [rows] = await getMysqlPool().execute<import("mysql2").RowDataPacket[]>(
+    "SELECT COUNT(*) AS c FROM processed_event_ids"
+  );
+  return Number(rows[0]?.c ?? 0);
+}
+
+/** Removes all Localist dedupe keys so the pipeline can re-ingest events. Does not delete review posts. */
+export async function clearProcessedEventIds(): Promise<number> {
+  await ensureMysqlSchema();
+  const [result] = await getMysqlPool().execute("DELETE FROM processed_event_ids");
+  return Number((result as { affectedRows?: number }).affectedRows ?? 0);
+}

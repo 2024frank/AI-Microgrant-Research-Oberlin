@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { listReviewPosts } from "@/lib/reviewStore";
 import type { ReviewStatus } from "@/lib/postTypes";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "viewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const status = req.nextUrl.searchParams.get("status") as ReviewStatus | null;
     const maxResults = Number(req.nextUrl.searchParams.get("maxResults") ?? 500);

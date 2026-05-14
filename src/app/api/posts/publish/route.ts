@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { getReviewPost, updateReviewPost } from "@/lib/reviewStore";
 import { submitToCommunityHub, fetchExistingCHPosts } from "@/lib/communityHub";
 import { runDedupAgent } from "@/lib/gemini";
@@ -8,6 +10,9 @@ export const dynamic = "force-dynamic";
 const ADMIN_EMAIL = "fkusiapp@oberlin.edu";
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const body = await req.json();
     const { postId } = body;

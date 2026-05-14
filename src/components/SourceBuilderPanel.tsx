@@ -82,7 +82,11 @@ export function SourceBuilderPanel() {
     setListStatus("loading");
     setListError(null);
     try {
-      const res = await fetch("/api/source-builder", { cache: "no-store" });
+      const { getClientBearerAuthHeader } = await import("@/lib/clientAuthHeaders");
+      const res = await fetch("/api/source-builder", {
+        cache: "no-store",
+        headers: await getClientBearerAuthHeader(),
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(typeof err.error === "string" ? err.error : "Could not load builder history.");
@@ -105,9 +109,10 @@ export function SourceBuilderPanel() {
     setBuilderError(null);
     try {
       const trimmed = builderPrompt.trim();
+      const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
       const res = await fetch("/api/source-builder", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({
           prompt: trimmed,
           ...(trimmed.length === 0 && acknowledgeEmptyPrompt ? { acknowledgeEmptyPrompt: true } : {}),

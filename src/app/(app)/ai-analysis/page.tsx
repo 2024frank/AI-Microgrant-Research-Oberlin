@@ -28,10 +28,13 @@ export default function AiAnalysisPage() {
     async function load() {
       const { listAllReviewPosts } = await import("@/lib/reviewStoreClient");
       const { clientListPipelineJobs } = await import("@/lib/pipelineJobsClient");
+      const { getClientBearerAuthHeader } = await import("@/lib/clientAuthHeaders");
       const [p, j, fb] = await Promise.all([
         listAllReviewPosts(),
         clientListPipelineJobs(10),
-        fetch("/api/posts/feedback-stats").then((r) => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/posts/feedback-stats", { headers: await getClientBearerAuthHeader() })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
       ]);
       setPosts(p);
       setJobs(j);

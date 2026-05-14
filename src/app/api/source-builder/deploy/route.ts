@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { ensureMysqlSchema, getMysqlPool, json } from "@/lib/mysql";
 import { upsertSourceConfigRecord } from "@/lib/sourceConfigsDb";
 import type { SourceConfig } from "@/lib/sourceConfig";
@@ -48,6 +50,9 @@ async function githubPut(filePath: string, rawContent: string, message: string):
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "admin");
+  if (!guard.ok) return guard.response;
+
   const { config, sourceCode } = await req.json();
   if (!config?.id || !config?.name) {
     return NextResponse.json({ error: "Config with id and name required" }, { status: 400 });

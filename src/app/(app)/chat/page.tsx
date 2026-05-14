@@ -48,9 +48,6 @@ export default function ChatPage() {
     const mentions = extractMentions(text);
     await sendChatMessage({
       text: text.trim(),
-      senderEmail: user.email ?? "",
-      senderName: authorizedUser.displayName ?? user.email ?? "Unknown",
-      senderPhoto: user.photoURL ?? null,
       mentions,
     });
     setText("");
@@ -95,9 +92,10 @@ export default function ChatPage() {
     if (!broadcastPrompt.trim()) return;
     setDrafting(true);
     try {
+      const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
       const res = await fetch("/api/broadcast/draft", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ prompt: broadcastPrompt }),
       });
       const data = await res.json();
@@ -112,9 +110,10 @@ export default function ChatPage() {
     setBroadcastSending(true);
     setBroadcastResult(null);
     try {
+      const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
       const res = await fetch("/api/broadcast/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({
           subject: broadcastSubject,
           body: broadcastBody,

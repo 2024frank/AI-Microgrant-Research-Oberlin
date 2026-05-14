@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import {
   listSourceBuilderSessions,
   runSourceBuilderAgent,
@@ -7,7 +9,10 @@ import {
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "viewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const sessions = await listSourceBuilderSessions(20);
     return NextResponse.json({ sessions });
@@ -24,6 +29,9 @@ const EMPTY_PROMPT_BYPASS_TEXT =
   "[Human bypass: empty brief] Run a concise audit of the current Oberlin Civic Calendar source setup and suggest the next integration step.";
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const body = await req.json().catch(() => ({}));
     let prompt = String(body.prompt ?? "").trim();

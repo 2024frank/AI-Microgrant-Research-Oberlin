@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { listAuthorizedUsersAdmin } from "@/lib/usersAdmin";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +11,9 @@ function getBaseUrl() {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "admin");
+  if (!guard.ok) return guard.response;
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "No email key" }, { status: 500 });
 

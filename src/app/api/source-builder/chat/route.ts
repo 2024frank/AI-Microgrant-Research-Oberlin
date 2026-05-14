@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { runManagedAgentText } from "@/lib/anthropicManagedAgent";
 
 export const dynamic = "force-dynamic";
@@ -187,6 +189,9 @@ async function executeProbe(url: string): Promise<Record<string, unknown>> {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   let body: unknown;
   try {
     body = await req.json();

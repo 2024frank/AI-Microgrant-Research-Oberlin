@@ -27,10 +27,12 @@ const TIME_LIMIT_MS = 240_000; // 240s — leave 60s buffer before Vercel's 300s
 
 async function triggerContinuation(jobId: string, sourceId: string) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://ai-microgrant-research-oberlin.vercel.app").replace(/\/$/, "");
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (process.env.CRON_SECRET) headers["x-cron-secret"] = process.env.CRON_SECRET;
   try {
     await fetch(`${baseUrl}/api/pipeline/continue`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ jobId, sourceId }),
     });
   } catch { /* best effort */ }

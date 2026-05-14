@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { runCorrectionAgent } from "@/lib/gemini";
 import { saveAiLearningEvent, saveFeedback } from "@/lib/feedback";
 import { getReviewPost, updateReviewPost } from "@/lib/reviewStore";
@@ -8,6 +10,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const body = await req.json();
     const postId = String(body.postId ?? "");

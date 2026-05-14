@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { saveFeedback } from "@/lib/feedback";
 import { getReviewPost } from "@/lib/reviewStore";
 import { validatePost } from "@/lib/postValidation";
@@ -6,6 +8,9 @@ import { validatePost } from "@/lib/postValidation";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const body = await req.json();
     const { postId, postTitle, decision, rejectionReason, postTypeId, eventType, aiConfidence, sourceName, learningSignal } = body;

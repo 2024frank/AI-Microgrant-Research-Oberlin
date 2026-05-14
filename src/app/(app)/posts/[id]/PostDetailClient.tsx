@@ -225,9 +225,11 @@ export function PostDetailClient({ id }: { id: string }) {
     learningSignal?: string
   ) {
     if (!post) return;
+    const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
+    const headers = await getClientJsonAuthHeaders();
     const res = await fetch("/api/posts/feedback", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         postId: post.id,
         postTitle: post.title,
@@ -280,9 +282,10 @@ export function PostDetailClient({ id }: { id: string }) {
     setPublishing(true);
     setPublishMessage("");
     try {
+      const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
       const res = await fetch("/api/posts/publish", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ postId: post.id }),
       });
       const data = await res.json();
@@ -338,9 +341,10 @@ export function PostDetailClient({ id }: { id: string }) {
 
     setCorrecting(true);
     try {
+      const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
       const res = await fetch("/api/posts/correct", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ postId: post.id, reason }),
       });
       const data = await res.json();

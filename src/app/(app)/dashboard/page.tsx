@@ -47,9 +47,10 @@ export default function DashboardPage() {
   async function handleRunPipeline() {
     setRunning(true);
     try {
+      const { getClientJsonAuthHeaders } = await import("@/lib/clientAuthHeaders");
       const res = await fetch("/api/pipeline/trigger", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ sourceId: "localist-oberlin", sourceName: "Localist – Oberlin College Calendar" }),
       });
       const data = await res.json();

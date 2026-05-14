@@ -16,6 +16,7 @@ import {
   type ChatSession,
   type ChatMsg,
 } from "@/lib/sourceConfigStore";
+import { getClientJsonAuthHeaders } from "@/lib/clientAuthHeaders";
 
 type Message = {
   role: "user" | "assistant";
@@ -108,7 +109,7 @@ export default function SourceBuilderPage() {
       const chatMsgs = newMessages.map((m) => ({ role: m.role, content: m.content }));
       const res = await fetch("/api/source-builder/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ messages: chatMsgs, sessionId, agentSessionId }),
       });
       const data = await res.json();
@@ -168,7 +169,7 @@ export default function SourceBuilderPage() {
     try {
       const res = await fetch("/api/source-builder/probe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
@@ -187,7 +188,7 @@ export default function SourceBuilderPage() {
 
       const chatRes = await fetch("/api/source-builder/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({
           messages: [...messages, probeMsg, userAnalysis].map((m) => ({ role: m.role, content: m.probeResult ? JSON.stringify(m.probeResult) : m.content })),
           sessionId,
@@ -215,7 +216,7 @@ export default function SourceBuilderPage() {
     try {
       const res = await fetch("/api/source-builder/test", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ config, sourceCode: sourceCode ?? pendingCode }),
       });
       const data = await res.json();
@@ -232,7 +233,7 @@ export default function SourceBuilderPage() {
     try {
       const res = await fetch("/api/source-builder/deploy", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getClientJsonAuthHeaders(),
         body: JSON.stringify({ config: { ...config, createdBy: user?.email ?? "" }, sourceCode: sourceCode ?? pendingCode }),
       });
       const data = await res.json();

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
+
 export const dynamic = "force-dynamic";
 
 function getBaseUrl() {
@@ -8,17 +10,27 @@ function getBaseUrl() {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "viewer");
+  if (!guard.ok) return guard.response;
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "No email key" }, { status: 500 });
 
-  const { text, senderName, mentions } = await req.json();
-  if (!mentions?.length) return NextResponse.json({ ok: true });
+  const { text, mentions } = (await req.json()) as { text?: string; mentions?: unknown };
+  const senderName = guard.actor.displayName?.trim() || guard.actor.email;
+  if (!text || typeof text !== "string") {
+    return NextResponse.json({ error: "text required" }, { status: 400 });
+  }
+  const mentionList = Array.isArray(mentions)
+    ? mentions.filter((m): m is string => typeof m === "string" && m.includes("@")).slice(0, 25)
+    : [];
+  if (!mentionList.length) return NextResponse.json({ ok: true });
 
   const resend = new Resend(apiKey);
   const chatUrl = `${getBaseUrl().replace(/\/$/, "")}/chat`;
 
   await Promise.allSettled(
-    mentions.map((email: string) =>
+    mentionList.map((email: string) =>
       resend.emails.send({
         from: "Civic Calendar <noreply@uhurued.com>",
         to: [email],

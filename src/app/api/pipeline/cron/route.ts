@@ -26,12 +26,15 @@ export async function GET(req: NextRequest) {
     const triggered: string[] = [];
     const errors: string[] = [];
 
+    const cronHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (secret) cronHeaders["x-cron-secret"] = secret;
+
     await Promise.all(
       dueSources.map(async (source) => {
         try {
           const res = await fetch(`${baseUrl}/api/pipeline/trigger`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: cronHeaders,
             body: JSON.stringify({ sourceId: source.id, sourceName: source.name }),
           });
           if (res.ok) {

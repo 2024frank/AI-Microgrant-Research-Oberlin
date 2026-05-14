@@ -1,3 +1,7 @@
+"use client";
+
+import { getClientBearerAuthHeader, getClientJsonAuthHeaders } from "@/lib/clientAuthHeaders";
+
 export type ChatMessage = {
   id: string;
   text: string;
@@ -11,15 +15,12 @@ export type ChatMessage = {
 
 export async function sendChatMessage(msg: {
   text: string;
-  senderEmail: string;
-  senderName: string;
-  senderPhoto: string | null;
   mentions: string[];
 }) {
   const res = await fetch("/api/team-chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(msg),
+    headers: await getClientJsonAuthHeaders(),
+    body: JSON.stringify({ text: msg.text, mentions: msg.mentions }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -29,10 +30,9 @@ export async function sendChatMessage(msg: {
   if (msg.mentions.length > 0) {
     await fetch("/api/chat/notify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await getClientJsonAuthHeaders(),
       body: JSON.stringify({
         text: msg.text,
-        senderName: msg.senderName,
         mentions: msg.mentions,
       }),
     }).catch(() => {});
@@ -46,6 +46,7 @@ export function subscribeToChatMessages(count: number, callback: (messages: Chat
     try {
       const res = await fetch(`/api/team-chat?limit=${encodeURIComponent(String(count))}`, {
         cache: "no-store",
+        headers: await getClientBearerAuthHeader(),
       });
       if (!res.ok) return;
       const data = (await res.json()) as { messages?: ChatMessage[] };

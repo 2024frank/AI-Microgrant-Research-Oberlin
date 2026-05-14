@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { insertTeamChatMessage, listTeamChatMessages } from "@/lib/teamChatDb";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "viewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const limit = Number(req.nextUrl.searchParams.get("limit") ?? 100);
     const rows = await listTeamChatMessages(limit);
@@ -17,22 +22,24 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "viewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const body = (await req.json()) as {
       text?: string;
-      senderEmail?: string;
-      senderName?: string;
-      senderPhoto?: string | null;
       mentions?: string[];
     };
-    if (!body.text?.trim() || !body.senderEmail?.trim()) {
-      return NextResponse.json({ error: "text and senderEmail are required" }, { status: 400 });
+    if (!body.text?.trim()) {
+      return NextResponse.json({ error: "text is required" }, { status: 400 });
     }
+    const senderEmail = guard.actor.email;
+    const senderName = guard.actor.displayName?.trim() || senderEmail;
     const message = await insertTeamChatMessage({
       text: body.text.trim(),
-      senderEmail: body.senderEmail.trim(),
-      senderName: body.senderName?.trim() || body.senderEmail.trim(),
-      senderPhoto: body.senderPhoto ?? null,
+      senderEmail,
+      senderName,
+      senderPhoto: guard.actor.photoURL ?? null,
       mentions: Array.isArray(body.mentions) ? body.mentions : [],
     });
     return NextResponse.json({ message });

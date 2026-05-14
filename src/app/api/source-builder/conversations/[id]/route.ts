@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+
+import { requireActiveAppUser } from "@/lib/adminAuthGuard";
 import {
   appendUiChatMessage,
   getUiChatSession,
   updateUiChatTitle,
   type UiChatMsg,
 } from "@/lib/sourceBuilderUiChatsDb";
+import { normalizeEmail } from "@/lib/userIds";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "viewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const { id } = await params;
     const session = await getUiChatSession(id);
     if (!session) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    if (normalizeEmail(session.createdBy) !== normalizeEmail(guard.actor.email)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     return NextResponse.json({ session });
@@ -28,8 +37,16 @@ export async function GET(
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const guard = await requireActiveAppUser(req.headers.get("authorization"), "viewer");
+  if (!guard.ok) return guard.response;
+
   try {
     const { id } = await params;
+    const existing = await getUiChatSession(id);
+    if (!existing || normalizeEmail(existing.createdBy) !== normalizeEmail(guard.actor.email)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const body = (await req.json()) as {
       action?: string;
       message?: UiChatMsg;

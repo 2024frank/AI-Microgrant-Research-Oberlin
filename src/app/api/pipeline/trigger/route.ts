@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+
+import { isValidCronSecret, requireActiveAppUser } from "@/lib/adminAuthGuard";
 import { createPipelineJob } from "@/lib/pipelineJobs";
 import { runPipeline } from "@/lib/pipeline";
 import { ensureDefaultSources } from "@/lib/sources";
@@ -8,6 +10,14 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
+  // When CRON_SECRET is set, only trusted cron callers or signed-in reviewers may start runs.
+  if (process.env.CRON_SECRET) {
+    if (!isValidCronSecret(req)) {
+      const guard = await requireActiveAppUser(req.headers.get("authorization"), "reviewer");
+      if (!guard.ok) return guard.response;
+    }
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
     const sourceId = body.sourceId ?? "localist-oberlin";
