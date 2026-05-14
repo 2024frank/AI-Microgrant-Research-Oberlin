@@ -152,6 +152,32 @@ export async function ensureMysqlSchema() {
         INDEX idx_access_requests_requested_at (requested_at)
       )
     `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS team_chat_messages (
+        id VARCHAR(191) PRIMARY KEY,
+        data JSON NOT NULL,
+        created_at BIGINT GENERATED ALWAYS AS (CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.createdAt')) AS UNSIGNED)) STORED,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_team_chat_created_at (created_at)
+      )
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS source_configs (
+        id VARCHAR(191) PRIMARY KEY,
+        data JSON NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS source_builder_ui_chats (
+        id VARCHAR(191) PRIMARY KEY,
+        data JSON NOT NULL,
+        created_by VARCHAR(191) GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(data, '$.createdBy'))) STORED,
+        created_at BIGINT GENERATED ALWAYS AS (CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.createdAt')) AS UNSIGNED)) STORED,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_sb_ui_chats_user_created (created_by, created_at)
+      )
+    `);
   })();
   return schemaReady;
 }

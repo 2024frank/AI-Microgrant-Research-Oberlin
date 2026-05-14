@@ -1,15 +1,3 @@
-import {
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  limit,
-  onSnapshot,
-  serverTimestamp,
-  type Timestamp,
-} from "firebase/firestore";
-import { firebaseDb } from "@/lib/firebase";
-
 export type ChatMessage = {
   id: string;
   text: string;
@@ -17,10 +5,9 @@ export type ChatMessage = {
   senderName: string;
   senderPhoto: string | null;
   mentions: string[];
-  createdAt: Timestamp | null;
+  /** Epoch milliseconds (from MySQL-backed API). */
+  createdAt: number | null;
 };
-
-const chatCol = () => collection(firebaseDb, "teamChat");
 
 export async function sendChatMessage(msg: {
   text: string;
@@ -29,10 +16,15 @@ export async function sendChatMessage(msg: {
   senderPhoto: string | null;
   mentions: string[];
 }) {
-  await addDoc(chatCol(), {
-    ...msg,
-    createdAt: serverTimestamp(),
+  const res = await fetch("/api/team-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(msg),
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(typeof err.error === "string" ? err.error : "Failed to send message");
+  }
 
   if (msg.mentions.length > 0) {
     await fetch("/api/chat/notify", {
@@ -47,17 +39,31 @@ export async function sendChatMessage(msg: {
   }
 }
 
-export function subscribeToChatMessages(
-  count: number,
-  callback: (messages: ChatMessage[]) => void
-) {
-  const q = query(chatCol(), orderBy("createdAt", "desc"), limit(count));
-  return onSnapshot(q, (snap) => {
-    const messages = snap.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() } as ChatMessage))
-      .reverse();
-    callback(messages);
-  });
+export function subscribeToChatMessages(count: number, callback: (messages: ChatMessage[]) => void) {
+  let cancelled = false;
+
+  async function pull() {
+    try {
+      const res = await fetch(`/api/team-chat?limit=${encodeURIComponent(String(count))}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { messages?: ChatMessage[] };
+      if (!cancelled && Array.isArray(data.messages)) {
+        callback(data.messages);
+      }
+    } catch {
+      /* ignore transient network errors */
+    }
+  }
+
+  void pull();
+  const id = setInterval(() => void pull(), 3000);
+
+  return () => {
+    cancelled = true;
+    clearInterval(id);
+  };
 }
 
 export function extractMentions(text: string): string[] {

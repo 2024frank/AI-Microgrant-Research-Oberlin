@@ -640,7 +640,7 @@ function DeployResultCard({ result }: { result: { success: boolean; id?: string;
         </span>
       </div>
       {result.success && (
-        <p className="text-xs text-[var(--muted)] mt-1">Registered in Firestore — appears on the Sources page.</p>
+        <p className="text-xs text-[var(--muted)] mt-1">Saved to the database — appears on the Sources page.</p>
       )}
       <GithubBadge label="Config JSON" result={result.github?.config} />
       <GithubBadge label="Fetcher .ts" result={result.github?.code} />

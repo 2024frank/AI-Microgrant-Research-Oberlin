@@ -144,8 +144,8 @@ export default function ChatPage() {
   );
 
   function formatTime(ts: ChatMessage["createdAt"]) {
-    if (!ts) return "";
-    const d = ts.toDate();
+    if (ts == null) return "";
+    const d = new Date(ts);
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
     if (isToday) return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });

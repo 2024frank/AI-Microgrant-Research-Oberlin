@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { ensureMysqlSchema, getMysqlPool, json } from "@/lib/mysql";
+import { upsertSourceConfigRecord } from "@/lib/sourceConfigsDb";
 import type { SourceConfig } from "@/lib/sourceConfig";
 
 export const dynamic = "force-dynamic";
@@ -59,26 +60,34 @@ export async function POST(req: NextRequest) {
     sc.sourceCode = sourceCode;
   }
 
-  // Save to Firestore
-  await adminDb.collection("sourceConfigs").doc(sc.id).set({
+  const now = Date.now();
+  await upsertSourceConfigRecord({
     ...sc,
     enabled: true,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  });
+    createdAt: sc.createdAt ?? now,
+    updatedAt: now,
+  } as SourceConfig & Record<string, unknown>);
 
-  // Register in sources collection
-  await adminDb.collection("sources").doc(sc.id).set({
+  const sourceRow = {
     id: sc.id,
     name: sc.name,
-    description: sc.description,
+    description: sc.description ?? "",
     type: sc.type,
+    baseUrl: sc.url ?? "",
     schedule: sc.schedule ?? "off",
     scheduleHour: sc.scheduleHour ?? 6,
-    lastRun: null,
-    nextRun: null,
-    createdAt: Date.now(),
-  }, { merge: true });
+    lastRun: null as number | null,
+    nextRun: null as number | null,
+    createdAt: now,
+    enabled: true,
+  };
+
+  await ensureMysqlSchema();
+  await getMysqlPool().execute(
+    `INSERT INTO sources (id, data) VALUES (?, CAST(? AS JSON))
+     ON DUPLICATE KEY UPDATE data = VALUES(data)`,
+    [sc.id, json(sourceRow)]
+  );
 
   const githubResults: { config?: { committed: boolean; url?: string; error?: string }; code?: { committed: boolean; url?: string; error?: string } } = {};
 

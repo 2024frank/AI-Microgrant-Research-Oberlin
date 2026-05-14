@@ -46,7 +46,7 @@ export async function runPipeline(jobId: string, sourceId: string): Promise<void
     // Step 1: Fetch all Localist events
     const rawEvents = await fetchLocalistEvents(180);
 
-    // Step 2: Bulk-check which event IDs are already processed — one Firestore call
+    // Step 2: Bulk-check which event IDs are already processed — one DB query
     const allIds = rawEvents.map((e) => String(e.id));
     const processedSet = await bulkCheckProcessed(allIds);
 

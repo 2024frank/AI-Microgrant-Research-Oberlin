@@ -5,7 +5,8 @@ export type SourceSchedule = "off" | "2h" | "6h" | "12h" | "daily" | "weekly" | 
 export type Source = {
   id: string;
   name: string;
-  type: "localist";
+  description?: string;
+  type: "localist" | "rest_api" | "ical" | "rss" | "custom_code";
   baseUrl: string;
   schedule: SourceSchedule;
   scheduleHour?: number; // 0-23, for daily: run at this hour (UTC)
@@ -15,8 +16,6 @@ export type Source = {
   enabled: boolean;
   createdAt?: number;
 };
-
-const COLLECTION = "sources";
 
 const SCHEDULE_INTERVALS: Record<SourceSchedule, number> = {
   off: 0,

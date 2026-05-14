@@ -15,6 +15,9 @@ async function clearCollection(name: string) {
     sourceBuilderSessions: "source_builder_sessions",
     appUsers: "app_users",
     accessRequests: "access_requests",
+    teamChatMessages: "team_chat_messages",
+    sourceConfigs: "source_configs",
+    sourceBuilderUiChats: "source_builder_ui_chats",
   };
   const table = tableMap[name];
   if (!table) return 0;
@@ -24,7 +27,7 @@ async function clearCollection(name: string) {
 
 export async function POST() {
   try {
-    const [posts, dupes, processed, jobs, feedback, learning, builder, appUsers, accessReq] = await Promise.all([
+    const [posts, dupes, processed, jobs, feedback, learning, builder, appUsers, accessReq, teamChat, sourceCfgs, uiChats] = await Promise.all([
       clearCollection("reviewPosts"),
       clearCollection("duplicateGroups"),
       clearCollection("processedEventIds"),
@@ -34,6 +37,9 @@ export async function POST() {
       clearCollection("sourceBuilderSessions"),
       clearCollection("appUsers"),
       clearCollection("accessRequests"),
+      clearCollection("teamChatMessages"),
+      clearCollection("sourceConfigs"),
+      clearCollection("sourceBuilderUiChats"),
     ]);
 
     return NextResponse.json({
@@ -48,6 +54,9 @@ export async function POST() {
         sourceBuilderSessions: builder,
         appUsers,
         accessRequests: accessReq,
+        teamChatMessages: teamChat,
+        sourceConfigs: sourceCfgs,
+        sourceBuilderUiChats: uiChats,
       },
     });
   } catch (err) {
