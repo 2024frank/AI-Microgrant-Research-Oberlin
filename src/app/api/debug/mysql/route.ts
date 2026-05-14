@@ -58,14 +58,29 @@ export async function GET(req: NextRequest) {
 
     const first = rows[0];
 
-    return NextResponse.json({
+    const payload: Record<string, unknown> = {
       ok: first?.ok === 1,
       configured: true,
       host: env.host,
       port: Number(env.port),
       database: first?.database_name ?? null,
       version: first?.version ?? null,
-    });
+    };
+
+    if (req.nextUrl.searchParams.get("stats") === "1") {
+      const [processedRows] = await connection.execute<mysql.RowDataPacket[]>(
+        "SELECT COUNT(*) AS c FROM processed_event_ids"
+      );
+      const [postRows] = await connection.execute<mysql.RowDataPacket[]>(
+        "SELECT COUNT(*) AS c FROM review_posts"
+      );
+      payload.stats = {
+        processedEventIds: Number(processedRows[0]?.c ?? 0),
+        reviewPosts: Number(postRows[0]?.c ?? 0),
+      };
+    }
+
+    return NextResponse.json(payload);
   } catch (err) {
     return NextResponse.json(
       {

@@ -320,7 +320,9 @@ export default function SourcesPage() {
                   <span className="text-teal-400">Queued: {currentJob.totalQueued}</span>
                   <span className="text-red-400">Rejected: {currentJob.totalRejected}</span>
                   <span className="text-amber-400">Duplicates: {currentJob.totalDuplicates}</span>
-                  <span className="text-[var(--muted)]">Skipped: {currentJob.totalSkipped}</span>
+                  <span className="text-[var(--muted)]" title="Events whose Localist id already exists in MySQL processed_event_ids (not Firestore).">
+                    Skipped: {currentJob.totalSkipped}
+                  </span>
                 </div>
               )}
             </div>
@@ -337,7 +339,9 @@ export default function SourcesPage() {
                   <span className="text-teal-400">{currentJob.totalQueued} queued</span>
                   <span className="text-red-400">{currentJob.totalRejected} auto-rejected</span>
                   <span className="text-amber-400">{currentJob.totalDuplicates} duplicates</span>
-                  <span>{currentJob.totalSkipped} skipped (already ingested)</span>
+                  <span title="MySQL processed_event_ids — clear via Admin reset or scripts/clear_mysql_all.mjs to re-run those events.">
+                    {currentJob.totalSkipped} skipped (already in DB)
+                  </span>
                 </div>
               </div>
             </div>

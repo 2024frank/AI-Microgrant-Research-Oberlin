@@ -132,6 +132,7 @@ export async function isEventProcessed(localistEventId: string): Promise<boolean
   return Boolean(rows[0]);
 }
 
+/** Returns Localist event ids already recorded in MySQL `processed_event_ids` (dedupe / idempotency). Not Firestore. */
 export async function bulkCheckProcessed(ids: string[]): Promise<Set<string>> {
   if (ids.length === 0) return new Set();
   await ensureMysqlSchema();
@@ -151,6 +152,7 @@ export async function bulkCheckProcessed(ids: string[]): Promise<Set<string>> {
   return processed;
 }
 
+/** Persist Localist event id to MySQL `processed_event_ids` after a successful pipeline outcome for that event. */
 export async function markEventProcessed(localistEventId: string): Promise<void> {
   await ensureMysqlSchema();
   await getMysqlPool().execute(
