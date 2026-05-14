@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LocalistEvent } from "./localist";
-import type { ReviewPost } from "./postTypes";
+import {
+  type ReviewPost,
+  COMMUNITY_HUB_POST_TYPE_IDS_FOR_CLASSIFIER,
+  COMMUNITY_HUB_POST_TYPES,
+} from "./postTypes";
 
 const MODEL = "gemini-2.5-flash";
 const ADMIN_EMAIL = "fkusiapp@oberlin.edu";
@@ -98,34 +102,42 @@ export type CorrectionResult = EditorResult & {
   notes: string;
 };
 
-const EXTRACTION_PROMPT = `You are an extraction agent for a civic calendar admin tool. Given this raw event from Oberlin College's Localist calendar, normalize it into a structured Community Hub post.
+const ALLOWED_POST_TYPE_IDS = new Set<number>([...COMMUNITY_HUB_POST_TYPE_IDS_FOR_CLASSIFIER]);
 
-POST TYPE IDs — choose the most fitting (you may select multiple, return as array):
-0=City Government
-1=Ecolympics or Environmental
-2=Exhibit
-3=Fair, Festival, or Public Celebration
-4=Film
-5=Music Performance
-6=Networking Event
-7=Participatory Sport or Game
-8=Presentation or Lecture
-9=Spectator Sport
-10=Theatre or Dance
-11=Tour, Walking Tours or Open House
-12=Volunteer Opportunity
-13=Workshop or Class
-14=Other
+function sanitizePostTypeIds(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [89];
+  const nums = raw
+    .map((x) => Number(x))
+    .filter((n) => Number.isFinite(n) && ALLOWED_POST_TYPE_IDS.has(n));
+  const dedup = [...new Set(nums)].sort((a, b) => a - b);
+  return dedup.length > 0 ? dedup : [89];
+}
 
-LOCATION TYPES:
-"ph2" = physical location only (address provided, no online link)
-"on" = online only (zoom/stream link, no physical address)
-"bo" = both physical and online (hybrid)
-"ne" = neither (announcement with no venue)
+function communityHubPostTypePromptBlock(): string {
+  return COMMUNITY_HUB_POST_TYPE_IDS_FOR_CLASSIFIER.map(
+    (id) => `${id}=${COMMUNITY_HUB_POST_TYPES[id]}`
+  ).join("\n");
+}
 
-EVENT TYPE:
-"ot" = a time-bound event with a specific start time
-"an" = an announcement or news item (use same startTime and endTime)
+const EXTRACTION_PROMPT_TEMPLATE = `You are an extraction agent for a civic calendar admin tool. Given this raw event from Oberlin College's Localist calendar, normalize it into fields that match Oberlin Community Hub calendar **submit** payloads (see project docs/COMMUNITY_HUB_API_PAYLOAD.md — same rules you must follow here).
+
+Submit endpoint (for context): POST https://oberlin.communityhub.cloud/api/legacy/calendar/post/submit
+
+COMMUNITY HUB postTypeId — use ONLY these integers (pick every ID that clearly applies; at least one):
+{POST_TYPE_BLOCK}
+
+LOCATION TYPES (must match Hub):
+"ph2" = physical only → set "location" from venue/address when known; omit urlLink unless hybrid.
+"on" = online only → set "urlLink" to meeting/stream URL when known; omit physical location.
+"bo" = hybrid → both "location" and "urlLink" when both are known.
+"ne" = neither → no venue and no meeting link (typical for broad announcements).
+
+DISPLAY (prefer "all" with screensIds [] unless the raw data implies school-only):
+"all" | "ps" | "sps" | "ss" — use "ss" only if you have explicit screen IDs (otherwise never use "ss").
+
+EVENT TYPE for this JSON output:
+"ot" = time-bound event with a specific start time
+"an" = announcement (use same startTime and endTime for the single session)
 
 RULES:
 - isAthletic=true if event_types or title include athletic/varsity/sport/fitness keywords
@@ -134,6 +146,7 @@ RULES:
 - if endTime is null, set endTime = startTime + 7200 (2 hours)
 - calendarSourceName is always "Oberlin College Calendar"
 - calendarSourceUrl is always the event URL from the data
+- image_cdn_url: set to photo_url or equivalent CDN image URL when the raw event has one (Hub accepts third-party image URLs)
 - confidence: 0.0-1.0 score reflecting how certain you are about the classification
 - title: use the event title as-is (do not rewrite it)
 - Do not invent sponsors, times, locations, or links that are not clearly supported by the raw event text or structured fields.
@@ -244,7 +257,7 @@ export async function runExtractionAgent(
   const client = getClient();
   const model = client.getGenerativeModel({ model: MODEL });
 
-  const prompt = EXTRACTION_PROMPT.replace(
+  const prompt = EXTRACTION_PROMPT_TEMPLATE.replace("{POST_TYPE_BLOCK}", communityHubPostTypePromptBlock()).replace(
     "{EVENT_JSON}",
     JSON.stringify(event, null, 2)
   );
@@ -263,6 +276,7 @@ export async function runExtractionAgent(
 
   try {
     const parsed = parseJson<ExtractionResult>(text);
+    parsed.postTypeId = sanitizePostTypeIds(parsed.postTypeId);
     parsed.calendarSourceName = "Oberlin College Calendar";
     parsed.calendarSourceUrl =
       event.url || `https://calendar.oberlin.edu/event/${event.id}`;
@@ -271,7 +285,7 @@ export async function runExtractionAgent(
     return {
       eventType: "ot",
       title: event.title,
-      postTypeId: [14],
+      postTypeId: [89],
       isAthletic: false,
       sponsors: ["Oberlin College"],
       locationType: event.address ? "ph2" : "ne",
