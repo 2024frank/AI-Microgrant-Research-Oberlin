@@ -34,13 +34,13 @@ COMMUNITY_HUB_ENDPOINTS = {
 }
 
 EVENT_TYPE_TO_POST_TYPE = {
-  "arts": 1,
-  "music": 1,
-  "lectures": 2,
-  "lecture": 2,
-  "academic": 2,
-  "workshop": 3,
-  "community": 4,
+  "arts": 2,
+  "music": 8,
+  "lectures": 6,
+  "lecture": 6,
+  "academic": 6,
+  "workshop": 7,
+  "community": 3,
 }
 
 
@@ -87,8 +87,8 @@ def map_post_type_ids(event_type_names: list[str]) -> tuple[list[int], list[str]
   deduped = sorted(set(mapped))
   if not deduped:
     # Safe fallback with explicit review flag.
-    deduped = [1]
-    review_flags.append("No confident postTypeId mapping; defaulted to [1].")
+    deduped = [89]
+    review_flags.append("No confident postTypeId mapping; defaulted to [89].")
   return deduped, review_flags
 
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ensureMysqlSchema, getMysqlPool } from "@/lib/mysql";
+import { ensureDefaultSources } from "@/lib/sources";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ async function clearCollection(name: string) {
     postFeedback: "post_feedback",
     aiLearningEvents: "ai_learning_events",
     sourceBuilderSessions: "source_builder_sessions",
+    sources: "sources",
     appUsers: "app_users",
     accessRequests: "access_requests",
     teamChatMessages: "team_chat_messages",
@@ -27,7 +29,21 @@ async function clearCollection(name: string) {
 
 export async function POST() {
   try {
-    const [posts, dupes, processed, jobs, feedback, learning, builder, appUsers, accessReq, teamChat, sourceCfgs, uiChats] = await Promise.all([
+    const [
+      posts,
+      dupes,
+      processed,
+      jobs,
+      feedback,
+      learning,
+      builder,
+      sourcesCleared,
+      appUsers,
+      accessReq,
+      teamChat,
+      sourceCfgs,
+      uiChats,
+    ] = await Promise.all([
       clearCollection("reviewPosts"),
       clearCollection("duplicateGroups"),
       clearCollection("processedEventIds"),
@@ -35,12 +51,15 @@ export async function POST() {
       clearCollection("postFeedback"),
       clearCollection("aiLearningEvents"),
       clearCollection("sourceBuilderSessions"),
+      clearCollection("sources"),
       clearCollection("appUsers"),
       clearCollection("accessRequests"),
       clearCollection("teamChatMessages"),
       clearCollection("sourceConfigs"),
       clearCollection("sourceBuilderUiChats"),
     ]);
+
+    await ensureDefaultSources();
 
     return NextResponse.json({
       success: true,
@@ -52,12 +71,14 @@ export async function POST() {
         feedback,
         learning,
         sourceBuilderSessions: builder,
+        sources: sourcesCleared,
         appUsers,
         accessRequests: accessReq,
         teamChatMessages: teamChat,
         sourceConfigs: sourceCfgs,
         sourceBuilderUiChats: uiChats,
       },
+      reseeded: { defaultLocalistSource: "localist-oberlin" },
     });
   } catch (err) {
     return NextResponse.json(

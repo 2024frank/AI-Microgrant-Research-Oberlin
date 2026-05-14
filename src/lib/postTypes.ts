@@ -10,22 +10,27 @@ export type ReviewStatus =
   | "published"
   | "duplicate";
 
+/** Official Oberlin Community Hub `postTypeId` values (closed set for classifiers). */
+export const COMMUNITY_HUB_POST_TYPE_IDS_FOR_CLASSIFIER = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 59, 89,
+] as const;
+
 export const COMMUNITY_HUB_POST_TYPES: Record<number, string> = {
-  0: "City Government",
-  1: "Ecolympics or Environmental",
+  1: "Volunteer Opportunity",
   2: "Exhibit",
   3: "Fair, Festival, or Public Celebration",
-  4: "Film",
-  5: "Music Performance",
-  6: "Networking Event",
-  7: "Participatory Sport or Game",
-  8: "Presentation or Lecture",
-  9: "Spectator Sport",
-  10: "Theatre or Dance",
-  11: "Tour, Walking Tours or Open House",
-  12: "Volunteer Opportunity",
-  13: "Workshop or Class",
-  14: "Other",
+  4: "Tour, Walking Tours or Open House",
+  5: "Film",
+  6: "Presentation or Lecture",
+  7: "Workshop or Class",
+  8: "Music Performance",
+  9: "Theatre or Dance",
+  10: "City Government",
+  11: "Spectator Sport",
+  12: "Participatory Sport or Game",
+  13: "Networking Event",
+  59: "Ecolympics or Environmental",
+  89: "Other",
 };
 
 export function getCommunityHubPostTypeLabel(ids: number[]): string {

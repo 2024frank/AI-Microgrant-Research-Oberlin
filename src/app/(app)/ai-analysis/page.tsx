@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Brain, ThumbsUp, ThumbsDown, AlertCircle, TrendingUp, Loader2, Bot, Sparkles, Search, PenLine } from "lucide-react";
-import { COMMUNITY_HUB_POST_TYPES } from "@/lib/postTypes";
+import { COMMUNITY_HUB_POST_TYPES, COMMUNITY_HUB_POST_TYPE_IDS_FOR_CLASSIFIER } from "@/lib/postTypes";
 import type { ReviewPost } from "@/lib/postTypes";
 import type { PipelineJob } from "@/lib/pipelineJobs";
 
@@ -47,9 +47,13 @@ export default function AiAnalysisPage() {
   const avgConfidence = posts.length > 0
     ? Math.round((posts.reduce((s, p) => s + (Number(p.aiConfidence) || 0), 0) / posts.length) * 100) : 0;
 
-  const typeCounts = Object.entries(COMMUNITY_HUB_POST_TYPES)
-    .map(([id, label]) => ({ label, count: posts.filter((p) => p.postTypeId?.includes(Number(id))).length }))
-    .filter((t) => t.count > 0).sort((a, b) => b.count - a.count);
+  const typeCounts = [...COMMUNITY_HUB_POST_TYPE_IDS_FOR_CLASSIFIER]
+    .map((id) => ({
+      label: COMMUNITY_HUB_POST_TYPES[id] ?? `Type ${id}`,
+      count: posts.filter((p) => p.postTypeId?.includes(id)).length,
+    }))
+    .filter((t) => t.count > 0)
+    .sort((a, b) => b.count - a.count);
   const maxType = typeCounts[0]?.count ?? 1;
 
   const sponsorCounts: Record<string, number> = {};
@@ -73,7 +77,7 @@ export default function AiAnalysisPage() {
       bgColor: "bg-violet-900/20 border-violet-800/30",
       barColor: "bg-violet-500",
       tasks: totalAiProcessed,
-      description: "Classifies events, detects athletics, extracts location & sessions, assigns post type IDs",
+      description: "Classifies events, detects athletics, extracts location & sessions; assigns postTypeId from the closed Community Hub ID set",
       metrics: [
         { label: "Events classified", value: totalAiProcessed },
         { label: "Athletics auto-rejected", value: totalAutoRejected },
