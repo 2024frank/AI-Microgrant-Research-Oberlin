@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { useParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import { ExternalLink, Check, X } from 'lucide-react';
@@ -24,9 +25,10 @@ const GEO_SCOPES = ['hyper_local', 'city_wide', 'county', 'regional'];
 const GEO_LABELS: Record<string, string> = { hyper_local: 'Hyper-local', city_wide: 'City-wide', county: 'County', regional: 'Regional' };
 
 export default function ReviewEventPage() {
+  const { user, token: authToken, ready } = useAuth();
   const { id }  = useParams();
   const router  = useRouter();
-  const token   = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+  
   const startMs = Date.now();
 
   const [event, setEvent]           = useState<any>(null);
@@ -38,7 +40,7 @@ export default function ReviewEventPage() {
   const [toast, setToast]           = useState('');
 
   useEffect(() => {
-    fetch(`/api/review/events/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/review/events/${id}`, { headers: { Authorization: `Bearer ${authToken}` } })
       .then(r => r.json()).then(setEvent);
   }, [id]);
 
@@ -57,7 +59,7 @@ export default function ReviewEventPage() {
     const time_spent_sec = Math.round((Date.now() - startMs) / 1000);
     const res = await fetch(`/api/review/events/${id}/action`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
       body: JSON.stringify({ action: 'approve', edits, time_spent_sec }),
     });
     if (res.ok) { setToast('✓ Approved and submitted to CommunityHub'); setTimeout(() => router.push('/reviewer/queue'), 1200); }
@@ -70,7 +72,7 @@ export default function ReviewEventPage() {
     const time_spent_sec = Math.round((Date.now() - startMs) / 1000);
     await fetch(`/api/review/events/${id}/action`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
       body: JSON.stringify({ action: 'reject', edits: { reason_codes: reasons, reviewer_note: note }, time_spent_sec }),
     });
     setToast('Event rejected'); setTimeout(() => router.push('/reviewer/queue'), 1000);
@@ -78,7 +80,7 @@ export default function ReviewEventPage() {
 
   if (!event) return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar role="reviewer" name="Reviewer" />
+      <Sidebar role={user?.role || 'reviewer'} name={user?.name || ''} email={user?.email} />
       <main style={{ flex: 1, padding: '2rem', color: '#888', fontSize: 14 }}>Loading…</main>
     </div>
   );
@@ -88,7 +90,7 @@ export default function ReviewEventPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      <Sidebar role="reviewer" name="Reviewer" />
+      <Sidebar role={user?.role || 'reviewer'} name={user?.name || ''} email={user?.email} />
 
       <main style={{ flex: 1, padding: '2rem', maxWidth: 780 }}>
         {/* Toast */}

@@ -1,4 +1,5 @@
 'use client';
+import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState, useRef } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import { Plus, Play, ToggleLeft, ToggleRight, CheckCircle, XCircle, Loader, ExternalLink } from 'lucide-react';
@@ -21,6 +22,7 @@ interface RunStatus {
 }
 
 export default function SourcesPage() {
+  const { user, token, ready } = useAuth('admin');
   const [sources, setSources]         = useState<any[]>([]);
   const [runs, setRuns]               = useState<RunStatus[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -31,7 +33,7 @@ export default function SourcesPage() {
   const [triggering, setTriggering]   = useState<number | null>(null);
   const [activeRunId, setActiveRunId] = useState<number | null>(null);
   const pollRef                       = useRef<NodeJS.Timeout | null>(null);
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+  
 
   function load() {
     fetch('/api/sources', { headers: { Authorization: `Bearer ${token}` } })
@@ -51,7 +53,7 @@ export default function SourcesPage() {
       });
   }
 
-  useEffect(() => {
+  useEffect(() => { if (!ready || !token) return;
     load();
     loadRuns();
     return () => { if (pollRef.current) clearTimeout(pollRef.current); };
@@ -107,7 +109,7 @@ export default function SourcesPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      <Sidebar role="admin" name="Admin" />
+      <Sidebar role="admin" name={user?.name || 'Admin'} email={user?.email} />
 
       <main style={{ flex: 1, padding: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
