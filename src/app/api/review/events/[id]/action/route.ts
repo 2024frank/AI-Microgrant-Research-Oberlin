@@ -4,12 +4,15 @@ import { getAuthUser, unauthorized } from '@/lib/auth';
 
 const CH_BASE = 'https://oberlin.communityhub.cloud/api/legacy/calendar';
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const user = await getAuthUser(req);
   if (!user) return unauthorized();
 
   const { edits = {}, time_spent_sec = null, action } = await req.json();
-  const { id: eventId } = await params;
+  const { id: eventId } = await context.params;
 
   const [[event]] = await pool.query('SELECT * FROM raw_events WHERE id = ?', [eventId]) as any;
   if (!event) return Response.json({ error: 'Not found' }, { status: 404 });
@@ -81,7 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (['on','bo'].includes(merged.location_type)) payload.urlLink = merged.url_link;
 
     const chRes  = await fetch(`${CH_BASE}/post/submit`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     const chData = await chRes.json();
 

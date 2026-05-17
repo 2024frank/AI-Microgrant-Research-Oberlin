@@ -1,10 +1,9 @@
 import { NextRequest } from 'next/server';
 import pool from '@/lib/db';
 import { triggerAgentRun } from '@/lib/agentRunner';
+import { sendAgentRunSummary, sendReviewNotification } from '@/lib/email';
 
-// POST /api/agent/schedule
-// Vercel Cron hits this daily at 6am. Secured with CRON_SECRET env var.
-// Vercel sends: Authorization: Bearer <CRON_SECRET>
+// Vercel Cron hits this — Authorization: Bearer <CRON_SECRET>
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization');
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -15,15 +14,58 @@ export async function GET(req: NextRequest) {
     'SELECT id, name FROM sources WHERE active = 1'
   ) as any;
 
-  const results = [];
+  const results: { source: string; status: string; inserted: number; error?: string }[] = [];
+  let totalNew = 0;
+
   for (const source of sources) {
     try {
       const result = await triggerAgentRun(source.id);
       results.push({ source: source.name, status: 'ok', inserted: result.inserted });
+      totalNew += result.inserted;
     } catch (err: any) {
-      results.push({ source: source.name, status: 'error', error: err.message });
+      results.push({ source: source.name, status: 'error', inserted: 0, error: err.message });
     }
   }
 
-  return Response.json({ ran: results.length, results });
+  // Email admin with run summary
+  if (process.env.ADMIN_EMAIL && totalNew >= 0) {
+    sendAgentRunSummary({
+      adminEmail: process.env.ADMIN_EMAIL,
+      results,
+      totalNew,
+    }).catch(console.error);
+  }
+
+  // Email reviewers about new pending events
+  if (totalNew > 0) {
+    // Get all active reviewers and notify them
+    const [reviewers] = await pool.query(
+      `SELECT u.id, u.email, u.full_name FROM users u
+       WHERE u.active = 1 AND u.role = 'reviewer'`
+    ) as any;
+
+    for (const reviewer of reviewers) {
+      const [[{ pending }]] = await pool.query(
+        `SELECT COUNT(*) AS pending FROM raw_events re
+         LEFT JOIN reviewer_sources rs ON rs.source_id = re.source_id AND rs.reviewer_id = ?
+         WHERE re.status = 'pending'
+           AND (rs.reviewer_id IS NOT NULL OR NOT EXISTS (
+             SELECT 1 FROM reviewer_sources WHERE reviewer_id = ?
+           ))`,
+        [reviewer.id, reviewer.id]
+      ) as any;
+
+      if (pending > 0) {
+        sendReviewNotification({
+          reviewerEmail: reviewer.email,
+          reviewerName:  reviewer.full_name,
+          pendingCount:  pending,
+          sources:       results.filter(r => r.status === 'ok').map(r => ({ name: r.source, count: r.inserted })),
+          oldestDate:    null,
+        }).catch(console.error);
+      }
+    }
+  }
+
+  return Response.json({ ran: results.length, totalNew, results });
 }

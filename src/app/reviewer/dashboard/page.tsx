@@ -1,0 +1,134 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Sidebar from '@/components/layout/Sidebar';
+import { ClipboardList, CheckCircle, XCircle, Clock, AlertCircle, ArrowRight } from 'lucide-react';
+
+export default function ReviewerDashboardPage() {
+  const [data, setData]     = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router  = useRouter();
+  const token   = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+
+  useEffect(() => {
+    fetch('/api/reviewer/dashboard', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(setData).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar role="reviewer" name="…" />
+      <main style={{ flex: 1, padding: '2rem', color: '#888' }}>Loading…</main>
+    </div>
+  );
+
+  const stats   = data?.personal_stats || {};
+  const sources = data?.assigned_sources || [];
+  const recent  = data?.recent_activity || [];
+  const oldest  = data?.oldest_pending;
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+      <Sidebar role="reviewer" name={stats.full_name || 'Reviewer'} />
+
+      <main style={{ flex: 1, padding: '2rem', maxWidth: 860 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: '0.25rem' }}>Your dashboard</h1>
+        <p style={{ fontSize: 13, color: '#888', marginBottom: '1.5rem' }}>Actionable items only</p>
+
+        {/* Urgent CTA — shown when there's a queue */}
+        {data?.pending > 0 && (
+          <div onClick={() => router.push('/reviewer/queue')}
+            style={{ background: '#3a8c3f', borderRadius: 10, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'opacity 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: '0.5rem', display: 'flex' }}>
+                <ClipboardList size={22} color="white"/>
+              </div>
+              <div>
+                <div style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>
+                  {data.pending} event{data.pending !== 1 ? 's' : ''} waiting for review
+                </div>
+                {oldest && (
+                  <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 2 }}>
+                    Oldest from {new Date(oldest.created_at).toLocaleDateString()} · {oldest.source_name}
+                  </div>
+                )}
+              </div>
+            </div>
+            <ArrowRight size={20} color="white"/>
+          </div>
+        )}
+
+        {data?.pending === 0 && (
+          <div style={{ background: '#e8f5e9', borderRadius: 10, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <CheckCircle size={22} color="#3a8c3f"/>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#2a6b2e' }}>Queue is clear — all events reviewed!</div>
+          </div>
+        )}
+
+        {/* Personal stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+          <StatCard label="Today approved" value={stats.approved_today || 0} color="#e8f5e9" textColor="#2a6b2e" icon={<CheckCircle size={16} color="#3a8c3f"/>}/>
+          <StatCard label="Today rejected" value={stats.rejected_today || 0} color="#fdecea" textColor="#c0392b" icon={<XCircle size={16} color="#c0392b"/>}/>
+          <StatCard label="Total reviewed" value={stats.total_reviewed || 0} color="#f8f9fa" textColor="#333" icon={<ClipboardList size={16} color="#666"/>}/>
+          <StatCard label="Avg time (sec)" value={stats.avg_time_sec || '—'} color="#f8f9fa" textColor="#333" icon={<Clock size={16} color="#666"/>}/>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          {/* Sources breakdown */}
+          <div className="card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem' }}>Your sources</h3>
+            {sources.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#aaa' }}>All sources assigned</p>
+            ) : (
+              sources.map((s: any) => (
+                <div key={s.id} onClick={() => router.push(`/reviewer/queue?source_id=${s.id}`)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0', borderBottom: '1px solid #f0f0f0', cursor: 'pointer' }}>
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>{s.name}</span>
+                  {s.pending_count > 0 ? (
+                    <span style={{ background: '#3a8c3f', color: 'white', borderRadius: 20, padding: '1px 8px', fontSize: 11, fontWeight: 700 }}>{s.pending_count}</span>
+                  ) : (
+                    <span style={{ background: '#f0f0f0', color: '#aaa', borderRadius: 20, padding: '1px 8px', fontSize: 11 }}>0</span>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Recent activity */}
+          <div className="card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem' }}>Recent activity</h3>
+            {recent.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#aaa' }}>No activity yet</p>
+            ) : (
+              recent.slice(0, 8).map((r: any, i: number) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem 0', borderBottom: '1px solid #f5f5f5' }}>
+                  {r.action === 'approved'
+                    ? <CheckCircle size={14} color="#3a8c3f" style={{ flexShrink: 0 }}/>
+                    : <XCircle size={14} color="#c0392b" style={{ flexShrink: 0 }}/>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</div>
+                    <div style={{ fontSize: 11, color: '#aaa' }}>{r.source_name}</div>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#ccc', flexShrink: 0 }}>
+                    {new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function StatCard({ label, value, color, textColor, icon }: any) {
+  return (
+    <div style={{ background: color, borderRadius: 8, padding: '1rem', border: '1px solid #e8e8e8' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>{icon}<span style={{ fontSize: 11, color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</span></div>
+      <div style={{ fontSize: 26, fontWeight: 800, color: textColor }}>{value}</div>
+    </div>
+  );
+}

@@ -4,8 +4,11 @@ import { getAuthUser } from '@/lib/auth';
 
 const CH_BASE = 'https://oberlin.communityhub.cloud/api/legacy/calendar';
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
   const [[event]] = await pool.query(
     `SELECT re.*, s.name AS source_name, s.calendar_source_name
      FROM raw_events re JOIN sources s ON re.source_id = s.id WHERE re.id = ?`, [id]
@@ -14,10 +17,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return Response.json(event);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const user = await getAuthUser(req);
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  const { id } = await params;
+  const { id } = await context.params;
   const { edits = {} } = await req.json();
 
   const [[event]] = await pool.query('SELECT * FROM raw_events WHERE id = ?', [id]) as any;
@@ -25,7 +31,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!event.communityhub_post_id) return Response.json({ error: 'Not yet submitted' }, { status: 400 });
 
   const [[dbUser]] = await pool.query('SELECT id FROM users WHERE firebase_uid = ?', [user.uid]) as any;
-
   const editableFields = ['title','description','extended_description','sessions','location_type',
     'location','place_name','room_num','url_link','sponsors','post_type_ids','geo_scope',
     'contact_email','phone','website','image_cdn_url','buttons','display'];
@@ -42,13 +47,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         );
       }
     }
-
     const fieldMap: Record<string,string> = {
       title:'title', description:'description', extended_description:'extendedDescription',
       sessions:'sessions', location_type:'locationType', location:'location',
-      place_name:'placeName', room_num:'roomNum', url_link:'urlLink',
-      sponsors:'sponsors', post_type_ids:'postTypeId', contact_email:'contactEmail',
-      phone:'phone', website:'website', image_cdn_url:'image_cdn_url', buttons:'buttons', display:'display',
+      place_name:'placeName', room_num:'roomNum', url_link:'urlLink', sponsors:'sponsors',
+      post_type_ids:'postTypeId', contact_email:'contactEmail', phone:'phone',
+      website:'website', image_cdn_url:'image_cdn_url', buttons:'buttons', display:'display',
     };
     const chEdits: Record<string,any> = {};
     for (const [k,v] of Object.entries(edits)) { if (fieldMap[k]) chEdits[fieldMap[k]] = v; }
@@ -57,11 +61,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(chEdits),
     });
     const chData = await chRes.json();
-
     const setClauses = Object.keys(edits).filter(k => editableFields.includes(k)).map(k => `${k} = ?`).join(', ');
     const setVals    = Object.entries(edits).filter(([k]) => editableFields.includes(k)).map(([,v]) => typeof v==='object'?JSON.stringify(v):v);
     if (setClauses) await conn.query(`UPDATE raw_events SET ${setClauses}, status='resubmitted' WHERE id=?`, [...setVals, id]);
-
     await (conn as any).commit();
     return Response.json({ ok: true, communityhub: chData });
   } catch (err: any) {

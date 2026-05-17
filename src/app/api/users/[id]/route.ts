@@ -2,11 +2,14 @@ import { NextRequest } from 'next/server';
 import pool from '@/lib/db';
 import { getAuthUser, unauthorized, forbidden } from '@/lib/auth';
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const user = await getAuthUser(req);
   if (!user) return unauthorized();
   if (user.role !== 'admin') return forbidden();
-  const { id } = await params;
+  const { id } = await context.params;
 
   const { full_name, role, active, source_ids } = await req.json();
   const sets: string[] = [], vals: any[] = [];

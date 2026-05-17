@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ClipboardList, Database, Users, BarChart2, LogOut } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Database, Users, BarChart2, LogOut } from 'lucide-react';
 
 interface SidebarProps { role: 'admin' | 'reviewer'; name: string; }
 
@@ -14,8 +14,14 @@ export default function Sidebar({ role, name }: SidebarProps) {
       <div style={{ padding: '1.25rem 1rem 1rem', borderBottom: '1px solid #e8f5e9', display: 'flex', alignItems: 'center', gap: 10 }}>
         <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="50" cy="50" r="46" stroke="#3a8c3f" strokeWidth="5"/>
-          <path d="M50 78 C38 78 30 70 26 60 L50 18 L74 60 C70 70 62 78 50 78Z" fill="#3a8c3f"/>
-          <path d="M36 60 Q50 85 64 60" stroke="#3a8c3f" strokeWidth="3" fill="none" strokeLinecap="round"/>
+          <path d="M22 68 Q20 56 30 52 L42 47 Q48 45 50 52 L52 60" stroke="#3a8c3f" strokeWidth="4" fill="none" strokeLinecap="round"/>
+          <path d="M78 68 Q80 56 70 52 L58 47 Q52 45 50 52" stroke="#3a8c3f" strokeWidth="4" fill="none" strokeLinecap="round"/>
+          <rect x="40" y="28" width="8" height="24" rx="1" fill="#3a8c3f"/>
+          <rect x="48" y="22" width="8" height="30" rx="1" fill="#3a8c3f"/>
+          <rect x="56" y="32" width="8" height="20" rx="1" fill="#3a8c3f"/>
+          <rect x="32" y="36" width="8" height="16" rx="1" fill="#3a8c3f" opacity="0.6"/>
+          <rect x="64" y="38" width="8" height="14" rx="1" fill="#3a8c3f" opacity="0.6"/>
+          <rect x="24" y="52" width="52" height="3" rx="1.5" fill="#3a8c3f" opacity="0.3"/>
         </svg>
         <div>
           <div style={{ fontSize: 11, fontWeight: 800, color: '#3a8c3f', letterSpacing: 1 }}>AI CALENDAR</div>
@@ -32,7 +38,10 @@ export default function Sidebar({ role, name }: SidebarProps) {
             <div style={{ borderTop: '1px solid #eee', margin: '0.5rem 0' }}/>
           </>
         )}
-        <SideLink href="/reviewer/queue" icon={<ClipboardList size={15}/>} label="Review queue" active={isActive('/reviewer')} />
+        {role === 'reviewer' && (
+          <SideLink href="/reviewer/dashboard" icon={<LayoutDashboard size={15}/>} label="Dashboard" active={isActive('/reviewer/dashboard')} />
+        )}
+        <SideLink href="/reviewer/queue" icon={<ClipboardList size={15}/>} label="Review queue" active={isActive('/reviewer/queue')} />
       </nav>
 
       <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -43,7 +52,12 @@ export default function Sidebar({ role, name }: SidebarProps) {
           <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
           <div style={{ fontSize: 10, color: '#888', textTransform: 'capitalize' }}>{role}</div>
         </div>
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', padding: 0 }}><LogOut size={13}/></button>
+        <button
+          onClick={() => { localStorage.removeItem('token'); window.location.href = '/login'; }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', padding: 0 }}
+          title="Sign out">
+          <LogOut size={13}/>
+        </button>
       </div>
     </aside>
   );

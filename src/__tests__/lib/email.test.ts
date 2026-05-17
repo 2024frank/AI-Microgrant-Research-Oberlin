@@ -1,0 +1,88 @@
+// Test email templates render correct content
+// Mock Resend so no real emails are sent
+
+const mockSend = jest.fn().mockResolvedValue({ id: 'mock-email-id' });
+
+jest.mock('resend', () => ({
+  Resend: jest.fn().mockImplementation(() => ({
+    emails: { send: mockSend },
+  })),
+}));
+
+beforeEach(() => {
+  mockSend.mockClear();
+  process.env.RESEND_API_KEY      = 'test-key';
+  process.env.NEXT_PUBLIC_APP_URL = 'https://test.oberlin.edu';
+  jest.resetModules(); // fresh import each test so env vars are picked up
+});
+
+describe('Email templates', () => {
+  it('sendReviewNotification sends to correct recipient with count in subject', async () => {
+    const { sendReviewNotification } = require('@/lib/email');
+    await sendReviewNotification({
+      reviewerEmail: 'rev@oberlin.edu',
+      reviewerName:  'Jane Reviewer',
+      pendingCount:  7,
+      sources:       [{ name: 'Apollo Theatre', count: 4 }, { name: 'City of Oberlin', count: 3 }],
+      oldestDate:    'May 1',
+    });
+
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({
+      to:      'rev@oberlin.edu',
+      subject: expect.stringContaining('7'),
+    }));
+  });
+
+  it('review email subject uses singular for 1 event', async () => {
+    const { sendReviewNotification } = require('@/lib/email');
+    await sendReviewNotification({
+      reviewerEmail: 'r@o.edu', reviewerName: 'Jane',
+      pendingCount: 1, sources: [{ name: 'Apollo', count: 1 }], oldestDate: null,
+    });
+    const call = mockSend.mock.calls[0][0];
+    expect(call.subject).toMatch(/1 event\b/);
+    expect(call.subject).not.toMatch(/1 events/);
+  });
+
+  it('review email HTML contains key content', async () => {
+    const { sendReviewNotification } = require('@/lib/email');
+    await sendReviewNotification({
+      reviewerEmail: 'r@o.edu', reviewerName: 'Jane',
+      pendingCount: 12, sources: [{ name: 'Apollo', count: 12 }], oldestDate: null,
+    });
+    const html = mockSend.mock.calls[0][0].html;
+    expect(html).toContain('12');
+    expect(html).toContain('Jane');
+    expect(html).toContain('Apollo');
+    expect(html).toContain('/reviewer/queue');
+  });
+
+  it('sendWelcomeEmail sends to new user with correct role', async () => {
+    const { sendWelcomeEmail } = require('@/lib/email');
+    await sendWelcomeEmail({ email: 'new@oberlin.edu', name: 'New User', role: 'reviewer' });
+
+    const call = mockSend.mock.calls[0][0];
+    expect(call.to).toBe('new@oberlin.edu');
+    expect(call.subject).toContain('reviewer');
+    expect(call.html).toContain('New User');
+    expect(call.html).toContain('/login');
+  });
+
+  it('sendAgentRunSummary includes source results and error details', async () => {
+    const { sendAgentRunSummary } = require('@/lib/email');
+    await sendAgentRunSummary({
+      adminEmail: 'admin@oberlin.edu',
+      results: [
+        { source: 'Oberlin College', status: 'ok',    inserted: 8 },
+        { source: 'Apollo Theatre',  status: 'error', inserted: 0, error: 'Timeout' },
+      ],
+      totalNew: 8,
+    });
+
+    const html = mockSend.mock.calls[0][0].html;
+    expect(html).toContain('Oberlin College');
+    expect(html).toContain('Apollo Theatre');
+    expect(html).toContain('8');
+    expect(html).toContain('Timeout');
+  });
+});

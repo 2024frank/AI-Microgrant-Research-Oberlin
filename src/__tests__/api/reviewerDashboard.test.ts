@@ -1,0 +1,87 @@
+import { NextRequest } from 'next/server';
+import { GET } from '@/app/api/reviewer/dashboard/route';
+import { adminAuth } from '@/lib/firebase-admin';
+
+const db         = require('@/lib/db');
+const mockVerify = adminAuth.verifyIdToken as jest.Mock;
+
+const ADMIN    = { id: 1, email: 'admin@oberlin.edu', role: 'admin',    full_name: 'Admin', active: 1, firebase_uid: 'uid-admin' };
+const REVIEWER = { id: 2, email: 'rev@oberlin.edu',   role: 'reviewer', full_name: 'Rev',   active: 1, firebase_uid: 'uid-rev' };
+
+function makeReq() {
+  return new NextRequest('http://localhost/api/reviewer/dashboard', {
+    headers: { Authorization: 'Bearer valid' },
+  });
+}
+
+beforeEach(() => {
+  db.default.query.mockReset();
+  mockVerify.mockReset();
+});
+
+describe('GET /api/reviewer/dashboard', () => {
+  it('returns dashboard data for reviewer', async () => {
+    mockVerify.mockResolvedValue({ uid: 'uid-rev', email: 'rev@oberlin.edu' });
+    db.default.query
+      .mockResolvedValueOnce([[REVIEWER]])                                    // getAuthUser
+      .mockResolvedValueOnce([[{ pending: 5 }]])                              // pending count
+      .mockResolvedValueOnce([[{ id: 2 }]])                                   // db user lookup
+      .mockResolvedValueOnce([[{ total_reviewed: 20, total_approved: 15, total_rejected: 5, avg_time_sec: 42, approved_today: 3, rejected_today: 1 }]]) // personal stats
+      .mockResolvedValueOnce([[{ action: 'approved', title: 'Jazz Night', source_name: 'Apollo', created_at: new Date() }]]) // recent activity
+      .mockResolvedValueOnce([[{ id: 1, name: 'Apollo Theatre', slug: 'apollo', pending_count: 5 }]])  // assigned sources
+      .mockResolvedValueOnce([[{ title: 'Old Event', created_at: new Date(), source_name: 'Apollo' }]]); // oldest pending
+
+    const res  = await GET(makeReq());
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.pending).toBe(5);
+    expect(data.personal_stats.total_approved).toBe(15);
+    expect(data.recent_activity).toHaveLength(1);
+    expect(data.assigned_sources).toHaveLength(1);
+    expect(data.oldest_pending.title).toBe('Old Event');
+  });
+
+  it('returns dashboard data for admin (no source filter)', async () => {
+    mockVerify.mockResolvedValue({ uid: 'uid-admin', email: 'admin@oberlin.edu' });
+    db.default.query
+      .mockResolvedValueOnce([[ADMIN]])
+      .mockResolvedValueOnce([[{ pending: 12 }]])
+      .mockResolvedValueOnce([[{ id: 1 }]])
+      .mockResolvedValueOnce([[{ total_reviewed: 0, total_approved: 0, total_rejected: 0, avg_time_sec: null, approved_today: 0, rejected_today: 0 }]])
+      .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[null]]);
+
+    const res  = await GET(makeReq());
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.pending).toBe(12);
+    // Admin query should NOT include reviewer_sources
+    const pendingQuery = db.default.query.mock.calls[1][0];
+    expect(pendingQuery).not.toContain('reviewer_sources');
+  });
+
+  it('returns 401 without token', async () => {
+    mockVerify.mockRejectedValueOnce(new Error('invalid'));
+    const res = await GET(new NextRequest('http://localhost/api/reviewer/dashboard', {}));
+    expect(res.status).toBe(401);
+  });
+
+  it('returns zero pending when queue is empty', async () => {
+    mockVerify.mockResolvedValue({ uid: 'uid-rev', email: 'rev@oberlin.edu' });
+    db.default.query
+      .mockResolvedValueOnce([[REVIEWER]])
+      .mockResolvedValueOnce([[{ pending: 0 }]])
+      .mockResolvedValueOnce([[{ id: 2 }]])
+      .mockResolvedValueOnce([[{ total_reviewed: 10, total_approved: 10, total_rejected: 0, avg_time_sec: 30, approved_today: 0, rejected_today: 0 }]])
+      .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[undefined]]);
+
+    const data = await (await GET(makeReq())).json();
+    expect(data.pending).toBe(0);
+    expect(data.oldest_pending).toBeNull();
+  });
+});

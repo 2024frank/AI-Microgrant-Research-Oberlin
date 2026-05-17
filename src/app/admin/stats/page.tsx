@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
-import { TrendingUp, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { TrendingUp, CheckCircle, XCircle, Clock, Play, Activity, Users } from 'lucide-react';
 
 export default function AdminStatsPage() {
   const [stats, setStats]       = useState<any>(null);
@@ -9,6 +9,7 @@ export default function AdminStatsPage() {
   const [reasons, setReasons]   = useState<any[]>([]);
   const [fields, setFields]     = useState<any[]>([]);
   const [timeline, setTimeline] = useState<any[]>([]);
+  const [activity, setActivity] = useState<any>(null);
   const [days, setDays]         = useState('30');
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
 
@@ -20,11 +21,13 @@ export default function AdminStatsPage() {
       fetch(`/api/admin/stats?type=rejection-reasons&days=${days}`, { headers: h }).then(r => r.json()),
       fetch(`/api/admin/stats?type=field-edits&days=${days}`, { headers: h }).then(r => r.json()),
       fetch(`/api/admin/stats?type=timeline&days=${days}`, { headers: h }).then(r => r.json()),
-    ]).then(([s, src, r, f, t]) => { setStats(s); setSources(src); setReasons(r); setFields(f); setTimeline(t); });
+      fetch('/api/admin/activity?limit=15', { headers: h }).then(r => r.json()),
+    ]).then(([s, src, r, f, t, act]) => {
+      setStats(s); setSources(src); setReasons(r); setFields(f); setTimeline(t); setActivity(act);
+    });
   }, [days]);
 
   const maxEdits = Math.max(...fields.map(f => f.edits), 1);
-  const maxApproved = Math.max(...sources.map(s => s.total || 0), 1);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
@@ -41,18 +44,29 @@ export default function AdminStatsPage() {
           </select>
         </div>
 
+        {/* Today's stats */}
+        {activity?.today && (
+          <div style={{ background: '#e8f5e9', borderRadius: 10, padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#2a6b2e', textTransform: 'uppercase', letterSpacing: 0.5 }}>Today</span>
+            <TodayStat label="Extracted" val={activity.today.extracted_today || 0} color="#3a8c3f"/>
+            <TodayStat label="Approved"  val={activity.today.approved_today  || 0} color="#3a8c3f"/>
+            <TodayStat label="Rejected"  val={activity.today.rejected_today  || 0} color="#c0392b"/>
+            <TodayStat label="Pending"   val={activity.today.pending         || 0} color="#e67e22"/>
+          </div>
+        )}
+
         {/* Stat cards */}
         {stats && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-            <StatCard label="Extracted" value={stats.total_extracted || 0} icon={<TrendingUp size={18} color="#3a8c3f"/>} />
-            <StatCard label="Approved" value={stats.total_approved || 0} icon={<CheckCircle size={18} color="#3a8c3f"/>} color="#e8f5e9" />
-            <StatCard label="Rejected" value={stats.total_rejected || 0} icon={<XCircle size={18} color="#c0392b"/>} color="#fdecea" />
-            <StatCard label="Approval rate" value={`${stats.approval_rate || 0}%`} icon={<Clock size={18} color="#3a8c3f"/>} color="#e8f5e9" />
+            <StatCard label="Extracted"    value={stats.total_extracted || 0} icon={<TrendingUp size={18} color="#3a8c3f"/>} />
+            <StatCard label="Approved"     value={stats.total_approved  || 0} icon={<CheckCircle size={18} color="#3a8c3f"/>} color="#e8f5e9" />
+            <StatCard label="Rejected"     value={stats.total_rejected  || 0} icon={<XCircle size={18} color="#c0392b"/>}    color="#fdecea" />
+            <StatCard label="Approval rate" value={`${stats.approval_rate || 0}%`} icon={<Activity size={18} color="#3a8c3f"/>} color="#e8f5e9" />
           </div>
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-          {/* Approval rate by source */}
+          {/* Approval by source */}
           <div className="card">
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem' }}>Approval rate by source</h3>
             {sources.map(s => (
@@ -66,6 +80,7 @@ export default function AdminStatsPage() {
                 </div>
               </div>
             ))}
+            {!sources.length && <p style={{ fontSize: 12, color: '#aaa' }}>No data yet</p>}
           </div>
 
           {/* Rejection reasons */}
@@ -82,44 +97,102 @@ export default function AdminStatsPage() {
           </div>
         </div>
 
-        {/* Most-edited fields */}
-        <div className="card" style={{ marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem' }}>Most-edited fields by reviewers <span style={{ fontSize: 11, fontWeight: 400, color: '#888' }}>(extraction accuracy signal)</span></h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {fields.slice(0, 8).map((f: any) => (
-              <div key={f.field_name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 12, width: 160, color: '#444', fontFamily: 'monospace' }}>{f.field_name}</span>
-                <div style={{ flex: 1, background: '#eee', borderRadius: 4, height: 8 }}>
-                  <div style={{ background: '#e67e22', borderRadius: 4, height: 8, width: `${(f.edits / maxEdits) * 100}%`, transition: 'width 0.5s' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+          {/* Most-edited fields */}
+          <div className="card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem' }}>
+              Most-edited fields <span style={{ fontSize: 11, fontWeight: 400, color: '#888' }}>(extraction accuracy)</span>
+            </h3>
+            {fields.slice(0, 7).map((f: any) => (
+              <div key={f.field_name} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 11, width: 150, color: '#444', fontFamily: 'monospace', flexShrink: 0 }}>{f.field_name}</span>
+                <div style={{ flex: 1, background: '#eee', borderRadius: 4, height: 7 }}>
+                  <div style={{ background: '#e67e22', borderRadius: 4, height: 7, width: `${(f.edits / maxEdits) * 100}%` }} />
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#e67e22', width: 30, textAlign: 'right' }}>{f.edits}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#e67e22', width: 24, textAlign: 'right' }}>{f.edits}</span>
               </div>
             ))}
-            {!fields.length && <p style={{ fontSize: 12, color: '#aaa' }}>No edits recorded yet</p>}
+            {!fields.length && <p style={{ fontSize: 12, color: '#aaa' }}>No edits yet</p>}
+          </div>
+
+          {/* Reviewer leaderboard */}
+          <div className="card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Users size={14}/> Reviewer activity
+            </h3>
+            {(activity?.reviewer_stats || []).map((u: any, i: number) => (
+              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.5rem 0', borderBottom: '1px solid #f5f5f5' }}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: i === 0 ? '#3a8c3f' : '#e8f5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: i === 0 ? 'white' : '#3a8c3f', flexShrink: 0 }}>
+                  {u.full_name[0]}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.full_name}</div>
+                  <div style={{ fontSize: 10, color: '#aaa' }}>
+                    {u.approved || 0} approved · {u.rejected || 0} rejected
+                    {u.avg_time_sec ? ` · ${u.avg_time_sec}s avg` : ''}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#3a8c3f' }}>{u.approved_today || 0} today</div>
+              </div>
+            ))}
+            {!activity?.reviewer_stats?.length && <p style={{ fontSize: 12, color: '#aaa' }}>No reviewer activity</p>}
           </div>
         </div>
 
-        {/* Timeline */}
-        <div className="card">
-          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem' }}>Events over time</h3>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 80 }}>
-            {timeline.slice(-30).map((t: any, i: number) => {
-              const maxVal = Math.max(...timeline.map((x: any) => x.extracted), 1);
-              return (
-                <div key={i} title={`${t.date}: ${t.extracted} extracted, ${t.approved} approved`}
-                  style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center', cursor: 'default' }}>
-                  <div style={{ width: '100%', background: '#3a8c3f', borderRadius: '2px 2px 0 0', height: `${(t.approved / maxVal) * 70}px`, minHeight: t.approved > 0 ? 2 : 0 }} />
-                  <div style={{ width: '100%', background: '#c8e6c9', borderRadius: 0, height: `${((t.extracted - t.approved) / maxVal) * 70}px`, minHeight: (t.extracted - t.approved) > 0 ? 2 : 0 }} />
-                </div>
-              );
-            })}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          {/* Timeline */}
+          <div className="card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem' }}>Events over time</h3>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 70 }}>
+              {timeline.slice(-30).map((t: any, i: number) => {
+                const maxVal = Math.max(...timeline.map((x: any) => x.extracted), 1);
+                return (
+                  <div key={i} title={`${t.date}: ${t.extracted} extracted, ${t.approved} approved`}
+                    style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1, cursor: 'default' }}>
+                    <div style={{ width: '100%', background: '#3a8c3f', borderRadius: '2px 2px 0 0', height: `${(t.approved / maxVal) * 60}px`, minHeight: t.approved > 0 ? 2 : 0 }} />
+                    <div style={{ width: '100%', background: '#c8e6c9', height: `${((t.extracted - t.approved) / maxVal) * 60}px`, minHeight: (t.extracted - t.approved) > 0 ? 2 : 0 }} />
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 10, color: '#888' }}>
+              <span><span style={{ display: 'inline-block', width: 8, height: 8, background: '#3a8c3f', borderRadius: 2, marginRight: 3 }}/>Approved</span>
+              <span><span style={{ display: 'inline-block', width: 8, height: 8, background: '#c8e6c9', borderRadius: 2, marginRight: 3 }}/>Extracted</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 11, color: '#888' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, background: '#3a8c3f', display: 'inline-block', borderRadius: 2 }}/> Approved</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, background: '#c8e6c9', display: 'inline-block', borderRadius: 2 }}/> Extracted</span>
+
+          {/* Recent activity feed */}
+          <div className="card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Activity size={14}/> Live activity
+            </h3>
+            <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+              {(activity?.recent_actions || []).slice(0, 12).map((a: any, i: number) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.4rem 0', borderBottom: '1px solid #f5f5f5', fontSize: 12 }}>
+                  <span style={{ fontSize: 13 }}>{a.action === 'approved' ? '✓' : '✗'}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{a.event_title}</span>
+                    <span style={{ fontSize: 10, color: '#aaa' }}>{a.reviewer_name} · {a.source_name}</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: '#ccc', flexShrink: 0 }}>
+                    {new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+              {!activity?.recent_actions?.length && <p style={{ fontSize: 12, color: '#aaa' }}>No activity yet</p>}
+            </div>
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+function TodayStat({ label, val, color }: any) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span style={{ fontSize: 20, fontWeight: 800, color }}>{val}</span>
+      <span style={{ fontSize: 11, color: '#2a6b2e' }}>{label}</span>
     </div>
   );
 }

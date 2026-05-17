@@ -2,11 +2,14 @@ import { NextRequest } from 'next/server';
 import pool from '@/lib/db';
 import { getAuthUser, unauthorized, forbidden } from '@/lib/auth';
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const user = await getAuthUser(req);
   if (!user) return unauthorized();
   if (user.role !== 'admin') return forbidden();
-  const { id } = await params;
+  const { id } = await context.params;
 
   const body    = await req.json();
   const allowed = ['name','agent_id','schedule_cron','active'];
@@ -20,11 +23,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return Response.json(updated);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const user = await getAuthUser(req);
   if (!user) return unauthorized();
   if (user.role !== 'admin') return forbidden();
-  const { id } = await params;
+  const { id } = await context.params;
   await pool.query('UPDATE sources SET active = 0 WHERE id = ?', [id]);
   return Response.json({ ok: true });
 }
