@@ -1,10 +1,23 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { getAuth, Auth } from 'firebase-admin/auth';
 
-if (!getApps().length) {
-  initializeApp({
-    credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}')),
-  });
+let app: App;
+let adminAuthInstance: Auth;
+
+function getAdminApp(): App {
+  if (!app) {
+    if (getApps().length) {
+      app = getApps()[0];
+    } else {
+      const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+      app = initializeApp({
+        credential: cert(serviceAccount ? JSON.parse(serviceAccount) : {}),
+      });
+    }
+  }
+  return app;
 }
 
-export const adminAuth = getAuth();
+export const adminAuth = {
+  verifyIdToken: (token: string) => getAuth(getAdminApp()).verifyIdToken(token),
+};

@@ -14,11 +14,14 @@ export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
   if (!header?.startsWith('Bearer ')) return null;
   try {
     const decoded = await adminAuth.verifyIdToken(header.slice(7));
+    const email   = decoded.email?.toLowerCase();
+    if (!email) return null;
+
     const [[user]] = await pool.query(
-      'SELECT * FROM users WHERE firebase_uid = ? AND active = 1',
-      [decoded.uid]
+      'SELECT * FROM users WHERE email = ? AND active = 1', [email]
     ) as any;
     if (!user) return null;
+
     return { uid: decoded.uid, email: user.email, role: user.role, name: user.full_name };
   } catch {
     return null;

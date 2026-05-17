@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Disable static export for pages that use Firebase
+  output: undefined,
 };
 
 export default nextConfig;
