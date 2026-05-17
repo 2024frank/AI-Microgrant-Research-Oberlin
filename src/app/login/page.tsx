@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const provider = new GoogleAuthProvider();
 
@@ -17,13 +18,11 @@ export default function LoginPage() {
       const cred  = await signInWithPopup(auth, provider);
       const token = await cred.user.getIdToken();
 
-      // Check if this Google account is approved in our system
-      const res  = await fetch('/api/auth/me', {
+      const res = await fetch('/api/auth/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
-        // Not in our users table — sign them out immediately
         await signOut(auth);
         setError(`${cred.user.email} is not authorized. Contact your admin to request access.`);
         setLoading(false);
@@ -32,9 +31,10 @@ export default function LoginPage() {
 
       const user = await res.json();
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
 
-      if (user.role === 'admin')    router.push('/admin/stats');
-      else                          router.push('/reviewer/queue');
+      if (user.role === 'admin') router.push('/admin/stats');
+      else router.push('/reviewer/dashboard');
 
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
@@ -56,34 +56,24 @@ export default function LoginPage() {
         boxShadow: '0 4px 32px rgba(58,140,63,0.12)',
         border: '1px solid #e8f5e9',
       }}>
-        {/* Logo + wordmark */}
+        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" style={{ marginBottom: 12 }}>
-            <circle cx="50" cy="50" r="46" stroke="#3a8c3f" strokeWidth="5"/>
-            {/* Hands */}
-            <path d="M22 68 Q20 58 28 54 L38 50 Q44 48 46 54 L48 62" stroke="#3a8c3f" strokeWidth="4" fill="none" strokeLinecap="round"/>
-            <path d="M78 68 Q80 58 72 54 L62 50 Q56 48 54 54 L52 62" stroke="#3a8c3f" strokeWidth="4" fill="none" strokeLinecap="round"/>
-            <path d="M48 62 Q50 66 52 62" stroke="#3a8c3f" strokeWidth="3" fill="none" strokeLinecap="round"/>
-            {/* City */}
-            <rect x="38" y="30" width="8" height="22" rx="1" fill="#3a8c3f"/>
-            <rect x="46" y="24" width="8" height="28" rx="1" fill="#3a8c3f"/>
-            <rect x="54" y="34" width="8" height="18" rx="1" fill="#3a8c3f"/>
-            <rect x="30" y="38" width="8" height="14" rx="1" fill="#3a8c3f" opacity="0.7"/>
-            <rect x="62" y="40" width="8" height="12" rx="1" fill="#3a8c3f" opacity="0.7"/>
-            {/* Ground */}
-            <rect x="24" y="52" width="52" height="3" rx="1.5" fill="#3a8c3f" opacity="0.4"/>
-          </svg>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#3a8c3f', letterSpacing: 0.5, marginBottom: 2 }}>
-            AI CALENDAR
+          <Image
+            src="/logo.png"
+            alt="AI Calendar Logo"
+            width={72}
+            height={72}
+            style={{ marginBottom: 12 }}
+          />
+          <div style={{ fontSize: 18, fontWeight: 800, color: '#3a8c3f', letterSpacing: 0.5, marginBottom: 2 }}>
+            AI CALENDAR AGGREGATOR
           </div>
           <div style={{ fontSize: 12, color: '#999' }}>Oberlin Environmental Dashboard</div>
         </div>
 
-        <h1 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, textAlign: 'center' }}>
-          Sign in
-        </h1>
+        <h1 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, textAlign: 'center' }}>Sign in</h1>
         <p style={{ fontSize: 13, color: '#888', textAlign: 'center', marginBottom: '1.75rem', lineHeight: 1.5 }}>
-          Access is restricted to approved users.<br/>Sign in with your Google account.
+          Access is restricted to approved users.
         </p>
 
         {error && (
@@ -105,13 +95,12 @@ export default function LoginPage() {
             background: 'white', cursor: loading ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             fontSize: 14, fontWeight: 600, color: '#333',
-            transition: 'border-color 0.15s, box-shadow 0.15s',
+            transition: 'border-color 0.15s',
             opacity: loading ? 0.7 : 1,
           }}
           onMouseEnter={e => { if (!loading) e.currentTarget.style.borderColor = '#3a8c3f'; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = '#ddd'; }}
         >
-          {/* Google icon */}
           <svg width="18" height="18" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.8 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8.9 20-20 0-1.2-.1-2.3-.4-3.5z"/>
             <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19.1 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.8 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
@@ -121,7 +110,7 @@ export default function LoginPage() {
           {loading ? 'Signing in…' : 'Continue with Google'}
         </button>
 
-        <p style={{ fontSize: 11, color: '#bbb', textAlign: 'center', marginTop: '1.5rem', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 11, color: '#bbb', textAlign: 'center', marginTop: '1.5rem' }}>
           Don't have access? Contact your administrator.
         </p>
       </div>
