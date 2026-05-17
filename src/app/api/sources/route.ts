@@ -10,10 +10,11 @@ export async function GET(req: NextRequest) {
 
   const [rows] = await pool.query(
     `SELECT s.*,
-       (SELECT COUNT(*) FROM raw_events WHERE source_id = s.id)                    AS total_events,
-       (SELECT SUM(status='approved') FROM raw_events WHERE source_id = s.id)      AS total_approved,
-       (SELECT MAX(finished_at) FROM agent_runs WHERE source_id = s.id)            AS last_run_at,
-       (SELECT status FROM agent_runs WHERE source_id = s.id ORDER BY started_at DESC LIMIT 1) AS last_run_status
+       (SELECT COUNT(*) FROM raw_events WHERE source_id = s.id)               AS total_events,
+       (SELECT SUM(status='approved') FROM raw_events WHERE source_id = s.id) AS total_approved,
+       (SELECT MAX(finished_at) FROM agent_runs WHERE source_id = s.id)       AS last_run_at,
+       (SELECT status FROM agent_runs WHERE source_id = s.id
+        ORDER BY started_at DESC LIMIT 1)                                      AS last_run_status
      FROM sources s ORDER BY s.name ASC`
   ) as any;
 
@@ -21,46 +22,58 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/sources
-// Body: { name, agent_id }  — that's it. Everything else comes from shared env vars.
+// Fields:
+//   name         — org display name (e.g. "Apollo Theatre")
+//   agent_id     — unique Claude agent ID from Anthropic console
+//   schedule_cron — how often to fetch (default: daily 6am)
+//
+// Environment, vault, API key are all shared via env vars.
+// Agent already has its internal instructions — trigger just kicks it off.
+// First fetch fires immediately in background after creation.
 export async function POST(req: NextRequest) {
   const user = await getAuthUser(req);
   if (!user) return unauthorized();
   if (user.role !== 'admin') return forbidden();
 
-  const { name, agent_id } = await req.json();
+  const {
+    name,
+    agent_id,
+    schedule_cron = '0 6 * * *',
+  } = await req.json();
 
-  if (!name || !agent_id) {
-    return Response.json({ error: 'name and agent_id are required' }, { status: 400 });
+  if (!name?.trim())     return Response.json({ error: 'name is required' },     { status: 400 });
+  if (!agent_id?.trim()) return Response.json({ error: 'agent_id is required' }, { status: 400 });
+
+  // agent_id is the unique identifier — enforce uniqueness
+  const [[agentExists]] = await pool.query(
+    'SELECT id FROM sources WHERE agent_id = ?', [agent_id.trim()]
+  ) as any;
+  if (agentExists) {
+    return Response.json(
+      { error: 'This agent ID is already assigned to another source' },
+      { status: 409 }
+    );
   }
 
-  // Auto-generate slug from name
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-
-  // Check slug uniqueness
-  const [[existing]] = await pool.query(
-    'SELECT id FROM sources WHERE slug = ?', [slug]
-  ) as any;
-  if (existing) {
+  const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const [[slugExists]] = await pool.query('SELECT id FROM sources WHERE slug = ?', [slug]) as any;
+  if (slugExists) {
     return Response.json({ error: `A source named "${name}" already exists` }, { status: 409 });
   }
 
-  // All agents share the same environment/vault from env vars
-  const agentConfig = {
-    agent_id,
-    environment_id: process.env.SOURCE_BUILDER_ENVIRONMENT_ID,
-    vault_id:       process.env.SOURCE_BUILDER_VAULT_ID,
-  };
-
   const [result] = await pool.query(
-    `INSERT INTO sources
-       (name, slug, agent_id, agent_config, calendar_source_name, active)
+    `INSERT INTO sources (name, slug, agent_id, schedule_cron, calendar_source_name, active)
      VALUES (?, ?, ?, ?, ?, 1)`,
-    [name, slug, agent_id, JSON.stringify(agentConfig), name]
+    [name.trim(), slug, agent_id.trim(), schedule_cron, name.trim()]
   ) as any;
 
-  const [[created]] = await pool.query(
-    'SELECT * FROM sources WHERE id = ?', [result.insertId]
-  ) as any;
+  const sourceId = result.insertId;
+  const [[created]] = await pool.query('SELECT * FROM sources WHERE id = ?', [sourceId]) as any;
 
-  return Response.json(created, { status: 201 });
+  // Fire first fetch immediately — non-blocking
+  triggerAgentRun(sourceId).catch((err: Error) =>
+    console.error(`Initial fetch failed for source ${sourceId} (${name}):`, err.message)
+  );
+
+  return Response.json({ ...created, initial_fetch: 'triggered' }, { status: 201 });
 }

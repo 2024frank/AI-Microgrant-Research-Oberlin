@@ -6,7 +6,11 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 /**
  * Trigger a Claude agent run for a given source.
- * The agent outputs JSON events, we read them and write to raw_events.
+ *
+ * Each source has its own agent (unique agent_id) but shares
+ * the same environment and vault (from env vars). The agent
+ * already knows how to fetch its source internally — we just
+ * trigger it and read the JSON it outputs.
  */
 export async function triggerAgentRun(sourceId: number) {
   const [[source]] = await pool.query(
@@ -21,107 +25,58 @@ export async function triggerAgentRun(sourceId: number) {
   const runId = runResult.insertId;
 
   try {
-    // Get rejection history to inject as learning context
+    // Get rejection history for this source → injected so agent learns from mistakes
     const { prompt_block } = await getRejectionHistory(sourceId, 50);
 
-    // Build the full system prompt: stored prompt + rejection history
-    const systemPrompt = [source.system_prompt, prompt_block].filter(Boolean).join('\n\n');
+    // Trigger the agent via Anthropic's agent platform.
+    // The agent_id is what's unique per source — env/vault are shared.
+    const run = await (client as any).beta.agents.runs.create({
+      agent_id:       source.agent_id,
+      environment_id: process.env.SOURCE_BUILDER_ENVIRONMENT_ID,
+      vault_id:       process.env.SOURCE_BUILDER_VAULT_ID,
+      // Pass rejection history as a user message so the agent learns from it
+      messages: [
+        {
+          role:    'user',
+          content: prompt_block
+            ? `Run extraction now.\n\n${prompt_block}\n\nReturn only the JSON array of events.`
+            : 'Run extraction now. Return only the JSON array of events.',
+        },
+      ],
+    });
 
-    // Trigger the agent — it runs, fetches events, returns JSON
-    const message = await client.beta.messages.create({
-      model:      'claude-sonnet-4-6',
-      max_tokens: 8096,
-      system:     systemPrompt,
-      messages:   [{ role: 'user', content: 'Run extraction now. Return only the JSON array of events.' }],
-      // Use the shared environment and vault from env vars
-      // (betas for agent toolset if needed)
-    } as any);
+    // Poll until the run completes
+    let result = run;
+    while (result.status === 'running' || result.status === 'queued') {
+      await new Promise(r => setTimeout(r, 2000));
+      result = await (client as any).beta.agents.runs.retrieve(result.id);
+    }
 
-    // Parse the JSON output from the agent
-    const text = message.content
-      .filter((b: any) => b.type === 'text')
-      .map((b: any) => b.text)
-      .join('');
+    if (result.status !== 'completed') {
+      throw new Error(`Agent run ended with status: ${result.status}`);
+    }
 
-    // Extract JSON array from response (agent may wrap in ```json blocks)
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    // Extract the JSON array from the agent's output
+    const outputText: string = result.output_messages
+      ?.filter((m: any) => m.role === 'assistant')
+      ?.map((m: any) => typeof m.content === 'string' ? m.content : m.content?.[0]?.text || '')
+      ?.join('') || '';
+
+    const jsonMatch = outputText.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('Agent returned no JSON array');
 
     const events: any[] = JSON.parse(jsonMatch[0]);
 
-    // Write events to raw_events
-    const inserted: any[] = [];
-    const conn = await pool.getConnection();
-    try {
-      await conn.beginTransaction();
-      for (const ev of events) {
-        const [res] = await conn.query(
-          `INSERT INTO raw_events (
-            source_id, agent_run_id, event_type, title, description,
-            extended_description, sponsors, post_type_ids, sessions,
-            location_type, location, place_id, place_name, room_num,
-            url_link, display, screen_ids, buttons, contact_email,
-            phone, website, image_cdn_url, calendar_source_name,
-            calendar_source_url, geo_scope, geo_json, status
-          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending')`,
-          [
-            sourceId, runId,
-            ev.eventType || 'ot',
-            ev.title,
-            ev.description,
-            ev.extendedDescription || null,
-            JSON.stringify(ev.sponsors      || []),
-            JSON.stringify(ev.postTypeId    || []),
-            JSON.stringify(ev.sessions      || []),
-            ev.locationType || 'ne',
-            ev.location     || null,
-            ev.placeId      || null,
-            ev.placeName    || null,
-            ev.roomNum      || null,
-            ev.urlLink      || null,
-            ev.display      || 'all',
-            JSON.stringify(ev.screensIds    || []),
-            JSON.stringify(ev.buttons       || []),
-            ev.contactEmail || null,
-            ev.phone        || null,
-            ev.website      || null,
-            ev.image_cdn_url|| null,
-            ev.calendarSourceName || source.calendar_source_name,
-            ev.calendarSourceUrl  || null,
-            ev.geo_scope    || null,
-            ev.geo ? JSON.stringify(ev.geo) : null,
-          ]
-        ) as any;
-
-        const eventId = res.insertId;
-        const ingestedPostUrl = `${process.env.NEXT_PUBLIC_APP_URL}/events/${eventId}`;
-        await conn.query(
-          'UPDATE raw_events SET ingested_post_url = ? WHERE id = ?',
-          [ingestedPostUrl, eventId]
-        );
-        inserted.push({ id: eventId, title: ev.title });
-      }
-      await conn.commit();
-    } catch (e) {
-      await conn.rollback();
-      throw e;
-    } finally {
-      (conn as any).release();
-    }
+    // Write events to MySQL
+    const inserted = await writeEvents(events, sourceId, runId, source.calendar_source_name);
 
     // Close run with stats
     await pool.query(
       `UPDATE agent_runs SET
-        status='completed', finished_at=NOW(),
-        events_extracted=?, events_found=?,
-        prompt_tokens=?, completion_tokens=?
+         status='completed', finished_at=NOW(),
+         events_found=?, events_extracted=?
        WHERE id=?`,
-      [
-        inserted.length, events.length,
-        message.usage?.input_tokens  || null,
-        message.usage?.output_tokens || null,
-        runId,
-      ]
+      [events.length, inserted.length, runId]
     );
 
     return { run_id: runId, inserted: inserted.length, events: inserted };
@@ -132,5 +87,72 @@ export async function triggerAgentRun(sourceId: number) {
       [JSON.stringify([err.message]), runId]
     );
     throw err;
+  }
+}
+
+async function writeEvents(events: any[], sourceId: number, runId: number, calendarSourceName: string) {
+  const inserted: any[] = [];
+  const conn = await pool.getConnection();
+  try {
+    await (conn as any).beginTransaction();
+
+    for (const ev of events) {
+      const [res] = await conn.query(
+        `INSERT INTO raw_events (
+          source_id, agent_run_id, event_type, title, description,
+          extended_description, sponsors, post_type_ids, sessions,
+          location_type, location, place_id, place_name, room_num,
+          url_link, display, screen_ids, buttons, contact_email,
+          phone, website, image_cdn_url, calendar_source_name,
+          calendar_source_url, geo_scope, geo_json, status
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending')`,
+        [
+          sourceId, runId,
+          ev.eventType        || 'ot',
+          ev.title,
+          ev.description,
+          ev.extendedDescription  || null,
+          JSON.stringify(ev.sponsors     || []),
+          JSON.stringify(ev.postTypeId   || []),
+          JSON.stringify(ev.sessions     || []),
+          ev.locationType     || 'ne',
+          ev.location         || null,
+          ev.placeId          || null,
+          ev.placeName        || null,
+          ev.roomNum          || null,
+          ev.urlLink          || null,
+          ev.display          || 'all',
+          JSON.stringify(ev.screensIds   || []),
+          JSON.stringify(ev.buttons      || []),
+          ev.contactEmail     || null,
+          ev.phone            || null,
+          ev.website          || null,
+          ev.image_cdn_url    || null,
+          ev.calendarSourceName || calendarSourceName,
+          ev.calendarSourceUrl  || null,
+          ev.geo_scope        || null,
+          ev.geo ? JSON.stringify(ev.geo) : null,
+        ]
+      ) as any;
+
+      const eventId = res.insertId;
+
+      // Build ingestedPostUrl now that we have the row ID
+      const ingestedPostUrl = `${process.env.NEXT_PUBLIC_APP_URL}/events/${eventId}`;
+      await conn.query(
+        'UPDATE raw_events SET ingested_post_url = ? WHERE id = ?',
+        [ingestedPostUrl, eventId]
+      );
+
+      inserted.push({ id: eventId, title: ev.title, ingested_post_url: ingestedPostUrl });
+    }
+
+    await (conn as any).commit();
+    return inserted;
+  } catch (e) {
+    await (conn as any).rollback();
+    throw e;
+  } finally {
+    (conn as any).release();
   }
 }
