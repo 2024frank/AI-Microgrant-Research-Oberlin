@@ -3,11 +3,11 @@ import pool from '@/lib/db';
 import { triggerAgentRun } from '@/lib/agentRunner';
 
 // POST /api/agent/schedule
-// Called by a cron job (Vercel Cron / external scheduler)
-// Secured with a simple CRON_SECRET header
-export async function POST(req: NextRequest) {
-  const secret = req.headers.get('x-cron-secret');
-  if (secret !== process.env.CRON_SECRET) {
+// Vercel Cron hits this daily at 6am. Secured with CRON_SECRET env var.
+// Vercel sends: Authorization: Bearer <CRON_SECRET>
+export async function GET(req: NextRequest) {
+  const auth = req.headers.get('authorization');
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

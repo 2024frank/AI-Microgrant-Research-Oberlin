@@ -1,26 +1,77 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --green-primary: #3a8c3f;
+  --green-dark:    #2a6b2e;
+  --green-light:   #e8f5e9;
+  --green-mid:     #c8e6c9;
+  --black:         #111111;
+  --gray-dark:     #333333;
+  --gray-mid:      #666666;
+  --gray-light:    #f5f5f5;
+  --white:         #ffffff;
+  --danger:        #c0392b;
+  --warning:       #e67e22;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--white);
+  color: var(--black);
 }
+
+.btn-primary {
+  background: var(--green-primary);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--green-dark); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--green-primary);
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border: 1.5px solid var(--green-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-ghost:hover { background: var(--green-light); }
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-green  { background: var(--green-light); color: var(--green-dark); }
+.badge-gray   { background: #f0f0f0; color: #555; }
+.badge-red    { background: #fdecea; color: var(--danger); }
+.badge-amber  { background: #fff3e0; color: #c05e00; }
