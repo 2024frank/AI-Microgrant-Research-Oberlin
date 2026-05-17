@@ -6,7 +6,7 @@ const pool = mysql.createPool({
   user:               process.env.DATABASE_USERNAME,
   password:           process.env.DATABASE_PASSWORD,
   database:           process.env.DATABASE_NAME,
-  ssl:                { rejectUnauthorized: true },
+  ssl:                { rejectUnauthorized: false },  // DigitalOcean managed DB
   waitForConnections: true,
   connectionLimit:    10,
 });
