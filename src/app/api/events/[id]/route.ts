@@ -1,0 +1,107 @@
+import { NextRequest } from 'next/server';
+import pool from '@/lib/db';
+import { getAuthUser } from '@/lib/auth';
+
+const CH_BASE = 'https://oberlin.communityhub.cloud/api/legacy/calendar';
+
+// GET /api/events/:id — public, no auth required (CommunityHub links here)
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const [[event]] = await pool.query(
+    `SELECT re.*, s.name AS source_name, s.calendar_source_name
+     FROM raw_events re JOIN sources s ON re.source_id = s.id
+     WHERE re.id = ?`,
+    [params.id]
+  ) as any;
+
+  if (!event) return Response.json({ error: 'Not found' }, { status: 404 });
+  return Response.json(event);
+}
+
+// PATCH /api/events/:id — editor updates and re-submits to CommunityHub
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const user = await getAuthUser(req);
+  if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { edits = {} } = await req.json();
+  const eventId = params.id;
+
+  const [[event]] = await pool.query('SELECT * FROM raw_events WHERE id = ?', [eventId]) as any;
+  if (!event) return Response.json({ error: 'Not found' }, { status: 404 });
+  if (!event.communityhub_post_id) {
+    return Response.json({ error: 'Not yet submitted to CommunityHub' }, { status: 400 });
+  }
+
+  const [[dbUser]] = await pool.query(
+    'SELECT id FROM users WHERE firebase_uid = ?', [user.uid]
+  ) as any;
+
+  const editableFields = [
+    'title','description','extended_description','sessions','location_type',
+    'location','place_name','room_num','url_link','sponsors','post_type_ids',
+    'geo_scope','contact_email','phone','website','image_cdn_url','buttons','display',
+  ];
+
+  const conn = await pool.getConnection();
+  try {
+    await (conn as any).beginTransaction();
+
+    // Log field edits for benchmarking
+    for (const field of editableFields) {
+      if (edits[field] !== undefined && String(edits[field]) !== String(event[field] ?? '')) {
+        await conn.query(
+          `INSERT INTO field_edit_log (raw_event_id, source_id, reviewer_id, field_name, old_value, new_value)
+           VALUES (?,?,?,?,?,?)`,
+          [eventId, event.source_id, dbUser?.id, field, String(event[field] ?? ''), String(edits[field])]
+        );
+      }
+    }
+
+    // Map MySQL field names → CommunityHub field names for PATCH
+    const fieldMap: Record<string, string> = {
+      title: 'title', description: 'description',
+      extended_description: 'extendedDescription', sessions: 'sessions',
+      location_type: 'locationType', location: 'location',
+      place_name: 'placeName', room_num: 'roomNum', url_link: 'urlLink',
+      sponsors: 'sponsors', post_type_ids: 'postTypeId',
+      contact_email: 'contactEmail', phone: 'phone',
+      website: 'website', image_cdn_url: 'image_cdn_url',
+      buttons: 'buttons', display: 'display',
+    };
+
+    const chEdits: Record<string, any> = {};
+    for (const [k, v] of Object.entries(edits)) {
+      if (fieldMap[k]) chEdits[fieldMap[k]] = v;
+    }
+
+    // PATCH CommunityHub
+    const chRes  = await fetch(`${CH_BASE}/post/${event.communityhub_post_id}/submit`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(chEdits),
+    });
+    const chData = await chRes.json();
+
+    // Update MySQL
+    const setClauses = Object.keys(edits)
+      .filter(k => editableFields.includes(k))
+      .map(k => `${k} = ?`).join(', ');
+    const setVals = Object.entries(edits)
+      .filter(([k]) => editableFields.includes(k))
+      .map(([, v]) => typeof v === 'object' ? JSON.stringify(v) : v);
+
+    if (setClauses) {
+      await conn.query(
+        `UPDATE raw_events SET ${setClauses}, status='resubmitted' WHERE id=?`,
+        [...setVals, eventId]
+      );
+    }
+
+    await (conn as any).commit();
+    return Response.json({ ok: true, communityhub: chData });
+  } catch (err: any) {
+    await (conn as any).rollback();
+    return Response.json({ error: err.message }, { status: 500 });
+  } finally {
+    (conn as any).release();
+  }
+}

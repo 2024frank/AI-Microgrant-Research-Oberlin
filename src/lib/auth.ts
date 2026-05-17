@@ -1,0 +1,34 @@
+import { NextRequest } from 'next/server';
+import { adminAuth } from './firebase-admin';
+import pool from './db';
+
+export interface AuthUser {
+  uid:   string;
+  email: string;
+  role:  'admin' | 'reviewer';
+  name:  string;
+}
+
+export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
+  const header = req.headers.get('authorization');
+  if (!header?.startsWith('Bearer ')) return null;
+  try {
+    const decoded = await adminAuth.verifyIdToken(header.slice(7));
+    const [[user]] = await pool.query(
+      'SELECT * FROM users WHERE firebase_uid = ? AND active = 1',
+      [decoded.uid]
+    ) as any;
+    if (!user) return null;
+    return { uid: decoded.uid, email: user.email, role: user.role, name: user.full_name };
+  } catch {
+    return null;
+  }
+}
+
+export function unauthorized() {
+  return Response.json({ error: 'Unauthorized' }, { status: 401 });
+}
+
+export function forbidden() {
+  return Response.json({ error: 'Forbidden' }, { status: 403 });
+}
